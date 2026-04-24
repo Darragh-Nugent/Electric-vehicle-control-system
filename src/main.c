@@ -51,9 +51,9 @@ int main( void )
 {
     prvSetupHardware();
 
-    vCreateMotorTask();
+    // vCreateMotorTask();
     vCreateSensorTasks();
-    vCreateGuiTask();
+    // vCreateGuiTask();
 
     vTaskStartScheduler();
 
