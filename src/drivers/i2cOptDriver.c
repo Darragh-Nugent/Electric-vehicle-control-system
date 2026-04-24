@@ -16,80 +16,34 @@
 #include "driverlib/sysctl.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include "features/sensors/i2c_message_struct.h"
 
-extern SemaphoreHandle_t xI2CSemaphore;
-volatile bool errorFlag = false;
+extern QueueHandle_t xI2CSendQueue;
+extern QueueHandle_t xI2CReceiveQueue;
 
-/*
- * Handles interrupts from I2C0. Checks for timeout and gives xI2CSemaphore to unblock
- */
-void xI2CHandler(void)
-{
-    BaseType_t xI2CTaskWoken;
-    uint32_t ui32I2CStatus;
-
-    /* Read interrupt status */
-    ui32I2CStatus = I2CMasterIntStatusEx(I2C0_BASE, true);
-    /* Clear interrupt */
-    I2CMasterIntClearEx(I2C0_BASE, ui32I2CStatus);
-
-    /* Initialize as pdFALSE for FreeRTOS ISR handling */
-    xI2CTaskWoken = pdFALSE;
-
-    /* Check which interrupt was called */
-    if ((ui32I2CStatus & I2C_MASTER_INT_TIMEOUT) == I2C_MASTER_INT_TIMEOUT)
-    {
-        errorFlag = true;
-    }
-
-    xSemaphoreGiveFromISR(xI2CSemaphore, &xI2CTaskWoken);
-
-    /* Yield if required */
-    portYIELD_FROM_ISR(xI2CTaskWoken);
-}
+extern SemaphoreHandle_t xOPT3001Semaphore;
 
 /*
  * Write 2-byte value to I2C register
  */
 bool writeI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
 {
-    errorFlag = false;
-    while (xSemaphoreTake(xI2CSemaphore, 0) == pdTRUE);
+    // UARTprintf("Indside writei2c\n");
 
-    UARTprintf("Inside writeI2C\n");
+    i2c_send_message_t message;
+    message.id = 0;   // writer task id (not used in this implementation)
+    message.type = 1; // write
+    message.sensor = ui8Addr;
+    message.reg = ui8Reg;
+    message.data = data;
 
-    // Set slave address (write mode)
-    I2CMasterSlaveAddrSet(I2C0_BASE, ui8Addr, false);
-
-    // Send register address
-    I2CMasterDataPut(I2C0_BASE, ui8Reg);
-    I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_START);
-
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
+    xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
+    // UARTprintf("wait on semaphore in writei2c\n");
+    if (xSemaphoreTake(xOPT3001Semaphore, portMAX_DELAY) != pdTRUE)
     {
         return false;
     }
-    UARTprintf("Sent reg address\n");
-
-    // Send MSB
-    I2CMasterDataPut(I2C0_BASE, data[0]);
-    I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_CONT);
-
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
-    {
-        return false;
-    }
-    UARTprintf("Sent MSB\n");
-
-    // Send LSB
-    I2CMasterDataPut(I2C0_BASE, data[1]);
-    I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
-
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
-    {
-        return false;
-    }
-    UARTprintf("Sent LSB\n");
+    // UARTprintf("passed on semaphore in writei2c\n");
     return true;
 }
 
@@ -98,40 +52,23 @@ bool writeI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
  */
 bool readI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
 {
-    xSemaphoreTake(xI2CSemaphore, 0);
-    errorFlag = false;
+    // UARTprintf("Indside readi2c\n");
 
-    // Set slave address (write mode)
-    I2CMasterSlaveAddrSet(I2C0_BASE, ui8Addr, false);
+    i2c_send_message_t message;
+    message.id = 0;   // writer task id (not used in this implementation)
+    message.type = 0; // read
+    message.sensor = ui8Addr;
+    message.reg = ui8Reg;
+    message.data = data;
 
-    // Send register address
-    I2CMasterDataPut(I2C0_BASE, ui8Reg);
-    I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_SINGLE_SEND);
+    xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
 
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
+    // UARTprintf("wait on semaphore in readi2c\n");
+    if (xSemaphoreTake(xOPT3001Semaphore, portMAX_DELAY) != pdTRUE)
     {
         return false;
     }
-    // Set slave address (read mode)
-    I2CMasterSlaveAddrSet(I2C0_BASE, ui8Addr, true);
+    // UARTprintf("passed on semaphore in readi2c\n");
 
-    // Read MSB
-    I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
-
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
-    {
-        return false;
-    }
-    data[0] = I2CMasterDataGet(I2C0_BASE);
-
-    // Read LSB
-    I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
-
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
-    {
-        return false;
-    }
-
-    data[1] = I2CMasterDataGet(I2C0_BASE);
     return true;
 }

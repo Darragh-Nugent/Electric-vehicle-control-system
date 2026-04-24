@@ -40,8 +40,13 @@ volatile static uint32_t g_pui32ButtonPressed = NULL;
  * The binary semaphore used by the switch ISR & task.
  */
 extern SemaphoreHandle_t xButtonSemaphore;
-// extern SemaphoreHandle_t xUARTModeSemaphore;
-// extern volatile UART_mode_t UARTMode;
+
+/*
+ * The queuse
+ */
+QueueHandle_t xI2CSendQueue;
+QueueHandle_t xI2CReceiveQueue;
+
 
 extern void xI2CHandler(void);
 
@@ -84,7 +89,7 @@ void vLightSensorTask(void *pvParameters)
     uint16_t rawData = 0;
     float convertedLux = 0;
 
-    UARTprintf("Starting Light Sensor Task\n");
+    // UARTprintf("Starting Light Sensor Task\n");
 
     // // Test that sensor is set up correctly
     // UARTprintf("Testing OPT3001 Sensor:\n");

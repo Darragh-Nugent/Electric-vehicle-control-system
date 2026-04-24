@@ -40,26 +40,29 @@ extern uint32_t g_ui32SysClock;
 
 SemaphoreHandle_t xButtonSemaphore = NULL;
 SemaphoreHandle_t xI2CSemaphore = NULL;
+SemaphoreHandle_t xOPT3001Semaphore = NULL;
 
-QueueHandle_t xI2CQueue;
+QueueHandle_t xI2CSendQueue;
+QueueHandle_t xI2CReceiveQueue;
 
 void vCreateSensorTasks(void)
 {
     xButtonSemaphore = xSemaphoreCreateBinary();
     xI2CSemaphore = xSemaphoreCreateBinary();
+    xOPT3001Semaphore = xSemaphoreCreateBinary();
 
-    // xI2CQueue = xQueueCreate(10, sizeof(struct i2c_message_t));
+    xI2CSendQueue = xQueueCreate(10, sizeof(i2c_send_message_t));
 
     prvSensorOPT3001Init();
     // vTaskDelay(pdMS_TO_TICKS(1000)); // delay to ensure sensor is initialised before testing
 
-    // xTaskCreate(
-    //     vI2CManagerTask,
-    //     "I2CManagerTask",
-    //     256,
-    //     NULL,
-    //     LIGHT_SENSOR_PRIORITY,
-    //     NULL);
+    xTaskCreate(
+        vI2CManagerTask,
+        "I2CManagerTask",
+        256,
+        NULL,
+        LIGHT_SENSOR_PRIORITY,
+        NULL);
 
     // xTaskCreate(
     //     vAccelerationSensorTask,
