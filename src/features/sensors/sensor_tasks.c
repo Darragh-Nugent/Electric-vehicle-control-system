@@ -43,7 +43,7 @@ SemaphoreHandle_t xI2CSemaphore = NULL;
 SemaphoreHandle_t xOPT3001Semaphore = NULL;
 
 QueueHandle_t xI2CSendQueue;
-QueueHandle_t xI2CReceiveQueue;
+QueueHandle_t xI2CRecvQueue;
 
 void vCreateSensorTasks(void)
 {
@@ -52,6 +52,7 @@ void vCreateSensorTasks(void)
     xOPT3001Semaphore = xSemaphoreCreateBinary();
 
     xI2CSendQueue = xQueueCreate(10, sizeof(i2c_send_message_t));
+    xI2CRecvQueue = xQueueCreate(10, sizeof(i2c_recv_message_t));
 
     prvSensorOPT3001Init();
     // vTaskDelay(pdMS_TO_TICKS(1000)); // delay to ensure sensor is initialised before testing

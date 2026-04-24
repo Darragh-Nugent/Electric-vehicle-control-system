@@ -41,12 +41,6 @@ volatile static uint32_t g_pui32ButtonPressed = NULL;
  */
 extern SemaphoreHandle_t xButtonSemaphore;
 
-/*
- * The queuse
- */
-QueueHandle_t xI2CSendQueue;
-QueueHandle_t xI2CReceiveQueue;
-
 
 extern void xI2CHandler(void);
 

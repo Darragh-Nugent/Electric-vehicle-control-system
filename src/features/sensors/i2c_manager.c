@@ -38,7 +38,7 @@ extern uint32_t g_ui32SysClock;
 volatile uint32_t g_ui32TimeStamp;
 
 extern QueueHandle_t xI2CSendQueue;
-extern QueueHandle_t xI2CReceiveQueue;
+extern QueueHandle_t xI2CRecvQueue;
 
 extern SemaphoreHandle_t xI2CSemaphore;
 extern SemaphoreHandle_t xOPT3001Semaphore;
@@ -86,6 +86,12 @@ void vI2CManagerTask(void *pvParameters)
     while (1)
     {
         xQueueReceive(xI2CSendQueue, &message, portMAX_DELAY);
+
+        // Initialise response
+        response.id = message.id;
+        response.sensor = message.sensor;
+        response.success = true;
+
         // UARTprintf("Received message from task %d: sensor %d, reg %d, val %d\n", message.id, message.sensor, message.reg, message.data);
 
         uint8_t data[2];
@@ -95,24 +101,21 @@ void vI2CManagerTask(void *pvParameters)
         {
             if (!readI2CInternal(message.sensor, message.reg, message.data))
             {
+                response.success = false;
             }
         }
         else if (message.type == 1) // write
         {
             if (!writeI2CInternal(message.sensor, message.reg, message.data))
             {
+                response.success = false;
             }
         }
 
-        switch (message.id)
-        {
-        case 0:
-            xSemaphoreGive(xOPT3001Semaphore);
-            break;
-        
-        default:
-            break;
-        }
+        response.data[0] = message.data[0];
+        response.data[1] = message.data[1];
+
+        xQueueSend(xI2CRecvQueue, &response, portMAX_DELAY);
     }
 }
 
@@ -131,7 +134,7 @@ bool writeI2CInternal(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     I2CMasterDataPut(I2C0_BASE, ui8Reg);
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_START);
 
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
+    if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(10)) != pdTRUE || errorFlag)
     {
         return false;
     }
@@ -141,7 +144,7 @@ bool writeI2CInternal(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     I2CMasterDataPut(I2C0_BASE, data[0]);
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_CONT);
 
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
+    if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(10)) != pdTRUE || errorFlag)
     {
         return false;
     }
@@ -151,7 +154,7 @@ bool writeI2CInternal(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     I2CMasterDataPut(I2C0_BASE, data[1]);
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_SEND_FINISH);
 
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
+    if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(10)) != pdTRUE || errorFlag)
     {
         return false;
     }
@@ -174,7 +177,7 @@ bool readI2CInternal(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     I2CMasterDataPut(I2C0_BASE, ui8Reg);
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_SINGLE_SEND);
 
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
+    if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(10)) != pdTRUE || errorFlag)
     {
         return false;
     }
@@ -184,7 +187,7 @@ bool readI2CInternal(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     // Read MSB
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
 
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
+    if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(10)) != pdTRUE || errorFlag)
     {
         return false;
     }
@@ -193,7 +196,7 @@ bool readI2CInternal(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     // Read LSB
     I2CMasterControl(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
 
-    if (xSemaphoreTake(xI2CSemaphore, portMAX_DELAY) != pdTRUE || errorFlag)
+    if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(10)) != pdTRUE || errorFlag)
     {
         return false;
     }

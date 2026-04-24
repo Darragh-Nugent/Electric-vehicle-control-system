@@ -19,7 +19,7 @@
 #include "features/sensors/i2c_message_struct.h"
 
 extern QueueHandle_t xI2CSendQueue;
-extern QueueHandle_t xI2CReceiveQueue;
+extern QueueHandle_t xI2CRecvQueue;
 
 extern SemaphoreHandle_t xOPT3001Semaphore;
 
@@ -35,16 +35,19 @@ bool writeI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     message.type = 1; // write
     message.sensor = ui8Addr;
     message.reg = ui8Reg;
-    message.data = data;
+    message.data[0] = data[0];
+    message.data[1] = data[1];
+
+    i2c_recv_message_t response;
+    response.success = false;
 
     xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
     // UARTprintf("wait on semaphore in writei2c\n");
-    if (xSemaphoreTake(xOPT3001Semaphore, portMAX_DELAY) != pdTRUE)
-    {
-        return false;
-    }
-    // UARTprintf("passed on semaphore in writei2c\n");
-    return true;
+    xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
+    data[0] = response.data[0];
+    data[1] = response.data[1];
+
+    return response.success;
 }
 
 /*
@@ -59,16 +62,17 @@ bool readI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     message.type = 0; // read
     message.sensor = ui8Addr;
     message.reg = ui8Reg;
-    message.data = data;
+    message.data[0] = data[0];
+    message.data[1] = data[1];
+
+    i2c_recv_message_t response;
+    response.success = false;
 
     xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
+    // UARTprintf("wait on semaphore in writei2c\n");
+    xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
+    data[0] = response.data[0];
+    data[1] = response.data[1];
 
-    // UARTprintf("wait on semaphore in readi2c\n");
-    if (xSemaphoreTake(xOPT3001Semaphore, portMAX_DELAY) != pdTRUE)
-    {
-        return false;
-    }
-    // UARTprintf("passed on semaphore in readi2c\n");
-
-    return true;
+    return response.success;
 }
