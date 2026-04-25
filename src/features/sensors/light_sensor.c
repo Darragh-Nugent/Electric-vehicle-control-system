@@ -6,6 +6,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
+#include "event_groups.h"
 
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
@@ -22,6 +23,7 @@
 
 #include "motorlib.h"
 #include "features/priorities.h"
+#include "features/sensors/sensor_events.h"
 
 /*-----------------------------------------------------------*/
 
@@ -41,6 +43,7 @@ volatile static uint32_t g_pui32ButtonPressed = NULL;
  */
 extern SemaphoreHandle_t xButtonSemaphore;
 
+extern EventGroupHandle_t xSensorEvents;
 
 extern void xI2CHandler(void);
 
@@ -108,40 +111,24 @@ void vLightSensorTask(void *pvParameters)
 
     uint16_t prevLux[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
+    uint32_t events;
+
     // Loop Forever
     while (1)
     {
-        SysCtlDelay(g_ui32SysClock / 100);
+        events = xEventGroupWaitBits(xSensorEvents, ALL_SENSOR_EVENTS, pdTRUE, pdFALSE, portMAX_DELAY);
 
-        // Read and convert OPT values
-        success = sensorOpt3001Read(&rawData);
-
-        if (success)
+        if (events | LIGHT_SENSOR_EVENT)
         {
-            sensorOpt3001Convert(rawData, &convertedLux);
-            int lux_int = (int)convertedLux;
-            UARTprintf("Lux: %5d\n", lux_int);
+            // Read and convert OPT values
+            success = sensorOpt3001Read(&rawData);
 
-            //  UARTprintf("Before semaphore take in opttask");
-            // xSemaphoreTake(xUARTModeSemaphore, portMAX_DELAY);
-            // Construct Text
-            // if (UARTMode == NORMAL)
-            // {
-            //     id = 0;
-
-            //     UARTprintf("Lux: %5d\n", lux_int);
-            //     UARTprintf("Time Taken:  %u\n", timeTakenToReadI2C);
-            // }
-            // else if (UARTMode == PLOTTING)
-            // {
-            //     //UARTprintf("Calculating moving average");
-            //     uint16_t movingAverage = findMovingAverage(lux_int, prevLux);
-            //     UARTprintf("%u,%u,%d\n", id, lux_int, movingAverage);
-            //     id++;
-            // }
-
-            // xSemaphoreGive(xUARTModeSemaphore);
+            if (success)
+            {
+                sensorOpt3001Convert(rawData, &convertedLux);
+                int lux_int = (int)convertedLux;
+                UARTprintf("Lux: %5d\n", lux_int);
+            }
         }
     }
 }
-

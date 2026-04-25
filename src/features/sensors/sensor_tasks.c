@@ -6,6 +6,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
+#include "event_groups.h"
 
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
@@ -18,10 +19,12 @@
 #include "driverlib/pwm.h"
 #include "driverlib/i2c.h"
 #include "driverlib/interrupt.h"
+#include "driverlib/timer.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
 #include "features/sensors/i2c_message_struct.h"
+#include "sensor_events.h"
 
 extern void vI2CManagerTask(void *pvParameters);
 extern void vAccelerationSensorTask(void *pvParameters);
@@ -31,8 +34,11 @@ extern void vLightSensorTask(void *pvParameters);
 extern void vPowerSensorTask(void *pvParameters);
 extern void vSpeedSensorTask(void *pvParameters);
 
-static void prvSensorOPT3001Init(void);
 extern void xI2CHandler(void);
+extern void xOPT3001Handler(void);
+
+static void prvSensorOPT3001Init(void);
+static void prvI2CInit(void);
 
 void vCreateSensorTasks(void);
 
@@ -45,6 +51,8 @@ SemaphoreHandle_t xOPT3001Semaphore = NULL;
 QueueHandle_t xI2CSendQueue;
 QueueHandle_t xI2CRecvQueue;
 
+EventGroupHandle_t xSensorEvents;
+
 void vCreateSensorTasks(void)
 {
     xButtonSemaphore = xSemaphoreCreateBinary();
@@ -54,6 +62,9 @@ void vCreateSensorTasks(void)
     xI2CSendQueue = xQueueCreate(10, sizeof(i2c_send_message_t));
     xI2CRecvQueue = xQueueCreate(10, sizeof(i2c_recv_message_t));
 
+    xSensorEvents = xEventGroupCreate();
+
+    prvI2CInit();
     prvSensorOPT3001Init();
     // vTaskDelay(pdMS_TO_TICKS(1000)); // delay to ensure sensor is initialised before testing
 
@@ -114,7 +125,7 @@ void vCreateSensorTasks(void)
     //     NULL);
 }
 
-static void prvSensorOPT3001Init(void)
+static void prvI2CInit(void)
 {
     //
     // The I2C0 peripheral must be enabled before use.
@@ -157,6 +168,17 @@ static void prvSensorOPT3001Init(void)
 
     I2CMasterTimeoutSet(I2C0_BASE, g_ui32SysClock / 10);
     IntMasterEnable();
+}
 
-    // Initialise sensor
+static void prvSensorOPT3001Init(void)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // Enable the Timer 0 Module.
+
+    TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock / 2);    // set to ~ 2Hz
+
+    TimerIntRegister(TIMER0_BASE, TIMER_A, xOPT3001Handler); // set the timer interrupt vector
+    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);         // Enable the timer interrupt
+    TimerEnable(TIMER0_BASE, TIMER_A);                       // Enable the timers.
+    IntMasterEnable();                                       // Enable Master Interrupts
 }
