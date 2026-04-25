@@ -25,7 +25,7 @@
 
 #include "semphr.h"
 
-#include "screens/scr_dashboard.h"
+#include "scr_dashboard.h"
 #include "screens/scr_motor.h"
 #include "screens/scr_sensors.h"
 #include "screens/scr_alerts.h"
