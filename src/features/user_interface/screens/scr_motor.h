@@ -10,4 +10,4 @@ void scr_motor_set_rpm(float rpm);
 
 void scr_motor_set_current(float amps);
 
-void scr_motor_Set_state(uint8_t state);
+void scr_motor_set_state(uint8_t state);

@@ -22,8 +22,6 @@
 #include "layouts/lv_layout_private.h"
 #include "libs/bin_decoder/lv_bin_decoder.h"
 #include "libs/bmp/lv_bmp.h"
-#include "libs/ffmpeg/lv_ffmpeg.h"
-#include "libs/freetype/lv_freetype.h"
 #include "libs/fsdrv/lv_fsdrv.h"
 #include "libs/tjpgd/lv_tjpgd.h"
 #include "libs/libjpeg_turbo/lv_libjpeg_turbo.h"

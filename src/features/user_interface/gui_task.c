@@ -16,16 +16,19 @@
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
 
+#include "driverlib/rom_map.h"
 #include "motorlib.h"
 #include "features/priorities.h"
 
+#include "grlib/grlib.h"
 #include "drivers/Kentec320x240x16_ssd2119_spi.h"
 #include "drivers/touch.h"
 #include "grlib/widget.h"
 
+#include "driverlib/fpu.h"
 #include "semphr.h"
 
-#include "scr_dashboard.h"
+#include "screens/scr_dashboard.h"
 #include "screens/scr_motor.h"
 #include "screens/scr_sensors.h"
 #include "screens/scr_alerts.h"
@@ -62,7 +65,7 @@ static volatile bool boolTouchPressed;
 
 void vCreateGuiTask(void);
 static void prvGuiTask(void *pvParameters);
-void TouchCallBack(uint32_t, uint32_t, uint32_t);
+int32_t TouchCallBack(uint32_t, int32_t, int32_t);
 
 //*****************************************************************************
 //
@@ -77,7 +80,7 @@ static void prvLvglTickCb(TimerHandle_t xTimer)
     lv_tick_inc(5);
 }
 
-statric void prvDispatchMsg(const UiMsg_t *msg)
+static void prvDispatchMsg(const UiMsg_t *msg)
 {
     switch (msg->type)
     {
@@ -196,7 +199,7 @@ void prvGuiInit(void)
 
 void prvGuiTask(void *pvParameters)
 {
-    g_ui_queue = xQueueCreate(UI_QUEUE_DEPTH, sizeof(UiMsg_t))
+    g_ui_queue = xQueueCreate(UI_QUEUE_DEPTH, sizeof(UiMsg_t));
 
     lv_init();
     prvGuiInit();
@@ -205,7 +208,7 @@ void prvGuiTask(void *pvParameters)
     scr_sensors_init();
     scr_alerts_init();
 
-    lv_screen_load(dashboard_get());
+    //lv_screen_load(scr_dashboard_get());
     active_screen = SCREEN_DASHBOARD;
 
     // Software timer for LVGL
@@ -214,8 +217,8 @@ void prvGuiTask(void *pvParameters)
         pdMS_TO_TICKS(5),
         pdTRUE,
         NULL,
-        prvLvglTickCb,
-    )
+        prvLvglTickCb
+    );
 
     xTimerStart(xTickTimer, portMAX_DELAY);
 
@@ -227,8 +230,8 @@ void prvGuiTask(void *pvParameters)
         uint32_t delay_ms = lv_timer_handler();
 
         // Clamp just to prevent UI sleeping for way too long
-        if (delay < 1) delay_ms = 1;
-        if (delay > 20) delay_ms = 20;
+        if (delay_ms < 1) delay_ms = 1;
+        if (delay_ms > 20) delay_ms = 20;
 
         // Wait
         vTaskDelay(pdMS_TO_TICKS(delay_ms));
@@ -239,7 +242,7 @@ void prvGuiTask(void *pvParameters)
 /// @param ui32Message
 /// @param i32X
 /// @param i32Y
-void TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y)
+int32_t TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y)
 {
     // Finger touches the screen
     if (ui32Message == WIDGET_MSG_PTR_DOWN)
@@ -257,4 +260,5 @@ void TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y)
     {
         boolTouchPressed = false;
     }
+    return 0;
 }
