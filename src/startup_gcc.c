@@ -46,6 +46,7 @@ extern void vPortSVCHandler(void);
 extern void xPortSysTickHandler(void);
 extern void xI2CHandler(void);
 extern void xOPT3001Handler(void);
+extern void xBMI160Handler(void);
 
 
 //*****************************************************************************
@@ -109,7 +110,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Watchdog timer
     xOPT3001Handler,                        // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
-    IntDefaultHandler,                      // Timer 1 subtimer A
+    xBMI160Handler,                         // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
     IntDefaultHandler,                      // Timer 2 subtimer A
     IntDefaultHandler,                      // Timer 2 subtimer B

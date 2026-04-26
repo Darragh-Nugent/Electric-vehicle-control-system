@@ -17,6 +17,7 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "features/sensors/i2c_message_struct.h"
+#include "drivers/bmi160.h"
 
 extern QueueHandle_t xI2CSendQueue;
 extern QueueHandle_t xI2CRecvQueue;
@@ -26,7 +27,7 @@ extern SemaphoreHandle_t xOPT3001Semaphore;
 /*
  * Write 2-byte value to I2C register
  */
-bool writeI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
+bool writeI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
 {
     // UARTprintf("Indside writei2c\n");
 
@@ -35,8 +36,12 @@ bool writeI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     message.type = 1; // write
     message.sensor = ui8Addr;
     message.reg = ui8Reg;
-    message.data[0] = data[0];
-    message.data[1] = data[1];
+    message.len = len;
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        message.data[i] = data[i];
+    }
 
     i2c_recv_message_t response;
     response.success = false;
@@ -44,16 +49,21 @@ bool writeI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
     // UARTprintf("wait on semaphore in writei2c\n");
     xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
-    data[0] = response.data[0];
-    data[1] = response.data[1];
 
     return response.success;
+}
+
+int8_t writeI2CBMI160(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
+{
+    return writeI2C(ui8Addr, ui8Reg, data, len)
+               ? BMI160_OK
+               : BMI160_E_COM_FAIL;
 }
 
 /*
  * Read 2-byte value from I2C register
  */
-bool readI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
+bool readI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
 {
     // UARTprintf("Indside readi2c\n");
 
@@ -62,8 +72,7 @@ bool readI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     message.type = 0; // read
     message.sensor = ui8Addr;
     message.reg = ui8Reg;
-    message.data[0] = data[0];
-    message.data[1] = data[1];
+    message.len = len;
 
     i2c_recv_message_t response;
     response.success = false;
@@ -71,8 +80,23 @@ bool readI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data)
     xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
     // UARTprintf("wait on semaphore in writei2c\n");
     xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
-    data[0] = response.data[0];
-    data[1] = response.data[1];
+
+    for (uint16_t i = 0; i < len; i++)
+    {
+        data[i] = response.data[i];
+    }
 
     return response.success;
+}
+
+int8_t readI2CBMI160(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
+{
+    bool result = readI2C(ui8Addr, ui8Reg, data, len);
+    if (!result)
+    {
+        // UARTprintf("BMI bad");
+    }
+    return result
+        ? BMI160_OK
+        : BMI160_E_COM_FAIL;
 }

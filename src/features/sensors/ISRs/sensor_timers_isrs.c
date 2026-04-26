@@ -34,3 +34,9 @@ void xOPT3001Handler(void)
     xEventGroupSetBits(xSensorEvents, LIGHT_SENSOR_EVENT);
 
 }
+
+void xBMI160Handler(void)
+{
+    TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+    xEventGroupSetBits(xSensorEvents, ACCEL_SENSOR_EVENT);
+}

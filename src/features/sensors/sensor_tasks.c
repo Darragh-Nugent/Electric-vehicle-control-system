@@ -34,6 +34,8 @@ extern void vLightSensorTask(void *pvParameters);
 extern void vPowerSensorTask(void *pvParameters);
 extern void vSpeedSensorTask(void *pvParameters);
 
+extern void prvSensorBMI160TimerInit(void);
+
 extern void xI2CHandler(void);
 extern void xOPT3001Handler(void);
 
@@ -66,6 +68,7 @@ void vCreateSensorTasks(void)
 
     prvI2CInit();
     prvSensorOPT3001Init();
+    prvSensorBMI160TimerInit();
     // vTaskDelay(pdMS_TO_TICKS(1000)); // delay to ensure sensor is initialised before testing
 
     xTaskCreate(
@@ -76,30 +79,6 @@ void vCreateSensorTasks(void)
         LIGHT_SENSOR_PRIORITY,
         NULL);
 
-    // xTaskCreate(
-    //     vAccelerationSensorTask,
-    //     "AccelSensorTask",
-    //     256,
-    //     NULL,
-    //     ACCELERATION_SENSOR_PRIORITY,
-    //     NULL);
-
-    // xTaskCreate(
-    //     vDistanceSensorTask,
-    //     "DistanceSensorTask",
-    //     256,
-    //     NULL,
-    //     DISTANCE_SENSOR_PRIORITY,
-    //     NULL);
-
-    // xTaskCreate(
-    //     vEnvSensorTask,
-    //     "EnvSensorTask",
-    //     256,
-    //     NULL,
-    //     ENV_SENSOR_PRIORITY,
-    //     NULL);
-
     xTaskCreate(
         vLightSensorTask,
         "LightSensorTask",
@@ -107,22 +86,6 @@ void vCreateSensorTasks(void)
         NULL,
         LIGHT_SENSOR_PRIORITY,
         NULL);
-
-    // xTaskCreate(
-    //     vPowerSensorTask,
-    //     "PowerSensorTask",
-    //     256,
-    //     NULL,
-    //     POWER_SENSOR_PRIORITY,
-    //     NULL);
-
-    // xTaskCreate(
-    //     vSpeedSensorTask,
-    //     "SpeedSensorTask",
-    //     256,
-    //     NULL,
-    //     SPEED_SENSOR_PRIORITY,
-    //     NULL);
 }
 
 static void prvI2CInit(void)

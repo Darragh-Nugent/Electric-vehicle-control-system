@@ -22,8 +22,10 @@
 
 
 // ----------------------- Exported prototypes -----------------------
-extern bool writeI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data);
-extern bool readI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data);
+extern bool writeI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data, uint16_t len);
+extern int8_t writeI2CBMI160(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data, uint16_t len);
+extern bool readI2C(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data, uint16_t len);
+extern int8_t readI2CBMI160(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data, uint16_t len);
 
 
 

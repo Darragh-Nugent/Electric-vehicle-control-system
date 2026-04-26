@@ -20,6 +20,8 @@
 #include "drivers/opt3001.h"
 #include "driverlib/i2c.h"
 #include "driverlib/interrupt.h"
+#include "drivers/bmi160.h"
+#include "drivers/i2cOptDriver.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
@@ -27,6 +29,9 @@
 
 /*-----------------------------------------------------------*/
 
+/*
+ * Current clock period
+ */
 extern uint32_t g_ui32SysClock;
 
 /*
@@ -45,12 +50,27 @@ extern SemaphoreHandle_t xButtonSemaphore;
 
 extern EventGroupHandle_t xSensorEvents;
 
+/*-----------------------------------------------------------*/
+
+/*
+ * The configuration struct for the acceleration sensor
+ */
+struct bmi160_dev bmi160dev;
+
+/*
+ * The struct for holding the acceleration data
+ */
+struct bmi160_sensor_data bmi160_accel;
+
+/*-----------------------------------------------------------*/
+
 extern void xI2CHandler(void);
 
 /*
  * The tasks as described in the comments at the top of this file.
  */
 static void prvSensorOPT3001Init(void);
+extern void prvSensorBmi160Init(struct bmi160_dev *bmi160dev);
 
 /*
  * Called by main() to do example specific hardware configurations and to
@@ -93,9 +113,15 @@ void vLightSensorTask(void *pvParameters)
     // success = sensorOpt3001Test();
 
     // Initialise sensor
-    sensorOpt3001Init();
+    bool result = sensorOpt3001Init();
+    if (!result)
+    {
+        UARTprintf("Sensor not init\n");
+    }
 
-    UARTprintf("OPT3001 Example\n");
+    prvSensorBmi160Init(&bmi160dev);
+
+    UARTprintf("Sensor start\n");
     // If the test fails, retry the full init + test sequence rather than
     // retesting a sensor that was never successfully enabled.
     while (!success)
@@ -118,17 +144,23 @@ void vLightSensorTask(void *pvParameters)
     {
         events = xEventGroupWaitBits(xSensorEvents, ALL_SENSOR_EVENTS, pdTRUE, pdFALSE, portMAX_DELAY);
 
-        if (events | LIGHT_SENSOR_EVENT)
-        {
-            // Read and convert OPT values
-            success = sensorOpt3001Read(&rawData);
+        // if (events & LIGHT_SENSOR_EVENT)
+        // {
+        //     // Read and convert OPT values
+        //     success = sensorOpt3001Read(&rawData);
 
-            if (success)
-            {
-                sensorOpt3001Convert(rawData, &convertedLux);
-                int lux_int = (int)convertedLux;
-                UARTprintf("Lux: %5d\n", lux_int);
-            }
+        //     if (success)
+        //     {
+        //         sensorOpt3001Convert(rawData, &convertedLux);
+        //         int lux_int = (int)convertedLux;
+        //         UARTprintf("Lux: %5d\n", lux_int);
+        //     }
+        // }
+        if (events & ACCEL_SENSOR_EVENT)
+        {
+            int8_t result = bmi160_get_sensor_data(BMI160_ACCEL_SEL, &bmi160_accel, NULL, &bmi160dev);
+            UARTprintf("result: %d\n", result); // check for errors
+            UARTprintf("ax:%d\tay:%d\taz:%d\n", bmi160_accel.x, bmi160_accel.y, bmi160_accel.z);
         }
     }
 }
