@@ -50,6 +50,7 @@ static void prvConfigureHallInts( void );
 int main( void )
 {
     prvSetupHardware();
+    IntMasterEnable();
 
     vCreateMotorTask();
     vCreateSensorTasks();

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "FreeRTOSConfig.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -15,14 +16,21 @@
 #include "utils/uartstdio.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
+#include "driverlib/interrupt.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
 
 static void prvMotorTask( void *pvParameters );
+void HallSensorIntEnable(void);
+void HallSensorGPIOConfig(void);
 
 void vCreateMotorTask(void)
 {
+    enableMotor();
+    HallSensorGPIOConfig();
+    HallSensorIntEnable();
+
     xTaskCreate(
         prvMotorTask,
         "motorTask",
@@ -38,52 +46,57 @@ static void prvMotorTask( void *pvParameters )
     uint16_t duty_value = 5;
     uint16_t period_value = 50;
 
-    /* Initialise the motors and set the duty cycle (speed) in microseconds */
     initMotorLib(period_value);
-    /* Set at >10% to get it to start */
     setDuty(duty_value);
 
-    /* Kick start the motor */
-    // Do an initial read of the hall effect sensor GPIO lines
-    // give the read hall effect sensor lines to updateMotor() to move the motor
-    // one single phase
-    // Recommendation is to use an interrupt on the hall effect sensors GPIO lines 
-    // So that the motor continues to be updated every time the GPIO lines change from high to low
-    // or low to high
-    // Include the updateMotor function call in the ISR to achieve this behaviour.
+    bool hall_a = GPIOPinRead(GPIO_PORTM_BASE, GPIO_PIN_3);
+    bool hall_b = GPIOPinRead(GPIO_PORTH_BASE, GPIO_PIN_2);
+    bool hall_c = GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_2);
+    updateMotor(hall_a, hall_b, hall_c);
 
-    /* Motor test - ramp up the duty cycle from 10% to 100%, than stop the motor */
-    for (;;)
-    {
-
-        if(duty_value>=period_value){
-            stopMotor(1);
-            continue;
-        }
-
-        setDuty(duty_value);
-        vTaskDelay(pdMS_TO_TICKS( 250 ));
-        duty_value++;
-
-    }
+    for(;;) {}
 }
 /*-----------------------------------------------------------*/
 
-
-/* Interrupt handlers */
-
 void HallSensorHandler(void)
 {
-    
-    //1. Read hall effect sensors
+    bool hall_a = GPIOPinRead(GPIO_PORTM_BASE, GPIO_PIN_3);
+    bool hall_b = GPIOPinRead(GPIO_PORTH_BASE, GPIO_PIN_2);
+    bool hall_c = GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_2);
 
-    //
-    //2. call update motor to change to next phase
-    //   updateMotor(??, ??, ??);
-    
-    //3. Clear interrupt
-    // GPIOIntClear(??);
+    GPIOIntClear(GPIO_PORTM_BASE, GPIO_PIN_3);
+    GPIOIntClear(GPIO_PORTH_BASE, GPIO_PIN_2);
+    GPIOIntClear(GPIO_PORTN_BASE, GPIO_PIN_2);
 
-    // Could also add speed sensing code here too.
+    updateMotor(hall_a, hall_b, hall_c);
+}
 
+void HallSensorGPIOConfig(void)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOM);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOH);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
+
+    GPIOPinTypeGPIOInput(GPIO_PORTM_BASE, GPIO_PIN_3);
+    GPIOPinTypeGPIOInput(GPIO_PORTH_BASE, GPIO_PIN_2);
+    GPIOPinTypeGPIOInput(GPIO_PORTN_BASE, GPIO_PIN_2);
+
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOM)) {}
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOH)) {}
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION)) {}
+}
+
+void HallSensorIntEnable(void)
+{
+    GPIOIntTypeSet(GPIO_PORTM_BASE, GPIO_PIN_3, GPIO_BOTH_EDGES);
+    GPIOIntTypeSet(GPIO_PORTH_BASE, GPIO_PIN_2, GPIO_BOTH_EDGES);
+    GPIOIntTypeSet(GPIO_PORTN_BASE, GPIO_PIN_2, GPIO_BOTH_EDGES);
+
+    GPIOIntEnable(GPIO_PORTM_BASE, GPIO_PIN_3);
+    GPIOIntEnable(GPIO_PORTH_BASE, GPIO_PIN_2);
+    GPIOIntEnable(GPIO_PORTN_BASE, GPIO_PIN_2);
+
+    IntEnable(INT_GPIOM);
+    IntEnable(INT_GPIOH);
+    IntEnable(INT_GPION);
 }
