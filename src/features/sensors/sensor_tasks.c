@@ -36,7 +36,9 @@ extern void vSpeedSensorTask(void *pvParameters);
 
 extern void prvSensorBMI160TimerInit(void);
 
-extern void xI2CHandler(void);
+extern void xI2C0Handler(void);
+extern void xI2C2Handler(void);
+
 extern void xOPT3001Handler(void);
 
 static void prvSensorOPT3001Init(void);
@@ -91,12 +93,18 @@ void vCreateSensorTasks(void)
 static void prvI2CInit(void)
 {
     //
-    // The I2C0 peripheral must be enabled before use.
+    // Enable I2C0 for Bootsetpack 1
     //
     SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C0);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
 
-    // Wait until both peripherals are fully clocked before touching their
+    //
+    // Enable I2C2 for Boosterback 2
+    //
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C2);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
+
+    // Wait until peripherals are fully clocked before touching their
     // registers. Skipping this causes intermittent failures on TM4C129x.
     while (!SysCtlPeripheralReady(SYSCTL_PERIPH_I2C0))
     {
@@ -104,13 +112,22 @@ static void prvI2CInit(void)
     while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOB))
     {
     }
+    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_I2C2))
+    {
+    }
+    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION))
+    {
+    }
 
     //
-    // Configure the pin muxing for I2C0 functions on port B2 and B3.
+    // Configure the pin muxing for I2C0 and I2C2 functions on port B2 and B3 and port N4 and N5.
     // This step is not necessary if your part does not support pin muxing.
     //
     GPIOPinConfigure(GPIO_PB2_I2C0SCL);
     GPIOPinConfigure(GPIO_PB3_I2C0SDA);
+
+    GPIOPinConfigure(GPIO_PN5_I2C2SCL);
+    GPIOPinConfigure(GPIO_PN4_I2C2SDA);
 
     //
     // Select the I2C function for these pins.  This function will also
@@ -121,14 +138,25 @@ static void prvI2CInit(void)
     GPIOPinTypeI2CSCL(GPIO_PORTB_BASE, GPIO_PIN_2);
     GPIOPinTypeI2C(GPIO_PORTB_BASE, GPIO_PIN_3);
 
+    GPIOPinTypeI2CSCL(GPIO_PORTN_BASE, GPIO_PIN_5);
+    GPIOPinTypeI2C(GPIO_PORTN_BASE, GPIO_PIN_4);
+
+    // Assign interrupt
     I2CMasterInitExpClk(I2C0_BASE, g_ui32SysClock, false);
-    I2CIntRegister(I2C0_BASE, xI2CHandler);
+    I2CIntRegister(I2C0_BASE, xI2C0Handler);
+
+    I2CMasterInitExpClk(I2C2_BASE, g_ui32SysClock, false);
+    I2CIntRegister(I2C2_BASE, xI2C2Handler);
 
     // Enable i2c interrupt sources
     I2CMasterIntEnableEx(I2C0_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
+    I2CMasterIntEnableEx(I2C2_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
 
     IntEnable(INT_I2C0); // should be in opt_task (thats what the semaphore example had)
+    IntEnable(INT_I2C2);
 
     I2CMasterTimeoutSet(I2C0_BASE, g_ui32SysClock / 10);
+    I2CMasterTimeoutSet(I2C2_BASE, g_ui32SysClock / 10);
+
     IntMasterEnable();
 }

@@ -81,15 +81,14 @@ extern void prvSensorBmi160Init(struct bmi160_dev *bmi160dev);
 extern int16_t getAbsoluteAccel(struct bmi160_sensor_data bmi160_accel);
 extern double getFilteredAccel(int16_t rawAccel);
 
+/*-----------------------------------------------------------*/
+
+
 /*
  * Called by main() to do example specific hardware configurations and to
  * create the Process Switch task.
  */
 void vCreateOPTTask(void);
-
-/*-----------------------------------------------------------*/
-
-/*-----------------------------------------------------------*/
 
 /*-----------------------------------------------------------*/
 
@@ -105,13 +104,14 @@ void vLightSensorTask(void *pvParameters)
     // UARTprintf("Testing OPT3001 Sensor:\n");
     // success = sensorOpt3001Test();
 
-    // Initialise sensor
+    // Initialise light sensor
     bool result = sensorOpt3001Init();
     if (!result)
     {
         UARTprintf("Sensor not init\n");
     }
 
+    // Intialise acceleration sensor
     prvSensorBmi160Init(&bmi160dev);
 
     UARTprintf("Sensor start\n");
