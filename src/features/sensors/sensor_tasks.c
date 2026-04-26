@@ -132,16 +132,3 @@ static void prvI2CInit(void)
     I2CMasterTimeoutSet(I2C0_BASE, g_ui32SysClock / 10);
     IntMasterEnable();
 }
-
-static void prvSensorOPT3001Init(void)
-{
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // Enable the Timer 0 Module.
-
-    TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
-    TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock / 2);    // set to ~ 2Hz
-
-    TimerIntRegister(TIMER0_BASE, TIMER_A, xOPT3001Handler); // set the timer interrupt vector
-    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);         // Enable the timer interrupt
-    TimerEnable(TIMER0_BASE, TIMER_A);                       // Enable the timers.
-    IntMasterEnable();                                       // Enable Master Interrupts
-}

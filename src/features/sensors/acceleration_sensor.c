@@ -22,6 +22,9 @@
 #include "motorlib.h"
 #include "features/priorities.h"
 
+#define ACCEL_SMOOTH 0.25
+#define ACCEL_PREV_NUM 8
+
 extern uint32_t g_ui32SysClock;
 
 extern void xBMI160Handler(void);
@@ -56,7 +59,7 @@ void prvSensorBmi160Init(struct bmi160_dev *bmi160dev)
     UARTprintf("Chip ID: 0x%02x\n", bmi160dev->chip_id); // should print 0xD1
 
     bmi160dev->accel_cfg.odr = BMI160_ACCEL_ODR_1600HZ;
-    bmi160dev->accel_cfg.range = BMI160_ACCEL_RANGE_2G;
+    bmi160dev->accel_cfg.range = BMI160_ACCEL_RANGE_8G;
     bmi160dev->accel_cfg.bw = BMI160_ACCEL_BW_NORMAL_AVG4;
     bmi160dev->accel_cfg.power = BMI160_ACCEL_NORMAL_MODE;
 
@@ -81,13 +84,13 @@ void prvSensorBmi160Init(struct bmi160_dev *bmi160dev)
         bmi160Test = bmi160_perform_self_test(BMI160_ACCEL_ONLY, bmi160dev);
     }
 
-    bmi160dev->accel_cfg.odr = BMI160_ACCEL_ODR_1600HZ;
-    bmi160dev->accel_cfg.range = BMI160_ACCEL_RANGE_2G;
+    bmi160dev->accel_cfg.odr = BMI160_ACCEL_ODR_100HZ;
+    bmi160dev->accel_cfg.range = BMI160_ACCEL_RANGE_8G;
     bmi160dev->accel_cfg.bw = BMI160_ACCEL_BW_NORMAL_AVG4;
     bmi160dev->accel_cfg.power = BMI160_ACCEL_NORMAL_MODE;
 
     // Configure gyro — required for self test
-    bmi160dev->gyro_cfg.odr = BMI160_GYRO_ODR_3200HZ;
+    bmi160dev->gyro_cfg.odr = BMI160_ACCEL_ODR_100HZ;
     bmi160dev->gyro_cfg.range = BMI160_GYRO_RANGE_2000_DPS;
     bmi160dev->gyro_cfg.bw = BMI160_GYRO_BW_NORMAL_MODE;
     bmi160dev->gyro_cfg.power = BMI160_GYRO_NORMAL_MODE;
@@ -95,4 +98,16 @@ void prvSensorBmi160Init(struct bmi160_dev *bmi160dev)
     bmi160_set_sens_conf(bmi160dev);
 
     bmi160dev->delay_ms(100); // allow sensors to ramp up
+}
+
+int16_t getAbsoluteAccel(struct bmi160_sensor_data bmi160_accel)
+{
+    return abs(bmi160_accel.x) + abs(bmi160_accel.y) + abs(bmi160_accel.z);
+}
+
+double getFilteredAccel(int16_t rawAccel)
+{
+    static double prev = 0;
+    prev = ACCEL_SMOOTH * rawAccel + (1 - ACCEL_SMOOTH) * prev;
+    return prev;
 }

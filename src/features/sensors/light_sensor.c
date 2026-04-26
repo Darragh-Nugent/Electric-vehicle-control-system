@@ -22,145 +22,46 @@
 #include "driverlib/interrupt.h"
 #include "drivers/bmi160.h"
 #include "drivers/i2cOptDriver.h"
+#include "driverlib/timer.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
 #include "features/sensors/sensor_events.h"
 
-/*-----------------------------------------------------------*/
+#define LIGHT_PREV_NUM 8
 
-/*
- * Current clock period
- */
+
 extern uint32_t g_ui32SysClock;
 
-/*
- * Time stamp global variable.
- */
-volatile uint32_t g_ui32TimeStamp;
-/*
- * Global variable to log the last GPIO button pressed.
- */
-volatile static uint32_t g_pui32ButtonPressed = NULL;
+extern void xOPT3001Handler(void);
 
-/*
- * The binary semaphore used by the switch ISR & task.
- */
-extern SemaphoreHandle_t xButtonSemaphore;
-
-extern EventGroupHandle_t xSensorEvents;
-
-/*-----------------------------------------------------------*/
-
-/*
- * The configuration struct for the acceleration sensor
- */
-struct bmi160_dev bmi160dev;
-
-/*
- * The struct for holding the acceleration data
- */
-struct bmi160_sensor_data bmi160_accel;
-
-/*-----------------------------------------------------------*/
-
-extern void xI2CHandler(void);
-
-/*
- * The tasks as described in the comments at the top of this file.
- */
-static void prvSensorOPT3001Init(void);
-extern void prvSensorBmi160Init(struct bmi160_dev *bmi160dev);
-
-/*
- * Called by main() to do example specific hardware configurations and to
- * create the Process Switch task.
- */
-void vCreateOPTTask(void);
-
-/*-----------------------------------------------------------*/
-
-/*-----------------------------------------------------------*/
-
-uint16_t findMovingAverage(uint16_t newValue, uint16_t *prevLux)
+void prvSensorOPT3001Init(void)
 {
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // Enable the Timer 0 Module.
+
+    TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock / 2);    // set to ~ 2Hz
+
+    TimerIntRegister(TIMER0_BASE, TIMER_A, xOPT3001Handler); // set the timer interrupt vector
+    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);         // Enable the timer interrupt
+    TimerEnable(TIMER0_BASE, TIMER_A);                       // Enable the timers.
+    IntMasterEnable();                                       // Enable Master Interrupts
+}
+
+uint16_t getFilteredLight(uint16_t newValue)
+{
+    static uint16_t prevLux[LIGHT_PREV_NUM] = { 0 };
+
     uint16_t sum = 0;
     // Shift the existing values to the left
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < LIGHT_PREV_NUM - 1; i++)
     {
         prevLux[i] = prevLux[i + 1];
         sum += prevLux[i];
     }
     // UARTprintf("After summation in moving average");
     // Add the new value to the end of the array
-    prevLux[7] = newValue;
+    prevLux[LIGHT_PREV_NUM - 1] = newValue;
 
-    return (sum + prevLux[7]) / 8;
-}
-
-/*-----------------------------------------------------------*/
-
-void vLightSensorTask(void *pvParameters)
-{
-    bool success = false;
-    uint16_t rawData = 0;
-    float convertedLux = 0;
-
-    // UARTprintf("Starting Light Sensor Task\n");
-
-    // // Test that sensor is set up correctly
-    // UARTprintf("Testing OPT3001 Sensor:\n");
-    // success = sensorOpt3001Test();
-
-    // Initialise sensor
-    bool result = sensorOpt3001Init();
-    if (!result)
-    {
-        UARTprintf("Sensor not init\n");
-    }
-
-    prvSensorBmi160Init(&bmi160dev);
-
-    UARTprintf("Sensor start\n");
-    // If the test fails, retry the full init + test sequence rather than
-    // retesting a sensor that was never successfully enabled.
-    while (!success)
-    {
-        SysCtlDelay(g_ui32SysClock);
-        UARTprintf("Test Failed, Trying again\n");
-        success = sensorOpt3001Test();
-    }
-
-    UARTprintf("All Tests Passed!\n\n");
-
-    uint32_t id = 0;
-
-    uint16_t prevLux[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-
-    uint32_t events;
-
-    // Loop Forever
-    while (1)
-    {
-        events = xEventGroupWaitBits(xSensorEvents, ALL_SENSOR_EVENTS, pdTRUE, pdFALSE, portMAX_DELAY);
-
-        // if (events & LIGHT_SENSOR_EVENT)
-        // {
-        //     // Read and convert OPT values
-        //     success = sensorOpt3001Read(&rawData);
-
-        //     if (success)
-        //     {
-        //         sensorOpt3001Convert(rawData, &convertedLux);
-        //         int lux_int = (int)convertedLux;
-        //         UARTprintf("Lux: %5d\n", lux_int);
-        //     }
-        // }
-        if (events & ACCEL_SENSOR_EVENT)
-        {
-            int8_t result = bmi160_get_sensor_data(BMI160_ACCEL_SEL, &bmi160_accel, NULL, &bmi160dev);
-            UARTprintf("result: %d\n", result); // check for errors
-            UARTprintf("ax:%d\tay:%d\taz:%d\n", bmi160_accel.x, bmi160_accel.y, bmi160_accel.z);
-        }
-    }
+    return (sum + prevLux[LIGHT_PREV_NUM - 1]) / LIGHT_PREV_NUM;
 }
