@@ -18,10 +18,9 @@
 #define SHT31_HEATEREN             0x306D
 #define SHT31_HEATERDIS            0x3066
 
-typedef bool (*sht31_read_fptr_t)(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
-typedef bool (*sht31_write_fptr_t)(uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len);
+typedef bool (*sht31_read_fptr_t)(uint8_t dev_addr, uint8_t *data, uint16_t len);
+typedef bool (*sht31_write_fptr_t)(uint8_t dev_addr, uint8_t *read_data, uint16_t len);
 typedef void (*sht31_delay_fptr_t)(uint32_t period);
-
 
 typedef struct  
 {
@@ -31,5 +30,12 @@ typedef struct
 
   sht31_delay_fptr_t delay;
 } sht31_dev;
+
+
+bool sht31_write_command(uint16_t command);
+void sht31_reset(void);
+bool sht31_init(sht31_dev new_config);
+uint8_t sht31_crc8(const uint8_t* data, int len);
+bool sht31_getTempHum(float *temp, float *humidity);
 
 #endif

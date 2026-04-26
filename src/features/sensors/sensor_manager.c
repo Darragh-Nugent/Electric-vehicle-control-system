@@ -22,6 +22,7 @@
 #include "driverlib/interrupt.h"
 #include "drivers/bmi160.h"
 #include "drivers/i2cOptDriver.h"
+#include "drivers/sht31.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
@@ -69,7 +70,7 @@ extern void xI2CHandler(void);
 /*
  * Functions for the light sensor
  */
-extern void prvSensorOPT3001Init(void);
+extern void prvSensorOPT3001TimerInit(void);
 uint16_t getFilteredLight(uint16_t newValue);
 
 /*-----------------------------------------------------------*/
@@ -82,6 +83,15 @@ extern int16_t getAbsoluteAccel(struct bmi160_sensor_data bmi160_accel);
 extern double getFilteredAccel(int16_t rawAccel);
 
 /*-----------------------------------------------------------*/
+
+/*
+* Functions for the temperature and humidity sensor
+*/
+extern void prvSensorSHT31Init(void);
+uint16_t getFilteredValue(uint16_t newValue);
+
+/*-----------------------------------------------------------*/
+
 
 
 /*
@@ -113,6 +123,9 @@ void vLightSensorTask(void *pvParameters)
 
     // Intialise acceleration sensor
     prvSensorBmi160Init(&bmi160dev);
+
+    //Intialise env sensor
+    prvSensorSHT31Init();
 
     UARTprintf("Sensor start\n");
     // If the test fails, retry the full init + test sequence rather than
@@ -161,6 +174,13 @@ void vLightSensorTask(void *pvParameters)
             //         Motor_EStop();
             //     }
             // }
+        }
+        if (events & TEMP_SENSOR_EVENT)
+        {
+            float temp;
+            float humidity;
+            bool result = sht31_getTempHum(&temp, &humidity);
+            UARTprintf("temp: %d,  humidity: %d", (int)(temp), (int)(humidity));
         }
     }
 }

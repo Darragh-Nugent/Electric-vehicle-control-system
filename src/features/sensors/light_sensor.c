@@ -35,7 +35,7 @@ extern uint32_t g_ui32SysClock;
 
 extern void xOPT3001Handler(void);
 
-void prvSensorOPT3001Init(void)
+void prvSensorOPT3001TimerInit(void)
 {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // Enable the Timer 0 Module.
 

@@ -35,13 +35,14 @@ extern void vPowerSensorTask(void *pvParameters);
 extern void vSpeedSensorTask(void *pvParameters);
 
 extern void prvSensorBMI160TimerInit(void);
+extern void prvSensorSHT31TimerInit(void);
 
 extern void xI2C0Handler(void);
 extern void xI2C2Handler(void);
 
 extern void xOPT3001Handler(void);
 
-static void prvSensorOPT3001Init(void);
+static void prvSensorOPT3001TimerInit(void);
 static void prvI2CInit(void);
 
 void vCreateSensorTasks(void);
@@ -69,8 +70,9 @@ void vCreateSensorTasks(void)
     xSensorEvents = xEventGroupCreate();
 
     prvI2CInit();
-    prvSensorOPT3001Init();
+    prvSensorOPT3001TimerInit();
     prvSensorBMI160TimerInit();
+    prvSensorSHT31TimerInit();
     // vTaskDelay(pdMS_TO_TICKS(1000)); // delay to ensure sensor is initialised before testing
 
     xTaskCreate(

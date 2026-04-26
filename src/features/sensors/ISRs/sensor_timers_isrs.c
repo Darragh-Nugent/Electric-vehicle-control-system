@@ -40,3 +40,9 @@ void xBMI160Handler(void)
     TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, ACCEL_SENSOR_EVENT);
 }
+
+void xSHT31Handler(void)
+{
+    TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+    xEventGroupSetBits(xSensorEvents, TEMP_SENSOR_EVENT);
+}

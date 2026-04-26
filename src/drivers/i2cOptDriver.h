@@ -23,8 +23,10 @@
 
 // ----------------------- Exported prototypes -----------------------
 extern bool I2C_write_reg(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data, uint16_t len);
+bool I2C_write_bytes(uint8_t ui8Addr, uint8_t *data, uint16_t len);
 extern int8_t I2C_write_BMI160(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data, uint16_t len);
 extern bool I2C_read_reg(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data, uint16_t len);
+bool I2C_read_bytes(uint8_t ui8Addr, uint8_t *data, uint16_t len);
 extern int8_t I2C_read_BMI160(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *Data, uint16_t len);
 
 
