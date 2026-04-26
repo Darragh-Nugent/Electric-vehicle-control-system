@@ -1,91 +1,70 @@
-// src/features/user_interface/gui_task.c
-//
-// The sole FreeRTOS task responsible for:
-//   1. GrLib context initialisation
-//   2. Screen manager initialisation
-//   3. Touch polling and screen switching
-//   4. Periodic screen_update() calls
-//
-// No LVGL. No lv_timer_handler(). No flush callbacks.
-#include <stdio.h>
-#include <stdlib.h>
-#include "gui_task.h"
-#include "../data.h"
-#include "grlib/grlib.h"
-#include "drivers/Kentec320x240x16_ssd2119_spi.h"
-#include "drivers/touch.h"                    // TivaWare touchscreen driver
-#include "grlib/widget.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
-#include <string.h>
+// #include "gui_task.h"
+// #include "../data.h"
+// #include "screens/scr_dashboard.h"
+// #include "grlib/widget.h"
+// #include "FreeRTOS.h"
+// #include "task.h"
+// #include "driver_lib/sysctl.h"
+// #include "driver_lib/udma.h"
+// #include "grlib.h"
+// #include "drivers/touch.h"
+// #include "drivers/Kentec320x240x16_ssd2119_spi.h"
+// #include "widget.h"
+// #include "semphr.h"
+// extern uint32_t g_ui32SysClock;
+// tContext sContext;
+// tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
+// SemaphoreHandle_t g_ui_mutex = NULL;
+// volatile UiData_t g_ui_data;
+// void vGuiTask(void *pvParams);
+// void vCreateGuiTask(void)
+// {
+//     Kentec320x240x16_SSD2119Init(g_ui32SysClock);
 
-void vGuiTask(void *pvParams);
-// ── Shared data (defined here, declared extern in ui_shared.h) ────────────
-volatile UiData_t g_ui_data;
-SemaphoreHandle_t g_ui_mutex;
+//     GrContextInit(&sContext, &g_sKentec320x240x16_SSD2119);
 
-// ── GrLib context (module-private) ────────────────────────────────────────
-static tContext s_context;
+//     g_ui_mutex = xSemaphoreCreateMutex();
+//     // configASSERT here will hard-fault before scheduler if mutex fails
+//     configASSERT(g_ui_mutex != NULL);
 
-// ── Touch state ───────────────────────────────────────────────────────────
-// Written by TouchCallBack (interrupt context), read by GUI task.
-volatile int16_t  g_touch_x       = 0;
-volatile int16_t  g_touch_y       = 0;
-volatile bool     g_touch_pressed = false;
+//     // DMA init
+//     SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
+//     SysCtlDelay(10);
+//     uDMAControlBaseSet(&psDMAControlTable[0]);
+//     uDMAEnable();
 
-// ── Touch callback (registered with TivaWare, called from interrupt) ──────
-void TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y) {
-    switch (ui32Message) {
-        case WIDGET_MSG_PTR_DOWN:
-        case WIDGET_MSG_PTR_MOVE:
-            g_touch_x       = (int16_t)i32X;
-            g_touch_y       = (int16_t)i32Y;
-            g_touch_pressed = true;
-            break;
-        case WIDGET_MSG_PTR_UP:
-            g_touch_pressed = false;
-            break;
-        default:
-            break;
-    }
-}
+//     // Touch init
+//     TouchScreenInit(g_ui32SysClock);
+//     TouchScreenCallbackSet(WidgetPointerMessage);
 
-// ── Touch → screen routing ────────────────────────────────────────────────
-// Called each GUI tick. Checks touch state and switches screens if a
-// navigation button was tapped.
+//     // Widget tree setup (ONE TIME ONLY)
+//     WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sDashboardPanel);
+//     WidgetPaint(WIDGET_ROOT);
+//     xTaskCreate(vGuiTask, "GUI", 1024, NULL, 2, NULL);
+// }
 
-#define NAV_Y    204   // matches scr_dashboard layout constant
-#define SCR_H    240
-#define SCR_W    320
+// void vGuiTask(void *pvParams)
+// {
+//     (void)pvParams;
+//     GrContextForegroundSet(&sContext, ClrRed);
+//     GrStringDraw(&sContext, "GUI TASK ALIVE", -1, 10, 10, 0);
+//     for (;;)
+//     {
+//         // // 1. Push latest state into UI layer
+//         // scr_dashboard_refresh();
 
-// ── GUI task ──────────────────────────────────────────────────────────────
+//         // // 2. Process touch + widget events
+//         // WidgetMessageQueueProcess();
 
-void vCreateGuiTask(void){
-    xTaskCreate(vGuiTask,    "GUI",    1024, NULL, 2, NULL);
-}
+//         // // 3. Let other tasks run
+//         // vTaskDelay(pdMS_TO_TICKS(40));
 
-void vGuiTask(void *pvParams) {
-    (void)pvParams;
+//         GrContextForegroundSet(&sContext, ClrWhite);
+//         GrRectFill(&sContext, &(tRectangle){0, 0, 319, 239});
 
-    // Shared data mutex
-    g_ui_mutex = xSemaphoreCreateMutex();
-    configASSERT(g_ui_mutex);
-    memset((void *)&g_ui_data, 0, sizeof(g_ui_data));
+//         GrContextForegroundSet(&sContext, ClrRed);
+//         GrStringDraw(&sContext, "TEST", -1, 10, 10, 0);
 
-    GrContextInit(&s_context, &g_sKentec320x240x16_SSD2119);
-
-    // Initialise all screens and show dashboard
-    screen_manager_init(&s_context);
-
-    for (;;) {
-
-        prv_handle_touch();
-        screen_update();
-
-        // 3. Yield — motor/sensor tasks run here
-        // 50ms = 20 Hz GUI refresh rate. Increase to 100ms if motor
-        // task needs more CPU; decrease to 20ms for snappier updates.
-        vTaskDelay(pdMS_TO_TICKS(50));
-    }
-}
+//         vTaskDelay(pdMS_TO_TICKS(1000));
+//     }
+// }

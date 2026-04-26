@@ -8,7 +8,7 @@
 typedef struct {
     // Motor
     float    motor_rpm;
-    float    motor_current_amps;
+    float    motor_current;
     uint8_t  motor_state;        // 0=idle 1=running 2=fault
 
     // Sensors (treat as opaque floats — your black boxes)

@@ -1,193 +1,188 @@
-// Dashboard — default home screen.
-// Shows summary values for all systems and navigation buttons.
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include "scr_dashboard.h"
-#include "../screen_manager.h"
+// // src/screens/scr_dashboard.c
+// //
+// // Dashboard panel — single APP_DRAWN canvas covering the content area.
+// //
+// //   - All drawing happens inside OnDashboardPaint(), called by the
+// //     widget system on the GUI task's WidgetMessageQueueProcess() call.
+// //   - Reads g_ui_data under mutex, snapshots, releases, then draws.
 
-// ── GrLib colour constants (RGB565 packed as 0x00RRGGBB for GrLib) ────────
-#define COL_BG          0x00000000   // black background
-#define COL_HEADER      0x00003366   // dark blue header bar
-#define COL_TEXT        0x00FFFFFF   // white text
-#define COL_LABEL       0x00AAAAAA   // grey label text
-#define COL_ACCENT      0x001199FF   // bright blue accent
-#define COL_WARN        0x00FF8800   // amber warning
-#define COL_FAULT       0x00FF2200   // red fault
-#define COL_BTN_BG      0x00223344   // dark button fill
-#define COL_BTN_BORDER  0x00336699   // button border
+// #include "scr_dashboard.h"
+// #include "../../data.h"
+// #include "grlib/grlib.h"
+// #include "grlib/widget.h"
+// #include "grlib/canvas.h"
+// #include "utils/ustdlib.h"
+// #include "drivers/Kentec320x240x16_ssd2119_spi.h"
 
-// ── Layout constants ──────────────────────────────────────────────────────
-#define SCR_W       320
-#define SCR_H       240
-#define HDR_H       28
-#define NAV_H       36
-#define NAV_Y       (SCR_H - NAV_H)  // 204
+// // ── Colours ───────────────────────────────────────────────────────────────
+// // Using GrLib named constants from grlib/grlib.h
+// #define COL_BG          ClrBlack
+// #define COL_HEADER_BG   ClrDarkBlue
+// #define COL_HEADER_TEXT ClrWhite
+// #define COL_LABEL       ClrSilver
+// #define COL_VALUE       ClrWhite
+// #define COL_ACCENT      ClrSkyBlue
+// #define COL_OK          ClrGreen
+// #define COL_FAULT       ClrRed
+// #define COL_WARN        ClrYellow
 
-// Value rows (3 rows between header and nav bar)
-#define ROW_H       ((NAV_Y - HDR_H) / 3)   // ~58 px each
-#define ROW1_Y      HDR_H
-#define ROW2_Y      (HDR_H + ROW_H)
-#define ROW3_Y      (HDR_H + ROW_H * 2)
+// // ── Layout ────────────────────────────────────────────────────────────────
+// // The canvas covers y=24 to y=189 (166px tall), matching the reference.
+// // x=0 to x=319 full width.
+// #define PANEL_X     0
+// #define PANEL_Y     24
+// #define PANEL_W     320
+// #define PANEL_H     166
 
-// Nav button widths (4 buttons across 320px with 2px gaps)
-#define NAV_BTNW    78
-#define NAV_BTN0_X  2
-#define NAV_BTN1_X  82
-#define NAV_BTN2_X  162
-#define NAV_BTN3_X  242
+// // Row layout inside the panel (y coords relative to screen, not panel)
+// #define ROW1_Y      36      // Motor RPM
+// #define ROW2_Y      90      // Motor current
+// #define ROW3_Y      144     // Status
 
-// ── Module state ──────────────────────────────────────────────────────────
-static tContext *s_ctx = NULL;
+// // Bar gauge geometry
+// #define BAR_X       10
+// #define BAR_W       280
+// #define BAR_H       12
 
-// Cached values — update() only redraws when these change
-static float    s_last_rpm     = -1.0f;
-static float    s_last_sensor_a = -1.0f;
-static uint32_t s_last_faults  = 0xFFFFFFFF;
-static uint8_t  s_last_state   = 0xFF;
+// // ── Widget declaration ────────────────────────────────────────────────────
+// // APP_DRAWN: widget system calls OnDashboardPaint() to render content.
+// // Parent = NULL (added to tree by WidgetAdd in main.c).
+// Canvas(g_sDashboardPanel,   // widget variable name
+//        NULL,                // parent (set when added to tree)
+//        NULL,                // next sibling
+//        NULL,                // first child
+//        &g_sKentec320x240x16_SSD2119,
+//        PANEL_X, PANEL_Y,
+//        PANEL_W, PANEL_H,
+//        CANVAS_STYLE_APP_DRAWN,
+//        COL_BG,              // fill colour (used if CANVAS_STYLE_FILL set)
+//        0, 0, 0, 0, 0,
+//        OnDashboardPaint);   // paint callback
 
-// ── Private helpers ───────────────────────────────────────────────────────
+// // ── Private helpers ───────────────────────────────────────────────────────
 
-static void prv_draw_header(void) {
-    tRectangle r = { 0, 0, SCR_W - 1, HDR_H - 1 };
-    GrContextForegroundSet(s_ctx, COL_HEADER);
-    GrRectFill(s_ctx, &r);
+// // Draw a horizontal bar gauge.
+// // filled_w = number of pixels to fill (pre-computed by caller).
+// static void prv_draw_bar(tContext *ctx,
+//                           int16_t x, int16_t y,
+//                           int16_t total_w, int16_t h,
+//                           int16_t filled_w,
+//                           uint32_t fill_col) {
+//     tRectangle r;
 
-    GrContextForegroundSet(s_ctx, COL_TEXT);
-    GrContextFontSet(s_ctx, g_psFontCmss14b);
-    GrStringDraw(s_ctx, "System Dashboard", -1, 8, 7, false);
-}
+//     // Background
+//     r.i16XMin = x;
+//     r.i16YMin = y;
+//     r.i16XMax = x + total_w - 1;
+//     r.i16YMax = y + h - 1;
+//     GrContextForegroundSet(ctx, ClrDarkGray);
+//     GrRectFill(ctx, &r);
 
-static void prv_draw_nav_buttons(void) {
-    // Static navigation bar — drawn once as part of full draw()
-    static const char *labels[] = { "Home", "Motor", "Sensors", "Alerts" };
-    int xs[] = { NAV_BTN0_X, NAV_BTN1_X, NAV_BTN2_X, NAV_BTN3_X };
+//     // Fill
+//     if (filled_w > 0) {
+//         r.i16XMax = x + filled_w - 1;
+//         GrContextForegroundSet(ctx, fill_col);
+//         GrRectFill(ctx, &r);
+//     }
 
-    GrContextFontSet(s_ctx, g_psFontCmss12);
+//     // Border
+//     r.i16XMin = x;
+//     r.i16XMax = x + total_w - 1;
+//     GrContextForegroundSet(ctx, ClrGray);
+//     GrRectDraw(ctx, &r);
+// }
 
-    for (int i = 0; i < 4; i++) {
-        tRectangle btn = {
-            xs[i], NAV_Y,
-            xs[i] + NAV_BTNW - 1, SCR_H - 1
-        };
+// // ── Paint callback ────────────────────────────────────────────────────────
+// // Called by WidgetMessageQueueProcess() — runs in the GUI task context.
+// // The widget system clips drawing to the canvas bounds automatically.
 
-        // Highlight active screen button
-        GrContextForegroundSet(s_ctx, (i == 0) ? COL_ACCENT : COL_BTN_BG);
-        GrRectFill(s_ctx, &btn);
+// void OnDashboardPaint(tWidget *psWidget, tContext *psContext) {
+//     char buf[24];
+//     UiData_t snap;
+//     tRectangle r;
 
-        GrContextForegroundSet(s_ctx, COL_BTN_BORDER);
-        GrRectDraw(s_ctx, &btn);
+//     // ── 1. Snapshot shared data ───────────────────────────────────────
+//     xSemaphoreTake(g_ui_mutex, portMAX_DELAY);
+//     snap.motor_rpm     = g_ui_data.motor_rpm;
+//     snap.motor_current = g_ui_data.motor_current;
+//     snap.motor_state   = g_ui_data.motor_state;
+//     snap.fault_flags   = g_ui_data.fault_flags;
+//     xSemaphoreGive(g_ui_mutex);
 
-        GrContextForegroundSet(s_ctx, COL_TEXT);
-        // Centre the label inside the button horizontally
-        int lw = GrStringWidthGet(s_ctx, labels[i], -1);
-        int lx = xs[i] + (NAV_BTNW - lw) / 2;
-        GrStringDraw(s_ctx, labels[i], -1, lx, NAV_Y + 11, false);
-    }
-}
+//     // ── 2. Clear canvas ───────────────────────────────────────────────
+//     r.i16XMin = PANEL_X;
+//     r.i16YMin = PANEL_Y;
+//     r.i16XMax = PANEL_X + PANEL_W - 1;
+//     r.i16YMax = PANEL_Y + PANEL_H - 1;
+//     GrContextForegroundSet(psContext, COL_BG);
+//     GrRectFill(psContext, &r);
 
-// Draw a labelled value row.
-// label : left-aligned small grey text
-// value : right-aligned large white text
-static void prv_draw_value_row(int row_y, const char *label, const char *value) {
-    // Clear the row
-    tRectangle r = { 0, row_y, SCR_W - 1, row_y + ROW_H - 2 };
-    GrContextForegroundSet(s_ctx, COL_BG);
-    GrRectFill(s_ctx, &r);
+//     // ── 3. Motor RPM ──────────────────────────────────────────────────
+//     GrContextFontSet(psContext, &g_sFontCm12);
+//     GrContextForegroundSet(psContext, COL_LABEL);
+//     GrStringDraw(psContext, "Motor Speed", -1, BAR_X, ROW1_Y, false);
 
-    // Separator line
-    GrContextForegroundSet(s_ctx, COL_BTN_BORDER);
-    GrLineDrawH(s_ctx, 0, SCR_W - 1, row_y + ROW_H - 1);
+//     // Format: cast to int
+//     int32_t irpm = (int32_t)snap.motor_rpm;
+//     usprintf(buf, "%d RPM", irpm);
 
-    // Label (small, grey, top-left of row)
-    GrContextFontSet(s_ctx, g_psFontCmss12);
-    GrContextForegroundSet(s_ctx, COL_LABEL);
-    GrStringDraw(s_ctx, label, -1, 8, row_y + 6, false);
+//     GrContextFontSet(psContext, &g_sFontCm20);
+//     GrContextForegroundSet(psContext, COL_VALUE);
+//     GrStringDraw(psContext, buf, -1, BAR_X, ROW1_Y + 16, false);
 
-    // Value (larger, white, vertically centred in row)
-    GrContextFontSet(s_ctx, g_psFontCmss18b);
-    GrContextForegroundSet(s_ctx, COL_TEXT);
-    int vw = GrStringWidthGet(s_ctx, value, -1);
-    GrStringDraw(s_ctx, value, -1, SCR_W - vw - 10, row_y + (ROW_H / 2) - 7, false);
-}
+//     // RPM bar (max 3000?)
+//     int16_t rpm_fill = (int16_t)((snap.motor_rpm / 3000.0f) * BAR_W);
+//     if (rpm_fill > BAR_W) rpm_fill = BAR_W;
+//     if (rpm_fill < 0)     rpm_fill = 0;
+//     prv_draw_bar(psContext, BAR_X, ROW1_Y + 42, BAR_W, BAR_H,
+//                  rpm_fill, COL_ACCENT);
 
-// ── Public API ────────────────────────────────────────────────────────────
+//     // ── 4. Motor current ──────────────────────────────────────────────
+//     GrContextFontSet(psContext, &g_sFontCm12);
+//     GrContextForegroundSet(psContext, COL_LABEL);
+//     GrStringDraw(psContext, "Current", -1, BAR_X, ROW2_Y, false);
 
-void scr_dashboard_init(tContext *ctx) {
-    s_ctx = ctx;
-    // Reset cache so first update() always draws
-    s_last_rpm      = -1.0f;
-    s_last_sensor_a  = -1.0f;
-    s_last_faults   = 0xFFFFFFFF;
-    s_last_state    = 0xFF;
-}
+//     // 7.35 A → display as "7.3 A"
+//     int32_t amps_whole = (int32_t)snap.motor_current;
+//     int32_t amps_frac  = (int32_t)((snap.motor_current - (float)amps_whole) * 10.0f);
+//     usprintf(buf, "%d.%d A", amps_whole, amps_frac);
 
-void scr_dashboard_draw(void) {
-    // Full screen clear
-    tRectangle full = { 0, 0, SCR_W - 1, SCR_H - 1 };
-    GrContextForegroundSet(s_ctx, COL_BG);
-    GrRectFill(s_ctx, &full);
+//     GrContextFontSet(psContext, &g_sFontCm20);
+//     uint32_t cur_col = (snap.motor_current > 8.0f) ? COL_WARN : COL_VALUE;
+//     if (snap.motor_current > 12.0f) cur_col = COL_FAULT;
+//     GrContextForegroundSet(psContext, cur_col);
+//     GrStringDraw(psContext, buf, -1, BAR_X, ROW2_Y + 16, false);
 
-    prv_draw_header();
-    prv_draw_nav_buttons();
+//     // Current bar (max 15 A)
+//     int16_t cur_fill = (int16_t)((snap.motor_current / 15.0f) * BAR_W);
+//     if (cur_fill > BAR_W) cur_fill = BAR_W;
+//     if (cur_fill < 0)     cur_fill = 0;
+//     prv_draw_bar(psContext, BAR_X, ROW2_Y + 42, BAR_W, BAR_H,
+//                  cur_fill, cur_col);
 
-    // Draw all value rows with current data (force full repaint)
-    s_last_rpm     = -1.0f;
-    s_last_sensor_a = -1.0f;
-    s_last_faults  = 0xFFFFFFFF;
-    s_last_state   = 0xFF;
-    scr_dashboard_update();
-}
+//     // ── 5. Status row ─────────────────────────────────────────────────
+//     GrContextFontSet(psContext, &g_sFontCm12);
+//     GrContextForegroundSet(psContext, COL_LABEL);
+//     GrStringDraw(psContext, "Status", -1, BAR_X, ROW3_Y, false);
 
-void scr_dashboard_update(void) {
-    char buf[32];
-    UiData_t snap;
+//     GrContextFontSet(psContext, &g_sFontCm18);
+//     if (snap.fault_flags != 0) {
+//         GrContextForegroundSet(psContext, COL_FAULT);
+//         GrStringDraw(psContext, "FAULT", -1, BAR_X, ROW3_Y + 16, false);
+//     } else {
+//         static const char *state_str[] = { "IDLE", "RUNNING", "FAULT" };
+//         static const uint32_t state_col[] = { COL_LABEL, COL_OK, COL_FAULT };
+//         uint8_t st = (snap.motor_state < 3) ? snap.motor_state : 0;
+//         GrContextForegroundSet(psContext, state_col[st]);
+//         GrStringDraw(psContext, state_str[st], -1, BAR_X, ROW3_Y + 16, false);
+//     }
+// }
 
-    // Snapshot shared data under mutex — copy then release immediately
-    UI_LOCK();
-    snap = (UiData_t){ g_ui_data.motor_rpm,
-                       g_ui_data.motor_current_amps,
-                       g_ui_data.motor_state,
-                       g_ui_data.sensor_a,
-                       g_ui_data.sensor_b,
-                       g_ui_data.sensor_c,
-                       g_ui_data.fault_flags };
-    UI_UNLOCK();
+// // ── Refresh request ───────────────────────────────────────────────────────
+// // Called from the GUI task each tick to queue a repaint.
+// // WidgetPaint() posts to the widget message queue — it does not draw
+// // immediately. Drawing happens on the next WidgetMessageQueueProcess() call.
 
-    // Row 1: Motor RPM — only redraw if value changed
-    if (snap.motor_rpm != s_last_rpm || snap.motor_state != s_last_state) {
-        if (snap.motor_state == 2) {
-            GrContextForegroundSet(s_ctx, COL_FAULT);
-        }
-        snprintf(buf, sizeof(buf), "%.0f RPM", snap.motor_rpm);
-        prv_draw_value_row(ROW1_Y, "Motor speed", buf);
-        s_last_rpm   = snap.motor_rpm;
-        s_last_state = snap.motor_state;
-    }
-
-    // Row 2: Sensor A
-    if (snap.sensor_a != s_last_sensor_a) {
-        snprintf(buf, sizeof(buf), "%.1f", snap.sensor_a);
-        prv_draw_value_row(ROW2_Y, "Sensor A", buf);
-        s_last_sensor_a = snap.sensor_a;
-    }
-
-    // Row 3: Fault status
-    if (snap.fault_flags != s_last_faults) {
-        if (snap.fault_flags == 0) {
-            prv_draw_value_row(ROW3_Y, "Status", "OK");
-        } else {
-            snprintf(buf, sizeof(buf), "FAULT 0x%02X", (unsigned)snap.fault_flags);
-            // Override colour for fault row
-            GrContextForegroundSet(s_ctx, COL_FAULT);
-            GrContextFontSet(s_ctx, g_psFontCmss18b);
-            tRectangle r = { 0, ROW3_Y, SCR_W - 1, ROW3_Y + ROW_H - 2 };
-            GrContextForegroundSet(s_ctx, COL_BG);
-            GrRectFill(s_ctx, &r);
-            GrContextForegroundSet(s_ctx, COL_FAULT);
-            GrStringDraw(s_ctx, buf, -1, 8, ROW3_Y + (ROW_H / 2) - 7, false);
-        }
-        s_last_faults = snap.fault_flags;
-    }
-}
+// void scr_dashboard_refresh(void) {
+//     WidgetPaint((tWidget *)&g_sDashboardPanel);
+// }

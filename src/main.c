@@ -23,12 +23,16 @@
 #include "utils/uartstdio.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
+#include "driver_lib/udma.h" //
 
 #include "features/user_interface/gui_task.h"
 
 // Motor lib
 #include <motorlib.h>
-
+#include "grlib.h"
+#include "drivers/Kentec320x240x16_ssd2119_spi.h"
+#include "drivers/touch.h"
+#include "widget.h"
 /*-----------------------------------------------------------*/
 
 /* The system clock frequency. */
@@ -44,7 +48,7 @@ static void prvConfigureUART(void);
 extern void vCreateMotorTask(void);
 extern void vCreateSensorTasks(void);
 extern void vCreateGuiTask(void);
-
+extern void vCreateDemoTask(void);
 static void prvConfigureHallInts(void);
 
 /*-----------------------------------------------------------*/
@@ -55,7 +59,7 @@ int main(void)
 
     vCreateMotorTask();
     vCreateSensorTasks();
-    vCreateGuiTask();
+    vCreateDemoTask();
 
     vTaskStartScheduler();
 
@@ -89,7 +93,6 @@ static void prvConfigureUART(void)
     UARTStdioConfig(0, 9600, 16000000);
 }
 /*-----------------------------------------------------------*/
-
 static void prvSetupHardware(void)
 {
     /* Run from the PLL at configCPU_CLOCK_HZ MHz. */
