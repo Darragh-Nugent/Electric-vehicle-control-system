@@ -10,7 +10,7 @@ volatile bool boolTouchPressed;
 
 // Handles touchscreen events and stores the current touch state
 // Called by Kentec/TivaWare interrupt
-void TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y)
+int32_t TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y)
 {
     switch (ui32Message)
     {
@@ -26,6 +26,7 @@ void TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y)
     default:
         break;
     }
+    return 0;
 }
 
 // LVGL read callback - every scan period

@@ -30,5 +30,6 @@ extern void LED_backlight_ON(void);
 extern void LED_backlight_OFF(void);
 extern void Kentec320x240x16_SSD2119Init(uint32_t ui32SysClock);
 extern const tDisplay g_sKentec320x240x16_SSD2119;
-
+void SSD2119_WriteCommand(uint16_t cmd);
+void SSD2119_WriteData(uint16_t data);
 #endif // __KENTEC320X240X16_SSD2119_SPI_H__

@@ -5,5 +5,5 @@
 #include "grlib/widget.h"
 
 
-void TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y);
+int32_t TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y);
 void touch_driver_init(void);

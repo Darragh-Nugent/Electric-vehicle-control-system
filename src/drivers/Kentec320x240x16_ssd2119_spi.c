@@ -6,20 +6,20 @@
 //
 // Copyright (c) 2016-2017 Texas Instruments Incorporated.  All rights reserved.
 // Software License Agreement
-// 
+//
 // Texas Instruments (TI) is supplying this software for use solely and
 // exclusively on TI's microcontroller products. The software is owned by
 // TI and/or its suppliers, and is protected under applicable copyright
 // laws. You may not combine this software with "viral" open-source
 // software in order to form a larger program.
-// 
+//
 // THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
 // NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
 // NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 // A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
 // CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
 // DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
+//
 // This is part of revision 2.1.4.178 of the EK-TM4C1294XL Firmware Package.
 //
 //*****************************************************************************
@@ -75,8 +75,8 @@
 // If no screen orientation is selected, "landscape flip" mode will be used.
 //
 //*****************************************************************************
-#if ! defined(PORTRAIT) && ! defined(PORTRAIT_FLIP) && \
-    ! defined(LANDSCAPE) && ! defined(LANDSCAPE_FLIP)
+#if !defined(PORTRAIT) && !defined(PORTRAIT_FLIP) && \
+    !defined(LANDSCAPE) && !defined(LANDSCAPE_FLIP)
 #define LANDSCAPE
 #endif
 
@@ -94,7 +94,7 @@
 #endif
 #ifdef LANDSCAPE
 #define HORIZ_DIRECTION 0x00
-#define VERT_DIRECTION  0x08
+#define VERT_DIRECTION 0x08
 #define MAPPED_X(x, y) (319 - (x))
 #define MAPPED_Y(x, y) (239 - (y))
 #endif
@@ -106,7 +106,7 @@
 #endif
 #ifdef LANDSCAPE_FLIP
 #define HORIZ_DIRECTION 0x30
-#define VERT_DIRECTION  0x38
+#define VERT_DIRECTION 0x38
 #define MAPPED_X(x, y) (x)
 #define MAPPED_Y(x, y) (y)
 #endif
@@ -116,66 +116,66 @@
 // Various internal SSD2119 registers name labels
 //
 //*****************************************************************************
-#define SSD2119_DEVICE_CODE_READ_REG  0x00
-#define SSD2119_OSC_START_REG         0x00
-#define SSD2119_OUTPUT_CTRL_REG       0x01
+#define SSD2119_DEVICE_CODE_READ_REG 0x00
+#define SSD2119_OSC_START_REG 0x00
+#define SSD2119_OUTPUT_CTRL_REG 0x01
 #define SSD2119_LCD_DRIVE_AC_CTRL_REG 0x02
-#define SSD2119_PWR_CTRL_1_REG        0x03
-#define SSD2119_DISPLAY_CTRL_REG      0x07
-#define SSD2119_FRAME_CYCLE_CTRL_REG  0x0b
-#define SSD2119_PWR_CTRL_2_REG        0x0c
-#define SSD2119_PWR_CTRL_3_REG        0x0d
-#define SSD2119_PWR_CTRL_4_REG        0x0e
-#define SSD2119_GATE_SCAN_START_REG   0x0f
-#define SSD2119_SLEEP_MODE_1_REG      0x10
-#define SSD2119_ENTRY_MODE_REG        0x11
-#define SSD2119_SLEEP_MODE_2_REG      0x12
-#define SSD2119_GEN_IF_CTRL_REG       0x15
-#define SSD2119_PWR_CTRL_5_REG        0x1e
-#define SSD2119_RAM_DATA_REG          0x22
-#define SSD2119_FRAME_FREQ_REG        0x25
-#define SSD2119_ANALOG_SET_REG        0x26
-#define SSD2119_VCOM_OTP_1_REG        0x28
-#define SSD2119_VCOM_OTP_2_REG        0x29
-#define SSD2119_GAMMA_CTRL_1_REG      0x30
-#define SSD2119_GAMMA_CTRL_2_REG      0x31
-#define SSD2119_GAMMA_CTRL_3_REG      0x32
-#define SSD2119_GAMMA_CTRL_4_REG      0x33
-#define SSD2119_GAMMA_CTRL_5_REG      0x34
-#define SSD2119_GAMMA_CTRL_6_REG      0x35
-#define SSD2119_GAMMA_CTRL_7_REG      0x36
-#define SSD2119_GAMMA_CTRL_8_REG      0x37
-#define SSD2119_GAMMA_CTRL_9_REG      0x3a
-#define SSD2119_GAMMA_CTRL_10_REG     0x3b
-#define SSD2119_V_RAM_POS_REG         0x44
-#define SSD2119_H_RAM_START_REG       0x45
-#define SSD2119_H_RAM_END_REG         0x46
-#define SSD2119_X_RAM_ADDR_REG        0x4e
-#define SSD2119_Y_RAM_ADDR_REG        0x4f
+#define SSD2119_PWR_CTRL_1_REG 0x03
+#define SSD2119_DISPLAY_CTRL_REG 0x07
+#define SSD2119_FRAME_CYCLE_CTRL_REG 0x0b
+#define SSD2119_PWR_CTRL_2_REG 0x0c
+#define SSD2119_PWR_CTRL_3_REG 0x0d
+#define SSD2119_PWR_CTRL_4_REG 0x0e
+#define SSD2119_GATE_SCAN_START_REG 0x0f
+#define SSD2119_SLEEP_MODE_1_REG 0x10
+#define SSD2119_ENTRY_MODE_REG 0x11
+#define SSD2119_SLEEP_MODE_2_REG 0x12
+#define SSD2119_GEN_IF_CTRL_REG 0x15
+#define SSD2119_PWR_CTRL_5_REG 0x1e
+#define SSD2119_RAM_DATA_REG 0x22
+#define SSD2119_FRAME_FREQ_REG 0x25
+#define SSD2119_ANALOG_SET_REG 0x26
+#define SSD2119_VCOM_OTP_1_REG 0x28
+#define SSD2119_VCOM_OTP_2_REG 0x29
+#define SSD2119_GAMMA_CTRL_1_REG 0x30
+#define SSD2119_GAMMA_CTRL_2_REG 0x31
+#define SSD2119_GAMMA_CTRL_3_REG 0x32
+#define SSD2119_GAMMA_CTRL_4_REG 0x33
+#define SSD2119_GAMMA_CTRL_5_REG 0x34
+#define SSD2119_GAMMA_CTRL_6_REG 0x35
+#define SSD2119_GAMMA_CTRL_7_REG 0x36
+#define SSD2119_GAMMA_CTRL_8_REG 0x37
+#define SSD2119_GAMMA_CTRL_9_REG 0x3a
+#define SSD2119_GAMMA_CTRL_10_REG 0x3b
+#define SSD2119_V_RAM_POS_REG 0x44
+#define SSD2119_H_RAM_START_REG 0x45
+#define SSD2119_H_RAM_END_REG 0x46
+#define SSD2119_X_RAM_ADDR_REG 0x4e
+#define SSD2119_Y_RAM_ADDR_REG 0x4f
 
-#define ENTRY_MODE_DEFAULT      0x6830
-#define MAKE_ENTRY_MODE(x)      ((ENTRY_MODE_DEFAULT & 0xff00) | (x))
+#define ENTRY_MODE_DEFAULT 0x6830
+#define MAKE_ENTRY_MODE(x) ((ENTRY_MODE_DEFAULT & 0xff00) | (x))
 
 //*****************************************************************************
 //
 // Defines for the pins that are used to communicate with the SSD2119.
 //
 //*****************************************************************************
-#define LCD_CS_PERIPH           SYSCTL_PERIPH_GPIOP
-#define LCD_CS_BASE             GPIO_PORTP_BASE
-#define LCD_CS_PIN              GPIO_PIN_3
+#define LCD_CS_PERIPH SYSCTL_PERIPH_GPIOP
+#define LCD_CS_BASE GPIO_PORTP_BASE
+#define LCD_CS_PIN GPIO_PIN_3
 
-#define LCD_DC_PERIPH           SYSCTL_PERIPH_GPIOP
-#define LCD_DC_BASE             GPIO_PORTP_BASE
-#define LCD_DC_PIN              GPIO_PIN_4
+#define LCD_DC_PERIPH SYSCTL_PERIPH_GPIOP
+#define LCD_DC_BASE GPIO_PORTP_BASE
+#define LCD_DC_PIN GPIO_PIN_4
 
-#define LCD_RST_PERIPH          SYSCTL_PERIPH_GPIOK
-#define LCD_RST_BASE            GPIO_PORTK_BASE
-#define LCD_RST_PIN             GPIO_PIN_6
+#define LCD_RST_PERIPH SYSCTL_PERIPH_GPIOK
+#define LCD_RST_BASE GPIO_PORTK_BASE
+#define LCD_RST_PIN GPIO_PIN_6
 
-#define LCD_LED_PERIPH          SYSCTL_PERIPH_GPIOG
-#define LCD_LED_BASE            GPIO_PORTG_BASE
-#define LCD_LED_PIN             GPIO_PIN_1
+#define LCD_LED_PERIPH SYSCTL_PERIPH_GPIOG
+#define LCD_LED_BASE GPIO_PORTG_BASE
+#define LCD_LED_PIN GPIO_PIN_1
 
 //*****************************************************************************
 //
@@ -183,15 +183,15 @@
 // the SSD2119.
 //
 //*****************************************************************************
-#define LCD_SSI_PERIPH          SYSCTL_PERIPH_SSI3
-#define LCD_SSI_BASE            SSI3_BASE
+#define LCD_SSI_PERIPH SYSCTL_PERIPH_SSI3
+#define LCD_SSI_BASE SSI3_BASE
 
-#define LCD_SSI_GPIO_PERIPH     SYSCTL_PERIPH_GPIOQ
-#define LCD_SSI_GPIO_BASE       GPIO_PORTQ_BASE
-#define LCD_SSI_CLK_CFG         GPIO_PQ0_SSI3CLK
-#define LCD_SSI_TX_CFG          GPIO_PQ2_SSI3XDAT0
-#define LCD_SSI_CLK_PIN         GPIO_PIN_0
-#define LCD_SSI_TX_PIN          GPIO_PIN_2
+#define LCD_SSI_GPIO_PERIPH SYSCTL_PERIPH_GPIOQ
+#define LCD_SSI_GPIO_BASE GPIO_PORTQ_BASE
+#define LCD_SSI_CLK_CFG GPIO_PQ0_SSI3CLK
+#define LCD_SSI_TX_CFG GPIO_PQ2_SSI3XDAT0
+#define LCD_SSI_CLK_PIN GPIO_PIN_0
+#define LCD_SSI_TX_PIN GPIO_PIN_2
 
 //*****************************************************************************
 //
@@ -216,9 +216,9 @@
 // \return Returns the display-driver specific color.
 //
 //*****************************************************************************
-#define DPYCOLORTRANSLATE(c)    ((((c) & 0x00f80000) >> 8) |               \
-                                 (((c) & 0x0000fc00) >> 5) |               \
-                                 (((c) & 0x000000f8) >> 3))
+#define DPYCOLORTRANSLATE(c) ((((c) & 0x00f80000) >> 8) | \
+                              (((c) & 0x0000fc00) >> 5) | \
+                              (((c) & 0x000000f8) >> 3))
 
 //*****************************************************************************
 //
@@ -256,7 +256,7 @@ WriteDataSPI(uint16_t ui16Data)
     // Write the most significant byte of the data to the bus.
     //
     pui16Data[0] = (ui16Data >> 8);
-    
+
     //
     // Write the least significant byte of the data to the bus.
     //
@@ -271,7 +271,9 @@ WriteDataSPI(uint16_t ui16Data)
     //
     // Wait until SSI0 is done transferring all the data in the transmit FIFO.
     //
-    while(SSIBusy(LCD_SSI_BASE)){ }
+    while (SSIBusy(LCD_SSI_BASE))
+    {
+    }
 
     GPIOPinWrite(LCD_CS_BASE, LCD_CS_PIN, LCD_CS_PIN);
 }
@@ -290,7 +292,7 @@ WriteCommandSPI(uint16_t ui16Data)
     // Write the most significant byte of the data to the bus.
     //
     pui16Data[0] = 0;
-    
+
     //
     // Write the least significant byte of the data to the bus.
     //
@@ -301,11 +303,13 @@ WriteCommandSPI(uint16_t ui16Data)
 
     SSIDataPut(LCD_SSI_BASE, pui16Data[0]);
     SSIDataPut(LCD_SSI_BASE, pui16Data[1]);
-    
+
     //
     // Wait until SSI0 is done transferring all the data in the transmit FIFO.
     //
-    while(SSIBusy(LCD_SSI_BASE)){ }
+    while (SSIBusy(LCD_SSI_BASE))
+    {
+    }
 
     GPIOPinWrite(LCD_CS_BASE, LCD_CS_PIN, LCD_CS_PIN);
 }
@@ -388,7 +392,7 @@ InitSPILCDInterface(uint32_t ui32SysClock)
     // the different SPI modes.
     //
     SSIConfigSetExpClk(LCD_SSI_BASE, ui32SysClock, SSI_FRF_MOTO_MODE_0,
-            SSI_MODE_MASTER, 15000000, 8);
+                       SSI_MODE_MASTER, 15000000, 8);
 
     //
     // Enable the SSI3 module.
@@ -404,10 +408,9 @@ InitSPILCDInterface(uint32_t ui32SysClock)
     // The "non-blocking" function checks if there is any data in the receive
     // FIFO and does not "hang" if there isn't.
     //
-    while(SSIDataGetNonBlocking(LCD_SSI_BASE, &pui32DataRx[0]))
+    while (SSIDataGetNonBlocking(LCD_SSI_BASE, &pui32DataRx[0]))
     {
     }
-
 }
 
 //*****************************************************************************
@@ -422,8 +425,7 @@ InitSPILCDInterface(uint32_t ui32SysClock)
 //! \return None.
 //
 //*****************************************************************************
-void
-Kentec320x240x16_SSD2119Init(uint32_t ui32SysClock)
+void Kentec320x240x16_SSD2119Init(uint32_t ui32SysClock)
 {
     uint32_t ui32ClockMS, ui32Count;
 
@@ -544,11 +546,11 @@ Kentec320x240x16_SSD2119Init(uint32_t ui32SysClock)
     // access to the full display buffer.
     //
     WriteCommandSPI(SSD2119_V_RAM_POS_REG);
-    WriteDataSPI((LCD_VERTICAL_MAX-1) << 8);
+    WriteDataSPI((LCD_VERTICAL_MAX - 1) << 8);
     WriteCommandSPI(SSD2119_H_RAM_START_REG);
     WriteDataSPI(0x0000);
     WriteCommandSPI(SSD2119_H_RAM_END_REG);
-    WriteDataSPI(LCD_HORIZONTAL_MAX-1);
+    WriteDataSPI(LCD_HORIZONTAL_MAX - 1);
     WriteCommandSPI(SSD2119_X_RAM_ADDR_REG);
     WriteDataSPI(0x00);
     WriteCommandSPI(SSD2119_Y_RAM_ADDR_REG);
@@ -558,7 +560,7 @@ Kentec320x240x16_SSD2119Init(uint32_t ui32SysClock)
     // Clear the contents of the display buffer.
     //
     WriteCommandSPI(SSD2119_RAM_DATA_REG);
-    for(ui32Count = 0; ui32Count < (320 * 240); ui32Count++)
+    for (ui32Count = 0; ui32Count < (320 * 240); ui32Count++)
     {
         WriteDataSPI(0x0000);
     }
@@ -587,8 +589,8 @@ Kentec320x240x16_SSD2119Init(uint32_t ui32SysClock)
 //*****************************************************************************
 static void
 Kentec320x240x16_SSD2119PixelDraw(void *pvDisplayData, int32_t i32X,
-        int32_t i32Y,
-        uint32_t ui32Value)
+                                  int32_t i32Y,
+                                  uint32_t ui32Value)
 {
     //
     // Set the X address of the display cursor.
@@ -636,10 +638,10 @@ Kentec320x240x16_SSD2119PixelDraw(void *pvDisplayData, int32_t i32X,
 //*****************************************************************************
 static void
 Kentec320x240x16_SSD2119PixelDrawMultiple(void *pvDisplayData, int32_t i32X,
-                                           int32_t i32Y, int32_t i32X0,
-                                           int32_t i32Count, int32_t i32BPP,
-                                           const uint8_t *pui8Data,
-                                           const uint8_t *pui8Palette)
+                                          int32_t i32Y, int32_t i32X0,
+                                          int32_t i32Count, int32_t i32BPP,
+                                          const uint8_t *pui8Data,
+                                          const uint8_t *pui8Palette)
 {
     uint32_t ui32Byte;
 
@@ -670,178 +672,178 @@ Kentec320x240x16_SSD2119PixelDrawMultiple(void *pvDisplayData, int32_t i32X,
     // Determine how to interpret the pixel data based on the number of bits
     // per pixel.
     //
-    switch(i32BPP & ~GRLIB_DRIVER_FLAG_NEW_IMAGE)
+    switch (i32BPP & ~GRLIB_DRIVER_FLAG_NEW_IMAGE)
+    {
+    //
+    // The pixel data is in 1 bit per pixel format.
+    //
+    case 1:
     {
         //
-        // The pixel data is in 1 bit per pixel format.
+        // Loop while there are more pixels to draw.
         //
-        case 1:
+        while (i32Count)
         {
             //
-            // Loop while there are more pixels to draw.
+            // Get the next byte of image data.
             //
-            while(i32Count)
+            ui32Byte = *pui8Data++;
+
+            //
+            // Loop through the pixels in this byte of image data.
+            //
+            for (; (i32X0 < 8) && i32Count; i32X0++, i32Count--)
             {
                 //
-                // Get the next byte of image data.
+                // Draw this pixel in the appropriate color.
                 //
-                ui32Byte = *pui8Data++;
-
-                //
-                // Loop through the pixels in this byte of image data.
-                //
-                for(; (i32X0 < 8) && i32Count; i32X0++, i32Count--)
-                {
-                    //
-                    // Draw this pixel in the appropriate color.
-                    //
-                    WriteDataSPI(((uint32_t *)pui8Palette)
-                            [(ui32Byte >> (7 - i32X0)) & 1]);
-                }
-
-                //
-                // Start at the beginning of the next byte of image data.
-                //
-                i32X0 = 0;
+                WriteDataSPI(((uint32_t *)pui8Palette)
+                                 [(ui32Byte >> (7 - i32X0)) & 1]);
             }
 
             //
-            // The image data has been drawn.
+            // Start at the beginning of the next byte of image data.
             //
-            break;
+            i32X0 = 0;
         }
 
         //
-        // The pixel data is in 4 bit per pixel format.
+        // The image data has been drawn.
         //
-        case 4:
+        break;
+    }
+
+    //
+    // The pixel data is in 4 bit per pixel format.
+    //
+    case 4:
+    {
+        //
+        // Loop while there are more pixels to draw.  "Duff's device" is
+        // used to jump into the middle of the loop if the first nibble of
+        // the pixel data should not be used.  Duff's device makes use of
+        // the fact that a case statement is legal anywhere within a
+        // sub-block of a switch statement.  See
+        // http://en.wikipedia.org/wiki/Duff's_device for detailed
+        // information about Duff's device.
+        //
+        switch (i32X0 & 1)
         {
-            //
-            // Loop while there are more pixels to draw.  "Duff's device" is
-            // used to jump into the middle of the loop if the first nibble of
-            // the pixel data should not be used.  Duff's device makes use of
-            // the fact that a case statement is legal anywhere within a
-            // sub-block of a switch statement.  See
-            // http://en.wikipedia.org/wiki/Duff's_device for detailed
-            // information about Duff's device.
-            //
-            switch(i32X0 & 1)
-            {
-                case 0:
-                    while(i32Count)
-                    {
-                        //
-                        // Get the upper nibble of the next byte of pixel data
-                        // and extract the corresponding entry from the
-                        // palette.
-                        //
-                        ui32Byte = (*pui8Data >> 4) * 3;
-                        ui32Byte = (*(uint32_t *)(pui8Palette + ui32Byte) &
-                                  0x00ffffff);
-
-                        //
-                        // Translate this palette entry and write it to the
-                        // screen.
-                        //
-                        WriteDataSPI(DPYCOLORTRANSLATE(ui32Byte));
-
-                        //
-                        // Decrement the count of pixels to draw.
-                        //
-                        i32Count--;
-
-                        //
-                        // See if there is another pixel to draw.
-                        //
-                        if(i32Count)
-                        {
-                case 1:
-                            //
-                            // Get the lower nibble of the next byte of pixel
-                            // data and extract the corresponding entry from
-                            // the palette.
-                            //
-                            ui32Byte = (*pui8Data++ & 15) * 3;
-                            ui32Byte = (*(uint32_t *)(pui8Palette + ui32Byte) &
-                                      0x00ffffff);
-
-                            //
-                            // Translate this palette entry and write it to the
-                            // screen.
-                            //
-                            WriteDataSPI(DPYCOLORTRANSLATE(ui32Byte));
-
-                            //
-                            // Decrement the count of pixels to draw.
-                            //
-                            i32Count--;
-                        }
-                    }
-            }
-
-            //
-            // The image data has been drawn.
-            //
-            break;
-        }
-
-        //
-        // The pixel data is in 8 bit per pixel format.
-        //
-        case 8:
-        {
-            //
-            // Loop while there are more pixels to draw.
-            //
-            while(i32Count--)
+        case 0:
+            while (i32Count)
             {
                 //
-                // Get the next byte of pixel data and extract the
-                // corresponding entry from the palette.
+                // Get the upper nibble of the next byte of pixel data
+                // and extract the corresponding entry from the
+                // palette.
                 //
-                ui32Byte = *pui8Data++ * 3;
-                ui32Byte = *(uint32_t *)(pui8Palette + ui32Byte) & 0x00ffffff;
+                ui32Byte = (*pui8Data >> 4) * 3;
+                ui32Byte = (*(uint32_t *)(pui8Palette + ui32Byte) &
+                            0x00ffffff);
 
                 //
-                // Translate this palette entry and write it to the screen.
+                // Translate this palette entry and write it to the
+                // screen.
                 //
                 WriteDataSPI(DPYCOLORTRANSLATE(ui32Byte));
-            }
 
-            //
-            // The image data has been drawn.
-            //
-            break;
+                //
+                // Decrement the count of pixels to draw.
+                //
+                i32Count--;
+
+                //
+                // See if there is another pixel to draw.
+                //
+                if (i32Count)
+                {
+                case 1:
+                    //
+                    // Get the lower nibble of the next byte of pixel
+                    // data and extract the corresponding entry from
+                    // the palette.
+                    //
+                    ui32Byte = (*pui8Data++ & 15) * 3;
+                    ui32Byte = (*(uint32_t *)(pui8Palette + ui32Byte) &
+                                0x00ffffff);
+
+                    //
+                    // Translate this palette entry and write it to the
+                    // screen.
+                    //
+                    WriteDataSPI(DPYCOLORTRANSLATE(ui32Byte));
+
+                    //
+                    // Decrement the count of pixels to draw.
+                    //
+                    i32Count--;
+                }
+            }
         }
 
         //
-        // We are being passed data in the display's native format.  Merely
-        // write it directly to the display.  This is a special case which is
-        // not used by the graphics library but which is helpful to
-        // applications which may want to handle, for example, JPEG images.
+        // The image data has been drawn.
         //
-        case 16:
+        break;
+    }
+
+    //
+    // The pixel data is in 8 bit per pixel format.
+    //
+    case 8:
+    {
+        //
+        // Loop while there are more pixels to draw.
+        //
+        while (i32Count--)
         {
-            uint16_t ui16Byte;
+            //
+            // Get the next byte of pixel data and extract the
+            // corresponding entry from the palette.
+            //
+            ui32Byte = *pui8Data++ * 3;
+            ui32Byte = *(uint32_t *)(pui8Palette + ui32Byte) & 0x00ffffff;
 
             //
-            // Loop while there are more pixels to draw.
+            // Translate this palette entry and write it to the screen.
             //
-            while(i32Count--)
-            {
-                //
-                // Get the next byte of pixel data and extract the
-                // corresponding entry from the palette.
-                //
-                ui16Byte = *((uint16_t *)pui8Data);
-                pui8Data += 2;
-
-                //
-                // Translate this palette entry and write it to the screen.
-                //
-                WriteDataSPI(ui16Byte);
-            }
+            WriteDataSPI(DPYCOLORTRANSLATE(ui32Byte));
         }
+
+        //
+        // The image data has been drawn.
+        //
+        break;
+    }
+
+    //
+    // We are being passed data in the display's native format.  Merely
+    // write it directly to the display.  This is a special case which is
+    // not used by the graphics library but which is helpful to
+    // applications which may want to handle, for example, JPEG images.
+    //
+    case 16:
+    {
+        uint16_t ui16Byte;
+
+        //
+        // Loop while there are more pixels to draw.
+        //
+        while (i32Count--)
+        {
+            //
+            // Get the next byte of pixel data and extract the
+            // corresponding entry from the palette.
+            //
+            ui16Byte = *((uint16_t *)pui8Data);
+            pui8Data += 2;
+
+            //
+            // Translate this palette entry and write it to the screen.
+            //
+            WriteDataSPI(ui16Byte);
+        }
+    }
     }
 }
 
@@ -864,8 +866,8 @@ Kentec320x240x16_SSD2119PixelDrawMultiple(void *pvDisplayData, int32_t i32X,
 //*****************************************************************************
 static void
 Kentec320x240x16_SSD2119LineDrawH(void *pvDisplayData, int32_t i32X1,
-        int32_t i32X2, int32_t i32Y,
-        uint32_t ui32Value)
+                                  int32_t i32X2, int32_t i32Y,
+                                  uint32_t ui32Value)
 {
     //
     // Set the cursor increment to left to right, followed by top to bottom.
@@ -893,7 +895,7 @@ Kentec320x240x16_SSD2119LineDrawH(void *pvDisplayData, int32_t i32X1,
     //
     // Loop through the pixels of this horizontal line.
     //
-    while(i32X1++ <= i32X2)
+    while (i32X1++ <= i32X2)
     {
         //
         // Write the pixel value.
@@ -921,8 +923,8 @@ Kentec320x240x16_SSD2119LineDrawH(void *pvDisplayData, int32_t i32X1,
 //*****************************************************************************
 static void
 Kentec320x240x16_SSD2119LineDrawV(void *pvDisplayData, int32_t i32X,
-        int32_t i32Y1, int32_t i32Y2,
-        uint32_t ui32Value)
+                                  int32_t i32Y1, int32_t i32Y2,
+                                  uint32_t ui32Value)
 {
     //
     // Set the cursor increment to top to bottom, followed by left to right.
@@ -950,7 +952,7 @@ Kentec320x240x16_SSD2119LineDrawV(void *pvDisplayData, int32_t i32X,
     //
     // Loop through the pixels of this vertical line.
     //
-    while(i32Y1++ <= i32Y2)
+    while (i32Y1++ <= i32Y2)
     {
         //
         // Write the pixel value.
@@ -1011,10 +1013,10 @@ Kentec320x240x16_SSD2119RectFill(void *pvDisplayData, const tRectangle *pRect,
     WriteCommandSPI(SSD2119_V_RAM_POS_REG);
 #if (defined LANDSCAPE_FLIP) || (defined PORTRAIT)
     WriteDataSPI(MAPPED_Y(pRect->i16XMin, pRect->i16YMin) |
-             (MAPPED_Y(pRect->i16XMax, pRect->i16YMax) << 8));
+                 (MAPPED_Y(pRect->i16XMax, pRect->i16YMax) << 8));
 #else
     WriteDataSPI(MAPPED_Y(pRect->i16XMax, pRect->i16YMax) |
-             (MAPPED_Y(pRect->i16XMin, pRect->i16YMin) << 8));
+                 (MAPPED_Y(pRect->i16XMin, pRect->i16YMin) << 8));
 #endif
 
     //
@@ -1035,9 +1037,9 @@ Kentec320x240x16_SSD2119RectFill(void *pvDisplayData, const tRectangle *pRect,
     //
     // Loop through the pixels of this filled rectangle.
     //
-    for(i32Count = ((pRect->i16XMax - pRect->i16XMin + 1) *
-                  (pRect->i16YMax - pRect->i16YMin + 1));
-                  i32Count >= 0; i32Count--)
+    for (i32Count = ((pRect->i16XMax - pRect->i16XMin + 1) *
+                     (pRect->i16YMax - pRect->i16YMin + 1));
+         i32Count >= 0; i32Count--)
     {
         //
         // Write the pixel value.
@@ -1066,7 +1068,7 @@ Kentec320x240x16_SSD2119RectFill(void *pvDisplayData, const tRectangle *pRect,
 //!
 //! \param pvDisplayData is a pointer to the driver-specific data for this
 //! display driver.
-//! \param ui32Value is the 24-bit RGB color.  The least-significant byte is 
+//! \param ui32Value is the 24-bit RGB color.  The least-significant byte is
 //! the blue channel, the next byte is the green channel, and the third byte is
 //! the red channel.
 //!
@@ -1084,7 +1086,7 @@ Kentec320x240x16_SSD2119ColorTranslate(void *pvDisplayData,
     //
     // Translate from a 24-bit RGB color to a 5-6-5 RGB color.
     //
-    return(DPYCOLORTRANSLATE(ui32Value));
+    return (DPYCOLORTRANSLATE(ui32Value));
 }
 
 //*****************************************************************************
@@ -1109,7 +1111,17 @@ Kentec320x240x16_SSD2119Flush(void *pvDisplayData)
     // There is nothing to be done.
     //
 }
+// **********************************************************************************
+void SSD2119_WriteCommand(uint16_t cmd)
+{
+    WriteCommandSPI(cmd);
+}
 
+void SSD2119_WriteData(uint16_t data)
+{
+    WriteDataSPI(data);
+}
+//***********************************************************************************
 //*****************************************************************************
 //
 //! The display structure that describes the driver for the Kentec
@@ -1117,24 +1129,23 @@ Kentec320x240x16_SSD2119Flush(void *pvDisplayData)
 //
 //*****************************************************************************
 const tDisplay g_sKentec320x240x16_SSD2119 =
-{
-    sizeof(tDisplay),
-    0,
+    {
+        sizeof(tDisplay),
+        0,
 #if defined(PORTRAIT) || defined(PORTRAIT_FLIP)
-    240,
-    320,
+        240,
+        320,
 #else
-    320,
-    240,
+        320,
+        240,
 #endif
-    Kentec320x240x16_SSD2119PixelDraw,
-    Kentec320x240x16_SSD2119PixelDrawMultiple,
-    Kentec320x240x16_SSD2119LineDrawH,
-    Kentec320x240x16_SSD2119LineDrawV,
-    Kentec320x240x16_SSD2119RectFill,
-    Kentec320x240x16_SSD2119ColorTranslate,
-    Kentec320x240x16_SSD2119Flush
-};
+        Kentec320x240x16_SSD2119PixelDraw,
+        Kentec320x240x16_SSD2119PixelDrawMultiple,
+        Kentec320x240x16_SSD2119LineDrawH,
+        Kentec320x240x16_SSD2119LineDrawV,
+        Kentec320x240x16_SSD2119RectFill,
+        Kentec320x240x16_SSD2119ColorTranslate,
+        Kentec320x240x16_SSD2119Flush};
 
 //*****************************************************************************
 //
