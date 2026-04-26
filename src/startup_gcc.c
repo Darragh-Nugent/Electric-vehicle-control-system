@@ -44,7 +44,7 @@ static void IntDefaultHandler(void);
 extern void xPortPendSVHandler(void);
 extern void vPortSVCHandler(void);
 extern void xPortSysTickHandler(void);
-extern void HallSensorHandler(void);
+extern void hallSensorHandler(void);
 
 //*****************************************************************************
 //
@@ -118,7 +118,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // FLASH Control
     IntDefaultHandler,                      // GPIO Port F
     IntDefaultHandler,                      // GPIO Port G
-    HallSensorHandler,                      // GPIO Port H
+    hallSensorHandler,                      // GPIO Port H
     IntDefaultHandler,                      // UART2 Rx and Tx
     IntDefaultHandler,                      // SSI1 Rx and Tx
     IntDefaultHandler,                      // Timer 3 subtimer A
@@ -158,8 +158,8 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     IntDefaultHandler,                      // I2C4 Master and Slave
     IntDefaultHandler,                      // I2C5 Master and Slave
-    HallSensorHandler,                      // GPIO Port M - HALL A
-    HallSensorHandler,                      // GPIO Port N - HALL C
+    hallSensorHandler,                      // GPIO Port M - HALL A
+    hallSensorHandler,                      // GPIO Port N - HALL C
     0,                                      // Reserved
     IntDefaultHandler,                      // Tamper
     IntDefaultHandler,                      // GPIO Port P (Summary or P0)

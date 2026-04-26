@@ -21,44 +21,7 @@
 #include "motorlib.h"
 #include "features/priorities.h"
 
-static void prvMotorTask( void *pvParameters );
-void HallSensorIntEnable(void);
-void HallSensorGPIOConfig(void);
-
-void vCreateMotorTask(void)
-{
-    enableMotor();
-    HallSensorGPIOConfig();
-    HallSensorIntEnable();
-
-    xTaskCreate(
-        prvMotorTask,
-        "motorTask",
-        configMINIMAL_STACK_SIZE,
-        NULL,
-        MOTOR_CONTROL_PRIORITY,
-        NULL
-    );
-}
-
-static void prvMotorTask( void *pvParameters )
-{
-    uint16_t duty_value = 5;
-    uint16_t period_value = 50;
-
-    initMotorLib(period_value);
-    setDuty(duty_value);
-
-    bool hall_a = GPIOPinRead(GPIO_PORTM_BASE, GPIO_PIN_3);
-    bool hall_b = GPIOPinRead(GPIO_PORTH_BASE, GPIO_PIN_2);
-    bool hall_c = GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_2);
-    updateMotor(hall_a, hall_b, hall_c);
-
-    for(;;) {}
-}
-/*-----------------------------------------------------------*/
-
-void HallSensorHandler(void)
+void hallSensorHandler(void)
 {
     bool hall_a = GPIOPinRead(GPIO_PORTM_BASE, GPIO_PIN_3);
     bool hall_b = GPIOPinRead(GPIO_PORTH_BASE, GPIO_PIN_2);
@@ -71,7 +34,7 @@ void HallSensorHandler(void)
     updateMotor(hall_a, hall_b, hall_c);
 }
 
-void HallSensorGPIOConfig(void)
+void hallSensorGPIOConfig(void)
 {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOM);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOH);
@@ -86,7 +49,7 @@ void HallSensorGPIOConfig(void)
     while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPION)) {}
 }
 
-void HallSensorIntEnable(void)
+void hallSensorIntEnable(void)
 {
     GPIOIntTypeSet(GPIO_PORTM_BASE, GPIO_PIN_3, GPIO_BOTH_EDGES);
     GPIOIntTypeSet(GPIO_PORTH_BASE, GPIO_PIN_2, GPIO_BOTH_EDGES);

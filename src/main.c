@@ -43,7 +43,8 @@ extern void vCreateMotorTask( void );
 extern void vCreateSensorTasks(void);
 extern void vCreateGuiTask(void);
 
-static void prvConfigureHallInts( void );
+extern void hallSensorGPIOConfig(void);
+extern void hallSensorIntEnable(void);
 
 /*-----------------------------------------------------------*/
 
@@ -102,8 +103,8 @@ static void prvSetupHardware(void)
     prvConfigureUART();
 
     /* Set-up interrupts for hall sensors */
-    prvConfigureHallInts();
-
+    hallSensorGPIOConfig();
+    hallSensorIntEnable();
 }
 /*-----------------------------------------------------------*/
 
@@ -122,20 +123,6 @@ void vApplicationMallocFailedHook( void )
     IntMasterDisable();
     for( ;; );
 }
-/*-----------------------------------------------------------*/
-static void prvConfigureHallInts( void )
-{
-
-    /* Configure GPIO ports to trigger an interrupt on rising/falling or both edges. */
-
-    /* Enable the interrupt for LaunchPad GPIO Port in the GPIO peripheral. */
-
-    /* Enable the Ports interrupt in the NVIC. */
-
-    /* Enable global interrupts in the NVIC. */
-    IntMasterEnable();
-}
-
 /*-----------------------------------------------------------*/
 
 void vApplicationIdleHook( void )
