@@ -15,6 +15,7 @@
 #include "utils/uartstdio.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
+#include "driver_lib/udma.h"
 
 #include "driverlib/rom_map.h"
 #include "motorlib.h"
@@ -28,18 +29,29 @@
 #include "driverlib/fpu.h"
 #include "semphr.h"
 
+#include "display.h"
 #include "screens/scr_dashboard.h"
 #include "screens/scr_motor.h"
 #include "screens/scr_sensors.h"
 #include "screens/scr_alerts.h"
 #include "screen_manager.h"
+#include "touch_driver.h"
 
 #include "features/data.h"
 #include "timers.h"
 #include "gui_task.h"
 #include "lvgl.h"
 
-#define GUI_TICK    5
+#define GUI_TICK 5
+#ifdef ewarm
+#pragma data_alignment = 1024
+tDMAControlTable psDMAControlTable[64];
+#elif defined(ccs)
+#pragma DATA_ALIGN(psDMAControlTable, 1024)
+tDMAControlTable psDMAControlTable[64];
+#else
+tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
+#endif
 //*****************************************************************************
 //
 // Gloal variable used to store the frequency of the system clock.
@@ -50,9 +62,12 @@ extern uint32_t g_ui32SysClock;
 // Queue handle (producers include data.h and use this queue)
 QueueHandle_t g_ui_queue;
 
+static lv_display_t *my_display;
+static lv_color_t draw_buf1[320 * 20]; // 20 line buffer
+static lv_color_t draw_buf2[320 * 20]; // 20 line buffer
+
 void vCreateGuiTask(void);
 static void prvGuiTask(void *pvParameters);
-int32_t TouchCallBack(uint32_t, int32_t, int32_t);
 
 //*****************************************************************************
 //
@@ -119,12 +134,27 @@ static void prvDispatchMsg(const UiMsg_t *msg)
 
 // Drain the Queue and prevents sensors to flood the queue to prevent
 // old values
-static void prvDrainQueue(void){
+static void prvDrainQueue(void)
+{
     UiMsg_t msg;
     uint8_t safeguard = 16; // may change if it seems like its skipping alot
-    while (safeguard-- && xQueueReceive(g_ui_queue, &msg, 0) == pdTRUE){
+    while (safeguard-- && xQueueReceive(g_ui_queue, &msg, 0) == pdTRUE)
+    {
         prvDispatchMsg(&msg);
     }
+}
+
+void display_init(void)
+{
+    my_display = lv_display_create(320, 240);
+
+    lv_display_set_flush_cb(my_display, disp_flush);
+
+    lv_display_set_buffers(my_display,
+                           draw_buf1,
+                           draw_buf2,
+                           sizeof(draw_buf1),
+                           LV_DISPLAY_RENDER_MODE_PARTIAL);
 }
 
 void vCreateGuiTask(void)
@@ -138,7 +168,7 @@ void vCreateGuiTask(void)
         NULL);
 }
 
-void prvGuiInit(void)
+void prvGuiHardwareInit(void)
 {
     //
     // The FPU should be enabled because some compilers will use floating-
@@ -158,17 +188,16 @@ void prvGuiInit(void)
     //
     Kentec320x240x16_SSD2119Init(g_ui32SysClock);
 
-    //
-    // Configure and enable uDMA -> add in if performance is required
-    //
-    // SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
-    // SysCtlDelay(10);
-    // uDMAControlBaseSet(&psDMAControlTable[0]);
-    // uDMAEnable();
+    // Configure and enable uDMA
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
+    SysCtlDelay(10);
+    uDMAControlBaseSet(&psDMAControlTable[0]);
+    uDMAEnable();
 
     //
     // Initialize the touch screen driver and have it route its messages to the
-    // widget tree.
+    // TouchCallBack.
     //
     TouchScreenInit(g_ui32SysClock);
     TouchScreenCallbackSet(TouchCallBack);
@@ -179,21 +208,22 @@ void prvGuiTask(void *pvParameters)
     g_ui_queue = xQueueCreate(UI_QUEUE_DEPTH, sizeof(UiMsg_t));
 
     lv_init();
-    prvGuiInit();
+    prvGuiHardwareInit();
+    display_init();
+    touch_driver_init();
     screen_manager_init();
-
     // Software timer for LVGL
     TimerHandle_t xTickTimer = xTimerCreate(
         "LvTick",
         pdMS_TO_TICKS(GUI_TICK),
         pdTRUE,
         NULL,
-        prvLvglTickCb
-    );
+        prvLvglTickCb);
 
     xTimerStart(xTickTimer, portMAX_DELAY);
 
-    for (;;){
+    for (;;)
+    {
         // Consume all pending data updates
         prvDrainQueue();
 
@@ -201,8 +231,10 @@ void prvGuiTask(void *pvParameters)
         uint32_t delay_ms = lv_timer_handler();
 
         // Clamp just to prevent UI sleeping for way too long
-        if (delay_ms < 1) delay_ms = 1;
-        if (delay_ms > 20) delay_ms = 20;
+        if (delay_ms < 1)
+            delay_ms = 1;
+        if (delay_ms > 20)
+            delay_ms = 20;
 
         // Wait -> allow other tasks to run
         vTaskDelay(pdMS_TO_TICKS(delay_ms));
