@@ -39,16 +39,7 @@ SECTIONS
         _etext = .;
     } > FLASH
 
-    .ARM.exidx :
-    {
-        __exidx_start = .;
-        *(.ARM.exidx*)
-        *(.gnu.linkonce.armexidx.*)
-        __exidx_end = .;
-    } > FLASH
-
-
-    .data : AT(ADDR(.ARM.exidx) + SIZEOF(.ARM.exidx))
+    .data : AT(ADDR(.text) + SIZEOF(.text))
     {
         _data = .;
         _ldata = LOADADDR (.data);
