@@ -19,7 +19,6 @@ void screen_manager_init(void) {
     scr_dashboard_init();
     scr_motor_init();
     scr_sensors_init();
-    scr_settings_init();
 
     s_screens[SCREEN_DASHBOARD] = scr_dashboard_get();
     s_screens[SCREEN_MOTOR]     = scr_motor_get();

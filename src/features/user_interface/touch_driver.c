@@ -1,10 +1,11 @@
 #include "lvgl.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include "grlib/grlib.h"  // must be included before widget.h for trectangle stuff
 #include "grlib/widget.h"
 
 volatile int16_t i16Touch_X = 0;
-volatile i16Touch_Y = 0;
+volatile int16_t i16Touch_Y = 0;
 volatile bool boolTouchPressed;
 
 // Handles touchscreen events and stores the current touch state
@@ -49,7 +50,4 @@ void touch_driver_init(void){
     lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(indev, prvTouchReadCb);
 
-    // How often LVGL polls the touch reach callback, can decrease if it doesnt feel
-    // responsive I guess. Keep in mind our clock is 120MHz 
-    lv_indev_set_read_period(indev,20);
 }

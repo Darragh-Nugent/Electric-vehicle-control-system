@@ -6,7 +6,7 @@
 
 void scr_dashboard_show_fault_banner(bool hasFault) {};
 void scr_dashboard_set_rpm(float f) {};
-void scr_dashboard_set_sensor(float f) {};
+void scr_dashboard_set_sensor(uint32_t idx,float f) {};
 void scr_dashboard_set_motor_state(uint32_t state) {};
 
 static lv_obj_t *s_screen;
@@ -38,9 +38,9 @@ static lv_obj_t *prv_nav_button_init(lv_obj_t *parent, const char *label, lv_eve
     lv_obj_set_size(button, 90, 40);
     lv_obj_add_event_cb(button, cb, LV_EVENT_CLICKED, NULL);
 
-    lv_obj_t *label = lv_label_create(button);
-    lv_label_set_text(label, label);
-    lv_obj_center(label);
+    lv_obj_t *lbl = lv_label_create(button);
+    lv_label_set_text(lbl, label);
+    lv_obj_center(lbl);
 
     return button;
 }
