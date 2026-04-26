@@ -1,8 +1,10 @@
-#include "lvgl.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
-#include <stdint.h>
+#include <stdbool.h>
+#include "grlib.h"
+#include "../../data.h"
 
-
-void scr_sensors_init(void);
-void scr_sensors_set_value(uint32_t,float);
-lv_obj_t *scr_sensors_get(void);
+void scr_sensors_draw(void) ;
+void scr_sensors_init(tContext *ctx);
+void scr_sensors_update(void);

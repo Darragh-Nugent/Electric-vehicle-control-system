@@ -1,13 +1,14 @@
-#include "lvgl.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include "grlib.h"
+#include "../../data.h"
 
+void scr_motor_init(tContext *ctx);
 
-void scr_motor_init(void);
+void scr_motor_draw(void) ;
 
-lv_obj_t *scr_motor_get(void);
+void scr_sensors_update(void);
 
-void scr_motor_set_rpm(float rpm);
-
-void scr_motor_set_current(float amps);
-
-void scr_motor_set_state(uint8_t state);
+void scr_motor_update(void);

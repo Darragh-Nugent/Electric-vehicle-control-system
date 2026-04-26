@@ -1,10 +1,10 @@
-#include "lvgl.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include "grlib.h"
+#include "../../data.h"
 
-
-void scr_dashboard_init(void);
-void scr_dashboard_show_fault_banner(bool);
-void scr_dashboard_set_rpm(float);
-void scr_dashboard_set_sensor(uint32_t,float);
-void scr_dashboard_set_motor_state(uint32_t);
-lv_obj_t *scr_dashboard_get(void);
+void scr_dashboard_init(tContext *ctx);   // called once at startup
+void scr_dashboard_draw(void);            // full redraw
+void scr_dashboard_update(void);          // partial update, changed data only

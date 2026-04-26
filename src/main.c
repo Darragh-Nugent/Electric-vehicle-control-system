@@ -24,6 +24,8 @@
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
 
+#include "features/user_interface/gui_task.h"
+
 // Motor lib
 #include <motorlib.h>
 
@@ -33,21 +35,21 @@
 uint32_t g_ui32SysClock;
 
 /* Set up the hardware ready to run this demo. */
-static void prvSetupHardware( void );
+static void prvSetupHardware(void);
 
 /* This function sets up UART0 to be used for a console to display information
  * as the example is running. */
 static void prvConfigureUART(void);
 
-extern void vCreateMotorTask( void );
+extern void vCreateMotorTask(void);
 extern void vCreateSensorTasks(void);
 extern void vCreateGuiTask(void);
 
-static void prvConfigureHallInts( void );
+static void prvConfigureHallInts(void);
 
 /*-----------------------------------------------------------*/
 
-int main( void )
+int main(void)
 {
     prvSetupHardware();
 
@@ -57,7 +59,8 @@ int main( void )
 
     vTaskStartScheduler();
 
-    for( ;; );
+    for (;;)
+        ;
 }
 /*-----------------------------------------------------------*/
 static void prvConfigureUART(void)
@@ -91,8 +94,9 @@ static void prvSetupHardware(void)
 {
     /* Run from the PLL at configCPU_CLOCK_HZ MHz. */
     g_ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
-            SYSCTL_OSC_MAIN | SYSCTL_USE_PLL |
-            SYSCTL_CFG_VCO_240), configCPU_CLOCK_HZ);
+                                             SYSCTL_OSC_MAIN | SYSCTL_USE_PLL |
+                                             SYSCTL_CFG_VCO_240),
+                                            configCPU_CLOCK_HZ);
 
     /* Configure device pins. */
     PinoutSet(false, false);
@@ -102,11 +106,10 @@ static void prvSetupHardware(void)
 
     /* Set-up interrupts for hall sensors */
     prvConfigureHallInts();
-
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationMallocFailedHook( void )
+void vApplicationMallocFailedHook(void)
 {
     /* vApplicationMallocFailedHook() will only be called if
     configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h.  It is a hook
@@ -119,10 +122,11 @@ void vApplicationMallocFailedHook( void )
     to query the size of free heap space that remains (although it does not
     provide information on how the remaining heap might be fragmented). */
     IntMasterDisable();
-    for( ;; );
+    for (;;)
+        ;
 }
 /*-----------------------------------------------------------*/
-static void prvConfigureHallInts( void )
+static void prvConfigureHallInts(void)
 {
 
     /* Configure GPIO ports to trigger an interrupt on rising/falling or both edges. */
@@ -137,7 +141,7 @@ static void prvConfigureHallInts( void )
 
 /*-----------------------------------------------------------*/
 
-void vApplicationIdleHook( void )
+void vApplicationIdleHook(void)
 {
     /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
     to 1 in FreeRTOSConfig.h.  It will be called on each iteration of the idle
@@ -151,26 +155,26 @@ void vApplicationIdleHook( void )
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
+void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
 {
-    ( void ) pcTaskName;
-    ( void ) pxTask;
+    (void)pcTaskName;
+    (void)pxTask;
 
     /* Run time stack overflow checking is performed if
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
     function is called if a stack overflow is detected. */
     IntMasterDisable();
-    for( ;; );
+    for (;;)
+        ;
 }
 /*-----------------------------------------------------------*/
 
-void *malloc( size_t xSize )
+void *malloc(size_t xSize)
 {
     /* There should not be a heap defined, so trap any attempts to call
     malloc. */
     IntMasterDisable();
-    for( ;; );
+    for (;;)
+        ;
 }
 /*-----------------------------------------------------------*/
-
-
