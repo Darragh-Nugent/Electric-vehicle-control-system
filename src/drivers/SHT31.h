@@ -18,24 +18,18 @@
 #define SHT31_HEATEREN             0x306D
 #define SHT31_HEATERDIS            0x3066
 
-class SHT31 {
-  public:
-    SHT31();
-    bool begin(uint8_t i2caddr = SHT31_ADDR);
-    float getTemperature(bool S = false);
-    float convertCtoF(float);
-    float getHumidity(void);
-    void reset(void);
-    void heater(bool);
-    uint8_t crc8(const uint8_t* data, int len);
+typedef bool (*sht31_read_fptr_t)(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
+typedef bool (*sht31_write_fptr_t)(uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len);
+typedef void (*sht31_delay_fptr_t)(uint32_t period);
 
-  private:
-    bool getTempHum(void);
-    void writeCommand(uint16_t cmd);
 
-    uint8_t _i2caddr;
-    float humidity, temp;
+typedef struct  
+{
+  sht31_read_fptr_t write;
 
-};
+  sht31_write_fptr_t read;
+
+  sht31_delay_fptr_t delay;
+} sht31_dev;
 
 #endif

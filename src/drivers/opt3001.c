@@ -139,7 +139,7 @@ bool sensorOpt3001Enable(bool enable)
 		val = CONFIG_DISABLE;
 	}
 
-	return writeI2C(OPT3001_I2C_ADDRESS, REG_CONFIGURATION, (uint8_t *)&val, 2);
+	return I2C_write_reg(OPT3001_I2C_ADDRESS, REG_CONFIGURATION, (uint8_t *)&val, 2);
 }
 
 /**************************************************************************************************
@@ -157,7 +157,7 @@ bool sensorOpt3001Read(uint16_t *rawData)
 	uint16_t val;
 
 	// Read configuration register to check if a conversion result is ready
-	if (!readI2C(OPT3001_I2C_ADDRESS, REG_CONFIGURATION, (uint8_t *)&val, 2))
+	if (!I2C_read_reg(OPT3001_I2C_ADDRESS, REG_CONFIGURATION, (uint8_t *)&val, 2))
 	{
 		return false;
 	}
@@ -174,7 +174,7 @@ bool sensorOpt3001Read(uint16_t *rawData)
 	}
 
 	// Conversion complete — read the result register
-	if (!readI2C(OPT3001_I2C_ADDRESS, REG_RESULT, (uint8_t *)&val, 2))
+	if (!I2C_read_reg(OPT3001_I2C_ADDRESS, REG_RESULT, (uint8_t *)&val, 2))
 	{
 		return false;
 	}
@@ -197,7 +197,7 @@ bool sensorOpt3001Test(void)
 	uint16_t val;
 
 	// Check manufacturer ID
-	if (!readI2C(OPT3001_I2C_ADDRESS, REG_MANUFACTURER_ID, (uint8_t *)&val, 2))
+	if (!I2C_read_reg(OPT3001_I2C_ADDRESS, REG_MANUFACTURER_ID, (uint8_t *)&val, 2))
 	{
 		UARTprintf("Bad man id read\n");
 		return false;
@@ -215,7 +215,7 @@ bool sensorOpt3001Test(void)
 	UARTprintf("Manufacturer ID Correct: %c%c\n", (val >> 8) & 0x00FF, val & 0x00FF);
 
 	// Check device ID
-	if (!readI2C(OPT3001_I2C_ADDRESS, REG_DEVICE_ID, (uint8_t *)&val, 2))
+	if (!I2C_read_reg(OPT3001_I2C_ADDRESS, REG_DEVICE_ID, (uint8_t *)&val, 2))
 	{
 		return false;
 	}

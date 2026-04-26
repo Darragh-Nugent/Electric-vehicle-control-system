@@ -49,10 +49,10 @@ static void prvBmi160Delay(uint32_t period)
 
 void prvSensorBmi160Init(struct bmi160_dev *bmi160dev)
 {
-    bmi160dev->write = writeI2CBMI160;
-    bmi160dev->read = readI2CBMI160;
+    bmi160dev->write = I2C_write_BMI160;
+    bmi160dev->read = I2C_read_BMI160;
     bmi160dev->delay_ms = prvBmi160Delay;
-    bmi160dev->id = 0x69; // or 0x69 — check your SDO pin
+    bmi160dev->id = 0x69;
     bmi160dev->intf = BMI160_I2C_INTF;
 
     bmi160_init(bmi160dev);
