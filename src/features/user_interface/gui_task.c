@@ -32,36 +32,23 @@
 #include "screens/scr_motor.h"
 #include "screens/scr_sensors.h"
 #include "screens/scr_alerts.h"
+#include "screen_manager.h"
 
 #include "features/data.h"
 #include "timers.h"
 #include "gui_task.h"
 #include "lvgl.h"
 
+#define GUI_TICK    5
 //*****************************************************************************
 //
 // Gloal variable used to store the frequency of the system clock.
 //
 //*****************************************************************************
-uint32_t g_ui32SysClock;
-// -> possibly need to change based on other branches/files
+extern uint32_t g_ui32SysClock;
 
 // Queue handle (producers include data.h and use this queue)
 QueueHandle_t g_ui_queue;
-
-// Internal state
-typedef enum
-{
-    SCREEN_DASHBOARD = 0,
-    SCREEN_MOTOR,
-    SCREEN_SENSORS,
-    SCREEN_ALERTS,
-} ActiveScreen_t;
-
-static ActiveScreen_t active_screen = SCREEN_DASHBOARD;
-
-static volatile int16_t i16Touch_X, i16Touch_Y;
-static volatile bool boolTouchPressed;
 
 void vCreateGuiTask(void);
 static void prvGuiTask(void *pvParameters);
@@ -73,11 +60,12 @@ int32_t TouchCallBack(uint32_t, int32_t, int32_t);
 // Runs from RTOS timer context (timer task) not the LVGL task
 //
 //*****************************************************************************
+
 static void prvLvglTickCb(TimerHandle_t xTimer)
 {
     (void)xTimer;
     // thread safe no mutex is required
-    lv_tick_inc(5);
+    lv_tick_inc(GUI_TICK);
 }
 
 static void prvDispatchMsg(const UiMsg_t *msg)
@@ -166,17 +154,6 @@ void prvGuiInit(void)
     FPULazyStackingEnable();
 
     //
-    // Run from the PLL at 120 MHz.
-    // Note: SYSCTL_CFG_VCO_240 is a new setting provided in TivaWare 2.2.x and
-    // later to better reflect the actual VCO speed due to SYSCTL#22.
-    //
-    g_ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
-                                             SYSCTL_OSC_MAIN |
-                                             SYSCTL_USE_PLL |
-                                             SYSCTL_CFG_VCO_240),
-                                            120000000);
-
-    //
     // Initialize the display driver.
     //
     Kentec320x240x16_SSD2119Init(g_ui32SysClock);
@@ -203,18 +180,12 @@ void prvGuiTask(void *pvParameters)
 
     lv_init();
     prvGuiInit();
-    scr_dashboard_init();
-    scr_motor_init();
-    scr_sensors_init();
-    scr_alerts_init();
-
-    //lv_screen_load(scr_dashboard_get());
-    active_screen = SCREEN_DASHBOARD;
+    screen_manager_init();
 
     // Software timer for LVGL
     TimerHandle_t xTickTimer = xTimerCreate(
         "LvTick",
-        pdMS_TO_TICKS(5),
+        pdMS_TO_TICKS(GUI_TICK),
         pdTRUE,
         NULL,
         prvLvglTickCb
@@ -233,32 +204,7 @@ void prvGuiTask(void *pvParameters)
         if (delay_ms < 1) delay_ms = 1;
         if (delay_ms > 20) delay_ms = 20;
 
-        // Wait
+        // Wait -> allow other tasks to run
         vTaskDelay(pdMS_TO_TICKS(delay_ms));
     }
-}
-
-/// @brief Handles touchscreen events and stores the current touch state
-/// @param ui32Message
-/// @param i32X
-/// @param i32Y
-int32_t TouchCallBack(uint32_t ui32Message, int32_t i32X, int32_t i32Y)
-{
-    // Finger touches the screen
-    if (ui32Message == WIDGET_MSG_PTR_DOWN)
-    {
-        boolTouchPressed = true;
-    }
-    // Fringer drags across the screen
-    else if (ui32Message == WIDGET_MSG_PTR_MOVE && boolTouchPressed)
-    {
-        i16Touch_X = i32X;
-        i16Touch_Y = i32Y;
-    }
-    // Finger is lifted
-    else if (ui32Message == WIDGET_MSG_PTR_UP)
-    {
-        boolTouchPressed = false;
-    }
-    return 0;
 }
