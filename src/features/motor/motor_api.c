@@ -8,12 +8,17 @@
 
 #include "states.h"
 
-SemaphoreHandle_t motorStateMutex = NULL;
-SemaphoreHandle_t motorSetSpeedMutex = NULL;
-extern motor_state_t motor_state;
 uint16_t userSetSpeed = 0;
 
-// transition to idle
+SemaphoreHandle_t motorStateMutex = NULL;
+SemaphoreHandle_t motorSetSpeedMutex = NULL;
+SemaphoreHandle_t motorStartSemaphore = NULL;
+SemaphoreHandle_t motorUpToSpeedSemaphore = NULL;
+
+extern motor_state_t motor_state;
+extern void hallSensorIntEnable(void);
+extern void kickStartMotor(void);
+// Transition state to idle
 void motorInit(void)
 {
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
@@ -30,11 +35,14 @@ void motorRunning(void)
 }
 
 // Transition state to starting.
+// Enable the hall effect sensor ISR and kick start the motor.
 void motorStart(void)
 {
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_STARTING;
     xSemaphoreGive(motorStateMutex);
+    hallSensorIntEnable();
+    kickStartMotor();
 }
 
 // Transition state to e-stop braking
@@ -42,6 +50,14 @@ void motorEStop(void)
 {
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_BRAKING;
+    xSemaphoreGive(motorStateMutex);
+}
+
+// Transition state to fault latched.
+void motorFaultLatched(void)
+{
+    xSemaphoreTake(motorStateMutex, portMAX_DELAY);
+    motor_state = MOTOR_STATE_FAULT;
     xSemaphoreGive(motorStateMutex);
 }
 

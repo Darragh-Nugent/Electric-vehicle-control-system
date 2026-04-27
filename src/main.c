@@ -43,10 +43,15 @@ extern void vCreateSensorTasks(void);
 extern void vCreateGuiTask(void);
 
 extern void hallSensorGPIOConfig(void);
-extern void hallSensorIntEnable(void);
+extern void hallSensorIntDisable(void);
 
 extern SemaphoreHandle_t motorStateMutex;
 extern SemaphoreHandle_t motorSetSpeedMutex;
+extern SemaphoreHandle_t motorStartSemaphore;
+extern SemaphoreHandle_t motorUpToSpeedSemaphore;
+
+SemaphoreHandle_t faultAcknowledgedSemaphore = NULL;
+
 /*-----------------------------------------------------------*/
 
 int main( void )
@@ -56,8 +61,16 @@ int main( void )
 
     motorStateMutex = xSemaphoreCreateMutex();
     motorSetSpeedMutex = xSemaphoreCreateMutex();
+    motorStartSemaphore = xSemaphoreCreateBinary();
+    motorUpToSpeedSemaphore = xSemaphoreCreateBinary();
+    faultAcknowledgedSemaphore = xSemaphoreCreateBinary();
 
-    while (motorStateMutex == NULL || motorSetSpeedMutex == NULL) {}
+    while (
+        motorStateMutex == NULL ||
+        motorSetSpeedMutex == NULL ||
+        motorStartSemaphore == NULL ||
+        motorUpToSpeedSemaphore == NULL ||
+        faultAcknowledgedSemaphore == NULL) {}
 
     vCreateMotorTask();
     vCreateSensorTasks();
@@ -110,7 +123,7 @@ static void prvSetupHardware(void)
 
     /* Set-up interrupts for hall sensors */
     hallSensorGPIOConfig();
-    hallSensorIntEnable();
+    hallSensorIntDisable(); // the hall effect ISR should be disabled by default (IDLE)
 }
 /*-----------------------------------------------------------*/
 

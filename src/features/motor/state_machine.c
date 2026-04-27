@@ -27,6 +27,12 @@ motor_state_t motor_state = MOTOR_STATE_IDLE;
 static void motorTask( void *pvParameters );
 void kickStartMotor(void);
 
+extern SemaphoreHandle_t motorStartSemaphore;
+extern SemaphoreHandle_t motorUpToSpeedSemaphore;
+extern SemaphoreHandle_t faultAcknowledgedSemaphore;
+extern volatile bool speed_semaphore_given;
+extern void hallSensorIntDisable(void);
+
 void vCreateMotorTask(void)
 {
     xTaskCreate(
@@ -51,25 +57,33 @@ static void motorTask( void *pvParameters )
         switch (motor_state)
         {
         case MOTOR_STATE_IDLE:
+            xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI
             motorStart();
-            // motor is stopped and outputs are disabled
-            // -> starting when user selects start.
             break;
         case MOTOR_STATE_STARTING:
-            kickStartMotor();
-            motorRunning();
-            // -> running when a sufficient speed is reached.
+            // if e-stop triggered: transition to braking
+            if (xSemaphoreTake(motorUpToSpeedSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+            {
+                motorRunning();
+            }
+            else {
+                kickStartMotor();
+            }
             break;
         case MOTOR_STATE_RUNNING:
+            // if e-stop triggered or fault occurs: transition to braking.
+            vTaskDelay(pdMS_TO_TICKS(100)); // placeholder delay
             // closed-loop control must be implemented here.
             break;
         case MOTOR_STATE_BRAKING:
-            // entered immediately when a fault occurs
-            // deccelerate here
+            vTaskDelay(pdMS_TO_TICKS(100)); // placeholder delay
+            // if speed == 0: transition to fault state
             break;
         case MOTOR_STATE_FAULT:
-            // the motor has come to a stop
-            // fault must be acknowledged by user.
+            hallSensorIntDisable(); // need to decide later where the best state is to call this.
+            speed_semaphore_given = false;
+            xSemaphoreTake(faultAcknowledgedSemaphore, portMAX_DELAY); // give from UI
+            motorInit();
             break;
         default:
             break;
