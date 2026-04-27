@@ -32,4 +32,5 @@ extern void Kentec320x240x16_SSD2119Init(uint32_t ui32SysClock);
 extern const tDisplay g_sKentec320x240x16_SSD2119;
 void SSD2119_WriteCommand(uint16_t cmd);
 void SSD2119_WriteData(uint16_t data);
+void SSD2119_PixelDraw(tDisplay *context, int32_t x1, int32_t y1, uint32_t buff);
 #endif // __KENTEC320X240X16_SSD2119_SPI_H__

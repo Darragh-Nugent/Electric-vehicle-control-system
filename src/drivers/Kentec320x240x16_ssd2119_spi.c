@@ -610,7 +610,14 @@ Kentec320x240x16_SSD2119PixelDraw(void *pvDisplayData, int32_t i32X,
     WriteCommandSPI(SSD2119_RAM_DATA_REG);
     WriteDataSPI(ui32Value);
 }
+void SSD2119_PixelDraw(tDisplay *context, int32_t x1, int32_t y1, uint32_t buff)
+{
+    // Cast the tDisplay* to the correct type if necessary (in this case, it's tContext*).
+    tContext *grlibContext = (tContext *)context;
 
+    // Call the original Kentec320x240x16_SSD2119PixelDraw function
+    Kentec320x240x16_SSD2119PixelDraw(grlibContext, x1, y1, buff);
+}
 //*****************************************************************************
 //
 //! Draws a horizontal sequence of pixels on the screen.
