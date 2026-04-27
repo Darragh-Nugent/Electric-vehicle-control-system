@@ -6,7 +6,7 @@
 
 void scr_dashboard_show_fault_banner(bool hasFault) {};
 void scr_dashboard_set_rpm(float f) {};
-void scr_dashboard_set_sensor(uint32_t idx,float f) {};
+void scr_dashboard_set_sensor(uint32_t idx, float f) {};
 void scr_dashboard_set_motor_state(uint32_t state) {};
 
 static lv_obj_t *s_screen;
@@ -44,21 +44,33 @@ static lv_obj_t *prv_nav_button_init(lv_obj_t *parent, const char *label, lv_eve
 
     return button;
 }
-
 void scr_dashboard_init(void)
 {
     s_screen = lv_obj_create(NULL);
 
-    prv_nav_button_init(s_screen, "Motor", btn_motor_cb, LV_ALIGN_BOTTOM_LEFT, -8, -8);
-    prv_nav_button_init(s_screen, "Sensors", btn_sensors_cb, LV_ALIGN_BOTTOM_LEFT, -8, -8);
-    prv_nav_button_init(s_screen, "Alerts", btn_alert_cb, LV_ALIGN_BOTTOM_LEFT, -8, -8);
+    // Create a container for the navigation bar at the bottom
+    lv_obj_t *nav_bar = lv_obj_create(s_screen);
+    lv_obj_set_size(nav_bar, LV_HOR_RES, 50);         // Set the navigation bar's height
+    lv_obj_align(nav_bar, LV_ALIGN_BOTTOM_MID, 0, 0); // Align it to the bottom of the screen
+
+    // Create the buttons within the navigation bar, spaced evenly
+    lv_obj_t *motor_btn = prv_nav_button_init(nav_bar, "Motor", btn_motor_cb, LV_ALIGN_LEFT_MID, 10, 0);
+    lv_obj_t *sensors_btn = prv_nav_button_init(nav_bar, "Sensors", btn_sensors_cb, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_t *alerts_btn = prv_nav_button_init(nav_bar, "Alerts", btn_alert_cb, LV_ALIGN_RIGHT_MID, -10, 0);
+
+    // Align the buttons horizontally within the navigation bar
+    lv_obj_set_width(motor_btn, 80);  
+    lv_obj_set_width(sensors_btn, 80); 
+    lv_obj_set_width(alerts_btn, 80);  
+
+    // Add some spacing between buttons
+    lv_obj_align(motor_btn, LV_ALIGN_LEFT_MID, 10, 0);
+    lv_obj_align(sensors_btn, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_align(alerts_btn, LV_ALIGN_RIGHT_MID, -10, 0);
 
     // To Do:
     // maybe remove nav for alerts, it should pop up instantly over everything
     // add in other sensors as their own seperate pages
     // add in charts/graph
-
-
 }
-
-lv_obj_t *scr_dashboard_get(void){return s_screen;}
+    lv_obj_t *scr_dashboard_get(void) { return s_screen; }
