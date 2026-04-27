@@ -50,6 +50,13 @@ void scr_dashboard_init(void)
     lv_color_t green = {124, 218, 124};
     s_screen = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(s_screen, green, LV_PART_MAIN);
+
+    // Label
+    lv_obj_t *title_label = lv_label_create(s_screen);
+    lv_label_set_text(title_label, "Group #30");
+    lv_obj_set_style_text_font(title_label, &lv_font_montserrat_30, 0);
+    lv_obj_align(title_label, LV_ALIGN_TOP_MID, 0, 8);
+
     // Create a container for the navigation bar at the bottom
     lv_obj_t *nav_bar = lv_obj_create(s_screen);
     lv_obj_set_size(nav_bar, LV_HOR_RES, 50);         // Set the navigation bar's height
