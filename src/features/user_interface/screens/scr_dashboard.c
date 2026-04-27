@@ -46,8 +46,10 @@ static lv_obj_t *prv_nav_button_init(lv_obj_t *parent, const char *label, lv_eve
 }
 void scr_dashboard_init(void)
 {
+    // To Do: Modularise colour
+    lv_color_t green = {124, 218, 124};
     s_screen = lv_obj_create(NULL);
-
+    lv_obj_set_style_bg_color(s_screen, green, LV_PART_MAIN);
     // Create a container for the navigation bar at the bottom
     lv_obj_t *nav_bar = lv_obj_create(s_screen);
     lv_obj_set_size(nav_bar, LV_HOR_RES, 50);         // Set the navigation bar's height
@@ -59,9 +61,9 @@ void scr_dashboard_init(void)
     lv_obj_t *alerts_btn = prv_nav_button_init(nav_bar, "Alerts", btn_alert_cb, LV_ALIGN_RIGHT_MID, -10, 0);
 
     // Align the buttons horizontally within the navigation bar
-    lv_obj_set_width(motor_btn, 80);  
-    lv_obj_set_width(sensors_btn, 80); 
-    lv_obj_set_width(alerts_btn, 80);  
+    lv_obj_set_width(motor_btn, 80);
+    lv_obj_set_width(sensors_btn, 80);
+    lv_obj_set_width(alerts_btn, 80);
 
     // Add some spacing between buttons
     lv_obj_align(motor_btn, LV_ALIGN_LEFT_MID, 10, 0);
@@ -73,4 +75,4 @@ void scr_dashboard_init(void)
     // add in other sensors as their own seperate pages
     // add in charts/graph
 }
-    lv_obj_t *scr_dashboard_get(void) { return s_screen; }
+lv_obj_t *scr_dashboard_get(void) { return s_screen; }

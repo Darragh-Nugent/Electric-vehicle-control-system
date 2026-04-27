@@ -46,7 +46,9 @@ static lv_obj_t *prv_nav_button_init(lv_obj_t *parent, const char *label, lv_eve
 
 void scr_sensors_init(void)
 {
+    lv_color_t green = {124, 218, 124};
     s_screen = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(s_screen, green, LV_PART_MAIN);
 
     // To DO:
     // Add similar but for other sensors

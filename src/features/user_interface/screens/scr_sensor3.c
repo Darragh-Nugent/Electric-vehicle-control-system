@@ -18,7 +18,9 @@ static void btn_home_cb(lv_event_t *e)
 
 void scr_sensor3_init(void)
 {
+    lv_color_t green = {124, 218, 124};
     s_screen = lv_obj_create(NULL);
+    lv_obj_set_style_bg_color(s_screen, green, LV_PART_MAIN);
 
     // To DO:
     // Add relevant buttons and diagnostics for motor

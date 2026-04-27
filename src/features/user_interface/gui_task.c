@@ -171,7 +171,7 @@ void vCreateGuiTask(void)
 void prvGuiHardwareInit(void)
 {
     GrContextInit(&g_sContext, &g_sKentec320x240x16_SSD2119);
-    GrContextForegroundSet(&g_sContext, ClrWhite);
+    GrContextForegroundSet(&g_sContext, ClrLightGreen);
     GrContextBackgroundSet(&g_sContext, ClrBlack);
 }
 
