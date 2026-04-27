@@ -21,12 +21,12 @@
 #include "driverlib/i2c.h"
 #include "driverlib/interrupt.h"
 #include "drivers/bmi160.h"
-#include "drivers/i2cOptDriver.h"
 #include "drivers/sht31.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
 #include "features/sensors/sensor_events.h"
+#include "sensor_filters.h"
 
 /*-----------------------------------------------------------*/
 
@@ -71,7 +71,6 @@ extern void xI2CHandler(void);
  * Functions for the light sensor
  */
 extern void prvSensorOPT3001TimerInit(void);
-uint16_t getFilteredLight(uint16_t newValue);
 
 /*-----------------------------------------------------------*/
 
@@ -80,19 +79,15 @@ uint16_t getFilteredLight(uint16_t newValue);
  */
 extern void prvSensorBmi160Init(struct bmi160_dev *bmi160dev);
 extern int16_t getAbsoluteAccel(struct bmi160_sensor_data bmi160_accel);
-extern double getFilteredAccel(int16_t rawAccel);
 
 /*-----------------------------------------------------------*/
 
 /*
-* Functions for the temperature and humidity sensor
-*/
+ * Functions for the temperature and humidity sensor
+ */
 extern void prvSensorSHT31Init(void);
-uint16_t getFilteredValue(uint16_t newValue);
 
 /*-----------------------------------------------------------*/
-
-
 
 /*
  * Called by main() to do example specific hardware configurations and to
@@ -124,7 +119,7 @@ void vLightSensorTask(void *pvParameters)
     // Intialise acceleration sensor
     prvSensorBmi160Init(&bmi160dev);
 
-    //Intialise env sensor
+    // Intialise env sensor
     prvSensorSHT31Init();
 
     UARTprintf("Sensor start\n");
@@ -143,6 +138,12 @@ void vLightSensorTask(void *pvParameters)
 
     uint32_t events;
 
+    // Create filters for sensors
+    moving_avg_t lightFilter = {{0}, 0, 0};
+    moving_avg_t tempFilter = {{0}, 0, 0};
+    moving_avg_t humidityFilter = {{0}, 0, 0};
+    exp_filter_t accelFilter = {0.25, 0};
+
     // Loop Forever
     while (1)
     {
@@ -156,18 +157,18 @@ void vLightSensorTask(void *pvParameters)
             if (success)
             {
                 sensorOpt3001Convert(rawData, &convertedLux);
-                uint16_t lux = (uint16_t)convertedLux;
-                uint16_t filteredLux = getFilteredLight(lux);
+                float lux = convertedLux;
+                float filteredLux = filterMovingAverage(&lightFilter, lux);
                 // UARTprintf("Lux: %5d\n", lux_int);
-                UARTprintf("%u,%d\n", lux, filteredLux);
+                UARTprintf("%u,%d\n", (int)lux, (int)filteredLux);
             }
         }
         if (events & ACCEL_SENSOR_EVENT)
         {
             int8_t result = bmi160_get_sensor_data(BMI160_ACCEL_SEL, &bmi160_accel, NULL, &bmi160dev);
             int16_t absoluteAccel = getAbsoluteAccel(bmi160_accel);
-            double filteredAccel = getFilteredAccel(absoluteAccel);
-            // UARTprintf("%d,%d\n", absoluteAccel, (int)(filteredAccel));
+            float filteredAccel = filterExponential(&accelFilter, (float)absoluteAccel);
+            UARTprintf("%d,%d\n", absoluteAccel, (int)(filteredAccel));
 
             //     if (filteredAccel > 6000)
             //     {
@@ -175,12 +176,14 @@ void vLightSensorTask(void *pvParameters)
             //     }
             // }
         }
-        if (events & TEMP_SENSOR_EVENT)
-        {
-            float temp;
-            float humidity;
-            bool result = sht31_getTempHum(&temp, &humidity);
-            UARTprintf("temp: %d,  humidity: %d", (int)(temp), (int)(humidity));
-        }
+        // if (events & TEMP_SENSOR_EVENT)
+        // {
+        //     float temp;
+        //     float humidity;
+        //     bool result = sht31_getTempHum(&temp, &humidity);
+        //     float filteredTemp = filterMovingAverage(&tempFilter, temp);
+        //     float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
+        //     // UARTprintf("temp: %d,  humidity: %d", (int)(filteredTemp), (int)(filteredHumidity));
+        // }
     }
 }

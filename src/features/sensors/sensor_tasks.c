@@ -20,11 +20,13 @@
 #include "driverlib/i2c.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/timer.h"
+#include "drivers/i2cDriver.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
-#include "features/sensors/i2c_message_struct.h"
 #include "sensor_events.h"
+
+/*-----------------------------------------------------------*/
 
 extern void vI2CManagerTask(void *pvParameters);
 extern void vAccelerationSensorTask(void *pvParameters);
@@ -34,18 +36,25 @@ extern void vLightSensorTask(void *pvParameters);
 extern void vPowerSensorTask(void *pvParameters);
 extern void vSpeedSensorTask(void *pvParameters);
 
-extern void prvSensorBMI160TimerInit(void);
-extern void prvSensorSHT31TimerInit(void);
+/*-----------------------------------------------------------*/
 
 extern void xI2C0Handler(void);
 extern void xI2C2Handler(void);
 
 extern void xOPT3001Handler(void);
+extern void xSHT31Handler(void);
+extern void xBMI160Handler(void);
 
-static void prvSensorOPT3001TimerInit(void);
+/*-----------------------------------------------------------*/
+
 static void prvI2CInit(void);
+static void prvTimerInit(void);
+
+/*-----------------------------------------------------------*/
 
 void vCreateSensorTasks(void);
+
+/*-----------------------------------------------------------*/
 
 extern uint32_t g_ui32SysClock;
 
@@ -57,6 +66,8 @@ QueueHandle_t xI2CSendQueue;
 QueueHandle_t xI2CRecvQueue;
 
 EventGroupHandle_t xSensorEvents;
+
+/*-----------------------------------------------------------*/
 
 void vCreateSensorTasks(void)
 {
@@ -70,9 +81,7 @@ void vCreateSensorTasks(void)
     xSensorEvents = xEventGroupCreate();
 
     prvI2CInit();
-    prvSensorOPT3001TimerInit();
-    prvSensorBMI160TimerInit();
-    prvSensorSHT31TimerInit();
+    prvTimerInit();
     // vTaskDelay(pdMS_TO_TICKS(1000)); // delay to ensure sensor is initialised before testing
 
     xTaskCreate(
@@ -91,6 +100,8 @@ void vCreateSensorTasks(void)
         LIGHT_SENSOR_PRIORITY,
         NULL);
 }
+
+/*-----------------------------------------------------------*/
 
 static void prvI2CInit(void)
 {
@@ -157,8 +168,42 @@ static void prvI2CInit(void)
     IntEnable(INT_I2C0); // should be in opt_task (thats what the semaphore example had)
     IntEnable(INT_I2C2);
 
-    I2CMasterTimeoutSet(I2C0_BASE, g_ui32SysClock / 10);
-    I2CMasterTimeoutSet(I2C2_BASE, g_ui32SysClock / 10);
+    I2CMasterTimeoutSet(I2C0_BASE, g_ui32SysClock / 100);
+    I2CMasterTimeoutSet(I2C2_BASE, g_ui32SysClock / 100);
 
+    IntMasterEnable();
+}
+
+static void prvTimerInit(void)
+{
+    // Enable the sensor timers
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // Enable the Timer 0 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 0 Module.
+
+    // Configure the interrupt time
+    TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock / 2); // set to ~ 2Hz
+
+    TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
+
+    TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock); // set to ~ 1Hz
+
+    // Regester and enable the interrupts
+    TimerIntRegister(TIMER0_BASE, TIMER_A, xOPT3001Handler);
+    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER0_BASE, TIMER_A);
+
+    TimerIntRegister(TIMER1_BASE, TIMER_A, xBMI160Handler);
+    TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER1_BASE, TIMER_A);
+
+    TimerIntRegister(TIMER2_BASE, TIMER_A, xSHT31Handler);
+    TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER2_BASE, TIMER_A);
+
+    // Enable Master Interrupts
     IntMasterEnable();
 }

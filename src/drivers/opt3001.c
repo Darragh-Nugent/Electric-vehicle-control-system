@@ -42,7 +42,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <math.h>
-#include "i2cOptDriver.h"
+#include "i2cDriver.h"
 #include "opt3001.h"
 #include "utils/uartstdio.h"
 

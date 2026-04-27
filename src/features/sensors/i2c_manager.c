@@ -19,11 +19,10 @@
 #include "drivers/opt3001.h"
 #include "driverlib/i2c.h"
 #include "driverlib/interrupt.h"
-#include "drivers/i2cOptDriver.h"
+#include "drivers/i2cDriver.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
-#include "i2c_message_struct.h"
 
 /*-----------------------------------------------------------*/
 

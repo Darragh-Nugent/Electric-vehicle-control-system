@@ -18,7 +18,6 @@
 #include "drivers/opt3001.h"
 #include "driverlib/i2c.h"
 #include "driverlib/interrupt.h"
-#include "drivers/i2cOptDriver.h"
 #include "sht31.h"
 
 #include "motorlib.h"

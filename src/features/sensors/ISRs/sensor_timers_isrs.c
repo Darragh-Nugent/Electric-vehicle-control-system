@@ -23,7 +23,6 @@
 
 #include "motorlib.h"
 #include "features/priorities.h"
-#include "features/sensors/i2c_message_struct.h"
 #include "../sensor_events.h"
 
 extern EventGroupHandle_t xSensorEvents;
@@ -32,7 +31,6 @@ void xOPT3001Handler(void)
 {
     TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, LIGHT_SENSOR_EVENT);
-
 }
 
 void xBMI160Handler(void)

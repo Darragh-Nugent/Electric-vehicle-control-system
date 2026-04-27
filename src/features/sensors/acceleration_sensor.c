@@ -16,31 +16,17 @@
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
 #include "drivers/bmi160.h"
-#include "drivers/i2cOptDriver.h"
+#include "drivers/i2cDriver.h"
 #include "driverlib/timer.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
 
-#define ACCEL_SMOOTH 0.25
 #define ACCEL_PREV_NUM 8
 
 extern uint32_t g_ui32SysClock;
 
 extern void xBMI160Handler(void);
-
-void prvSensorBMI160TimerInit(void)
-{
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
-
-    TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
-    TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
-
-    TimerIntRegister(TIMER1_BASE, TIMER_A, xBMI160Handler); // set the timer interrupt vector
-    TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);        // Enable the timer interrupt
-    TimerEnable(TIMER1_BASE, TIMER_A);                      // Enable the timers.
-    IntMasterEnable();                                      // Enable Master Interrupts
-}
 
 static void prvBmi160Delay(uint32_t period)
 {
@@ -103,11 +89,4 @@ void prvSensorBmi160Init(struct bmi160_dev *bmi160dev)
 int16_t getAbsoluteAccel(struct bmi160_sensor_data bmi160_accel)
 {
     return abs(bmi160_accel.x) + abs(bmi160_accel.y) + abs(bmi160_accel.z);
-}
-
-double getFilteredAccel(int16_t rawAccel)
-{
-    static double prev = 0;
-    prev = ACCEL_SMOOTH * rawAccel + (1 - ACCEL_SMOOTH) * prev;
-    return prev;
 }

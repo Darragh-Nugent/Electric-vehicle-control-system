@@ -9,14 +9,13 @@
  **************************************************************************************************/
 
 // ----------------------- Includes -----------------------
-#include "i2cOptDriver.h"
+#include "i2cDriver.h"
 #include "inc/hw_memmap.h"
 #include "driverlib/i2c.h"
 #include "utils/uartstdio.h"
 #include "driverlib/sysctl.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
-#include "features/sensors/i2c_message_struct.h"
 #include "drivers/bmi160.h"
 
 extern QueueHandle_t xI2CSendQueue;
@@ -117,8 +116,6 @@ bool I2C_read_reg(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
 
     return response.success;
 }
-
-
 
 /*
  * Read 2-byte value from I2C register
