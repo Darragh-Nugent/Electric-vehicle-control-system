@@ -1,145 +1,33 @@
-//*****************************************************************************
+// ui_display.c
 //
-// fonttest.c - Simple font testcase.
+// Owns: GrLib context, initial banner, complete widget tree construction.
+// Rules:
+//   NO FreeRTOS API calls (no xTaskCreate, no vTaskDelay, no semaphores)
+//   NO WidgetPaint() — painting happens in gui_task.c
+//   NO hardware init — LCD, touch, uDMA already done in main()
 //
-// Copyright (c) 2013-2020 Texas Instruments Incorporated.  All rights reserved.
-// Software License Agreement
-//
-// Texas Instruments (TI) is supplying this software for use solely and
-// exclusively on TI's microcontroller products. The software is owned by
-// TI and/or its suppliers, and is protected under applicable copyright
-// laws. You may not combine this software with "viral" open-source
-// software in order to form a larger program.
-//
-// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
-// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
-// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
-// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
-// DAMAGES, FOR ANY REASON WHATSOEVER.
-//
-// This is part of revision 2.2.0.295 of the EK-TM4C1294XL Firmware Package.
-//
-//*****************************************************************************
+// All widget declarations are copied exactly from your uploaded fonttest.c.
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "inc/hw_memmap.h"
-#include "inc/hw_nvic.h"
-#include "inc/hw_sysctl.h"
-#include "inc/hw_types.h"
-#include "driver_lib/fpu.h"
-#include "driver_lib/gpio.h"
-#include "driver_lib/flash.h"
-#include "driver_lib/sysctl.h"
-#include "driver_lib/systick.h"
-#include "driver_lib/uart.h"
-#include "driver_lib/udma.h"
-#include "driver_lib/rom.h"
-#include "driver_lib/rom_map.h"
-#include "grlib.h"
-#include "widget.h"
-#include "canvas.h"
-#include "checkbox.h"
-#include "container.h"
-#include "pushbutton.h"
-#include "radiobutton.h"
-#include "slider.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "utils/uartstdio.h"
+#include "grlib/grlib.h"
+#include "grlib/widget.h"
+#include "grlib/canvas.h"
+#include "grlib/checkbox.h"
+#include "grlib/container.h"
+#include "grlib/pushbutton.h"
+#include "grlib/radiobutton.h"
+#include "grlib/slider.h"
 #include "utils/ustdlib.h"
 #include "drivers/Kentec320x240x16_ssd2119_spi.h"
-#include "drivers/touch.h"
 #include "images.h"
+#include "display.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "utils/uartstdio.h"
-//*****************************************************************************
-//
-//! \addtogroup example_list
-//! <h1>Graphics Library Demonstration (grlib_demo)</h1>
-//!
-//! This application provides a demonstration of the capabilities of the
-//! TivaWare Graphics Library.  A series of panels show different features of
-//! the library.  For each panel, the bottom provides a forward and back button
-//! (when appropriate), along with a brief description of the contents of the
-//! panel.
-//!
-//! The first panel provides some introductory text and basic instructions for
-//! operation of the application.
-//!
-//! The second panel shows the available drawing primitives: lines, circles,
-//! rectangles, strings, and images.
-//!
-//! The third panel shows the canvas widget, which provides a general drawing
-//! surface within the widget hierarchy.  A text, image, and application-drawn
-//! canvas are displayed.
-//!
-//! The fourth panel shows the check box widget, which provides a means of
-//! toggling the state of an item.  Four check boxes are provided, with each
-//! having a red ``LED'' to the right.  The state of the LED tracks the state
-//! of the check box via an application callback.
-//!
-//! The fifth panel shows the container widget, which provides a grouping
-//! construct typically used for radio buttons.  Containers with a title, a
-//! centered title, and no title are displayed.
-//!
-//! The sixth panel shows the push button widget.  Two columns of push buttons
-//! are provided; the appearance of each column is the same but the left column
-//! does not utilize auto-repeat while the right column does.  Each push button
-//! has a red ``LED'' to its left, which is toggled via an application callback
-//! each time the push button is pressed.
-//!
-//! The seventh panel shows the radio button widget.  Two groups of radio
-//! buttons are displayed, the first using text and the second using images for
-//! the selection value.  Each radio button has a red ``LED'' to its right,
-//! which tracks the selection state of the radio buttons via an application
-//! callback.  Only one radio button from each group can be selected at a time,
-//! though the radio buttons in each group operate independently.
-//!
-//! The eighth and final panel shows the slider widget.  Six sliders
-//! constructed using the various supported style options are shown.  The
-//! slider value callback is used to update two widgets to reflect the values
-//! reported by sliders.  A canvas widget near the top right of the display
-//! tracks the value of the red and green image-based slider to its left and
-//! the text of the grey slider on the left side of the panel is update to show
-//! its own value.  The slider on the right is configured as an indicator
-//! which tracks the state of the upper slider and ignores user input.
-//!
-//! The LCD BoosterPack (BOOSTXL-K350QVG-S1) should be installed on
-//! BoosterPack 2 interface headers.
-//
-//*****************************************************************************
-//
-//*****************************************************************************
-//
-// The error routine that is called if the driver library encounters an error.
-//
-//*****************************************************************************
-#ifdef DEBUG
-void __error__(char *pcFilename, uint32_t ui32Line)
-{
-}
-#endif
-
-//*****************************************************************************
-//
-// Gloal variable used to store the frequency of the system clock.
-//
-//*****************************************************************************
-extern uint32_t g_ui32SysClock;
-//*****************************************************************************
-//
-// The DMA control structure table.
-//
-//*****************************************************************************
-#ifdef ewarm
-#pragma data_alignment = 1024
-tDMAControlTable psDMAControlTable[64];
-#elif defined(ccs)
-#pragma DATA_ALIGN(psDMAControlTable, 1024)
-tDMAControlTable psDMAControlTable[64];
-#else
-tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
-#endif
+extern volatile uint32_t g_ui32SysClock;
 
 //*****************************************************************************
 //
@@ -158,7 +46,6 @@ void OnRadioChange(tWidget *psWidget, uint32_t bSelected);
 void OnSliderChange(tWidget *psWidget, int32_t i32Value);
 extern tCanvasWidget g_psPanels[];
 
-void vDemoTask(void *pvParam);
 //*****************************************************************************
 //
 // The first panel, which contains introductory text explaining the
@@ -460,33 +347,26 @@ tSliderWidget g_psSliders[] =
 #define SLIDER_TEXT_VAL_INDEX 0
 #define SLIDER_LOCKED_INDEX 2
 #define SLIDER_CANVAS_VAL_INDEX 4
-
 #define NUM_SLIDERS (sizeof(g_psSliders) / sizeof(g_psSliders[0]))
 
-//*****************************************************************************
-//
-// An array of canvas widgets, one per panel.  Each canvas is filled with
-// black, overwriting the contents of the previous panel.
-//
-//*****************************************************************************
-tCanvasWidget g_psPanels[] =
-    {
-        CanvasStruct(0, 0, &g_sIntroduction, &g_sKentec320x240x16_SSD2119, 0, 24,
-                     320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
-        CanvasStruct(0, 0, &g_sPrimitives, &g_sKentec320x240x16_SSD2119, 0, 24,
-                     320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
-        CanvasStruct(0, 0, &g_sCanvas1, &g_sKentec320x240x16_SSD2119, 0, 24, 320,
-                     166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
-        CanvasStruct(0, 0, g_psCheckBoxes, &g_sKentec320x240x16_SSD2119, 0, 24,
-                     320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
-        CanvasStruct(0, 0, &g_sContainer1, &g_sKentec320x240x16_SSD2119, 0, 24,
-                     320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
-        CanvasStruct(0, 0, g_psPushButtons, &g_sKentec320x240x16_SSD2119, 0, 24,
-                     320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
-        CanvasStruct(0, 0, g_psRadioContainers, &g_sKentec320x240x16_SSD2119, 0,
-                     24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
-        CanvasStruct(0, 0, g_psSliders, &g_sKentec320x240x16_SSD2119, 0,
-                     24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
+// ── Panel canvas array ────────────────────────────────────────────────────
+tCanvasWidget g_psPanels[] = {
+    CanvasStruct(0, 0, &g_sIntroduction, &g_sKentec320x240x16_SSD2119,
+                 0, 24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
+    CanvasStruct(0, 0, &g_sPrimitives, &g_sKentec320x240x16_SSD2119,
+                 0, 24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
+    CanvasStruct(0, 0, &g_sCanvas1, &g_sKentec320x240x16_SSD2119,
+                 0, 24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
+    CanvasStruct(0, 0, g_psCheckBoxes, &g_sKentec320x240x16_SSD2119,
+                 0, 24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
+    CanvasStruct(0, 0, &g_sContainer1, &g_sKentec320x240x16_SSD2119,
+                 0, 24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
+    CanvasStruct(0, 0, g_psPushButtons, &g_sKentec320x240x16_SSD2119,
+                 0, 24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
+    CanvasStruct(0, 0, g_psRadioContainers, &g_sKentec320x240x16_SSD2119,
+                 0, 24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
+    CanvasStruct(0, 0, g_psSliders, &g_sKentec320x240x16_SSD2119,
+                 0, 24, 320, 166, CANVAS_STYLE_FILL, ClrBlack, 0, 0, 0, 0, 0, 0),
 };
 
 //*****************************************************************************
@@ -502,17 +382,16 @@ tCanvasWidget g_psPanels[] =
 // screen.
 //
 //*****************************************************************************
-char *g_pcPanei32Names[] =
-    {
-        "     Introduction     ",
-        "     Primitives     ",
-        "     Canvas     ",
-        "     Checkbox     ",
-        "     Container     ",
-        "     Push Buttons     ",
-        "     Radio Buttons     ",
-        "     Sliders     ",
-        "     S/W Update    "};
+char *g_pcPanei32Names[] = {
+    "     Introduction     ",
+    "     Primitives     ",
+    "     Canvas     ",
+    "     Checkbox     ",
+    "     Container     ",
+    "     Push Buttons     ",
+    "     Radio Buttons     ",
+    "     Sliders     ",
+};
 
 //*****************************************************************************
 //
@@ -533,24 +412,46 @@ RectangularButton(g_sNext, 0, 0, 0, &g_sKentec320x240x16_SSD2119, 270, 190,
                   ClrSilver, &g_sFontCm20, "+", g_pui8Blue50x50,
                   g_pui8Blue50x50Press, 0, 0, OnNext);
 
-//*****************************************************************************
-//
-// The panel that is currently being displayed.
-//
-//*****************************************************************************
-uint32_t g_ui32Panel;
+uint32_t g_ui32Panel = 0;
 
 //*****************************************************************************
 //
-// Handles presses of the previous panel button.
+// Public init function - Should be called in main due to the heavy draw calls
 //
 //*****************************************************************************
+void ui_display_init(void)
+{
+    // Draw the initial banner using direct GrLib calls.
+    tContext sContext;
+    tRectangle sRect;
+
+    GrContextInit(&sContext, &g_sKentec320x240x16_SSD2119);
+
+    // Banner creation
+    sRect.i16XMin = 0;
+    sRect.i16YMin = 0;
+    sRect.i16XMax = GrContextDpyWidthGet(&sContext) - 1;
+    sRect.i16YMax = 23;
+    GrContextForegroundSet(&sContext, ClrDarkBlue);
+    GrRectFill(&sContext, &sRect);
+    GrContextForegroundSet(&sContext, ClrWhite);
+    GrRectDraw(&sContext, &sRect);
+    GrContextFontSet(&sContext, &g_sFontCm20);
+    GrStringDrawCentered(&sContext, "grlib demo", -1,
+                         GrContextDpyWidthGet(&sContext) / 2, 8, 0);
+
+    // Build the widget tree
+    WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sPrevious);
+    WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sTitle);
+    WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sNext);
+    g_ui32Panel = 0;
+    WidgetAdd(WIDGET_ROOT, (tWidget *)g_psPanels);
+    CanvasTextSet(&g_sTitle, g_pcPanei32Names[0]);
+    UARTprintf("Free heap: %u\n", xPortGetFreeHeapSize());
+}
+
 void OnPrevious(tWidget *psWidget)
 {
-    //
-    // There is nothing to be done if the first panel is already being
-    // displayed.
-    //
     if (g_ui32Panel == 0)
     {
         return;
@@ -566,21 +467,12 @@ void OnPrevious(tWidget *psWidget)
     //
     g_ui32Panel--;
 
-    //
-    // Add and draw the new panel.
-    //
     WidgetAdd(WIDGET_ROOT, (tWidget *)(g_psPanels + g_ui32Panel));
     WidgetPaint((tWidget *)(g_psPanels + g_ui32Panel));
 
-    //
-    // Set the title of this panel.
-    //
     CanvasTextSet(&g_sTitle, g_pcPanei32Names[g_ui32Panel]);
     WidgetPaint((tWidget *)&g_sTitle);
 
-    //
-    // See if this is the first panel.
-    //
     if (g_ui32Panel == 0)
     {
         //
@@ -598,9 +490,6 @@ void OnPrevious(tWidget *psWidget)
     //
     if (g_ui32Panel == (NUM_PANELS - 2))
     {
-        //
-        // Display the next button.
-        //
         PushButtonImageOn(&g_sNext);
         PushButtonTextOn(&g_sNext);
         PushButtonFillOff(&g_sNext);
@@ -624,9 +513,6 @@ void OnNext(tWidget *psWidget)
         return;
     }
 
-    //
-    // Remove the current panel.
-    //
     WidgetRemove((tWidget *)(g_psPanels + g_ui32Panel));
 
     //
@@ -634,9 +520,6 @@ void OnNext(tWidget *psWidget)
     //
     g_ui32Panel++;
 
-    //
-    // Add and draw the new panel.
-    //
     WidgetAdd(WIDGET_ROOT, (tWidget *)(g_psPanels + g_ui32Panel));
     WidgetPaint((tWidget *)(g_psPanels + g_ui32Panel));
 
@@ -651,18 +534,12 @@ void OnNext(tWidget *psWidget)
     //
     if (g_ui32Panel == 1)
     {
-        //
-        // Display the previous button.
-        //
         PushButtonImageOn(&g_sPrevious);
         PushButtonTextOn(&g_sPrevious);
         PushButtonFillOff(&g_sPrevious);
         WidgetPaint((tWidget *)&g_sPrevious);
     }
 
-    //
-    // See if this is the last panel.
-    //
     if (g_ui32Panel == (NUM_PANELS - 1))
     {
         //
@@ -813,7 +690,6 @@ void OnCanvasPaint(tWidget *psWidget, tContext *psContext)
 void OnCheckChange(tWidget *psWidget, uint32_t bSelected)
 {
     uint32_t ui32Idx;
-
     //
     // Find the index of this check box.
     //
@@ -825,14 +701,10 @@ void OnCheckChange(tWidget *psWidget, uint32_t bSelected)
         }
     }
 
-    //
-    // Return if the check box could not be found.
-    //
     if (ui32Idx == NUM_CHECK_BOXES)
     {
         return;
     }
-
     //
     // Set the matching indicator based on the selected state of the check box.
     //
@@ -861,17 +733,11 @@ void OnButtonPress(tWidget *psWidget)
         }
     }
 
-    //
-    // Return if the push button could not be found.
-    //
     if (ui32Idx == NUM_PUSH_BUTTONS)
     {
         return;
     }
 
-    //
-    // Toggle the state of this push button indicator.
-    //
     g_ui32ButtonState ^= 1 << ui32Idx;
 
     //
@@ -973,7 +839,6 @@ void OnRadioChange(tWidget *psWidget, uint32_t bSelected)
         //
         ui32Idx += NUM_RADIO1_BUTTONS;
     }
-
     //
     // Set the matching indicator based on the selected state of the radio
     // button.
@@ -981,95 +846,4 @@ void OnRadioChange(tWidget *psWidget, uint32_t bSelected)
     CanvasImageSet(g_psRadioButtonIndicators + ui32Idx,
                    bSelected ? g_pui8LightOn : g_pui8LightOff);
     WidgetPaint((tWidget *)(g_psRadioButtonIndicators + ui32Idx));
-}
-
-void vCreateDemoTask(void)
-{
-    tContext sContext;
-    tRectangle sRect;
-    FPUEnable();
-    FPULazyStackingEnable();
-    Kentec320x240x16_SSD2119Init(g_ui32SysClock);
-    GrContextInit(&sContext, &g_sKentec320x240x16_SSD2119);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
-    SysCtlDelay(10);
-    //
-    // Fill the top 24 rows of the screen with blue to create the banner.
-    //
-    sRect.i16XMin = 0;
-    sRect.i16YMin = 0;
-    sRect.i16XMax = GrContextDpyWidthGet(&sContext) - 1;
-    sRect.i16YMax = 23;
-    GrContextForegroundSet(&sContext, ClrDarkBlue);
-    GrRectFill(&sContext, &sRect);
-
-    //
-    // Put a white box around the banner.
-    //
-    GrContextForegroundSet(&sContext, ClrWhite);
-    GrRectDraw(&sContext, &sRect);
-
-    //
-    // Put the application name in the middle of the banner.
-    //
-    GrContextFontSet(&sContext, &g_sFontCm20);
-    GrStringDrawCentered(&sContext, "grlib demo", -1,
-                         GrContextDpyWidthGet(&sContext) / 2, 8, 0);
-
-    //
-    // Configure and enable uDMA
-    //
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
-    SysCtlDelay(10);
-    uDMAControlBaseSet(&psDMAControlTable[0]);
-    uDMAEnable();
-
-    //
-    // Initialize the touch screen driver and have it route its messages to the
-    // widget tree.
-    //
-    TouchScreenInit(g_ui32SysClock);
-    TouchScreenCallbackSet(WidgetPointerMessage);
-
-    //
-    // Add the title block and the previous and next buttons to the widget
-    // tree.
-    //
-    WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sPrevious);
-    WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sTitle);
-    WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sNext);
-
-    //
-    // Add the first panel to the widget tree.
-    //
-    g_ui32Panel = 0;
-    WidgetAdd(WIDGET_ROOT, (tWidget *)g_psPanels);
-    CanvasTextSet(&g_sTitle, g_pcPanei32Names[0]);
-
-    //
-    // Issue the initial paint request to the widgets.
-    //
-    WidgetPaint(WIDGET_ROOT);
-
-    xTaskCreate(vDemoTask, "GUI", 8192, NULL, 2, NULL);
-}
-
-//*****************************************************************************
-//
-// A simple demonstration of the features of the TivaWare Graphics Library.
-//
-//*****************************************************************************
-void vDemoTask(void *pvParam)
-{
-
-    while (1)
-    {
-        //
-        // Process any messages in the widget message queue.
-        //
-        WidgetMessageQueueProcess();
-        // FORCE redraw (test)
-        WidgetPaint(WIDGET_ROOT);
-        vTaskDelay(pdMS_TO_TICKS(50));
-    }
 }

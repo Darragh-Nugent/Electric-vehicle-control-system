@@ -24,6 +24,7 @@
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
 #include "driver_lib/udma.h" //
+#include "driver_lib/fpu.h"  //
 
 #include "features/user_interface/gui_task.h"
 
@@ -33,6 +34,8 @@
 #include "drivers/Kentec320x240x16_ssd2119_spi.h"
 #include "drivers/touch.h"
 #include "widget.h"
+#include "features/user_interface/display.h"
+#include "features/user_interface/gui_task.h"
 /*-----------------------------------------------------------*/
 
 /* The system clock frequency. */
@@ -47,19 +50,23 @@ static void prvConfigureUART(void);
 
 extern void vCreateMotorTask(void);
 extern void vCreateSensorTasks(void);
-extern void vCreateGuiTask(void);
+extern void vCreateGUITask(void);
 extern void vCreateDemoTask(void);
 static void prvConfigureHallInts(void);
 
+tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
 /*-----------------------------------------------------------*/
 
 int main(void)
 {
     prvSetupHardware();
-
-    vCreateMotorTask();
-    vCreateSensorTasks();
-    vCreateDemoTask();
+    // vCreateMotorTask();
+    // vCreateSensorTasks();
+    UARTprintf("display init\n");
+    ui_display_init();
+    UARTprintf("Free heap: %u\n", xPortGetFreeHeapSize());
+    vCreateGUITask();
+    UARTprintf("GUI task creation returned\n");
 
     vTaskStartScheduler();
 
@@ -95,12 +102,23 @@ static void prvConfigureUART(void)
 /*-----------------------------------------------------------*/
 static void prvSetupHardware(void)
 {
+    FPUEnable();
+    FPULazyStackingEnable();
+
     /* Run from the PLL at configCPU_CLOCK_HZ MHz. */
     g_ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
                                              SYSCTL_OSC_MAIN | SYSCTL_USE_PLL |
                                              SYSCTL_CFG_VCO_240),
                                             configCPU_CLOCK_HZ);
 
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
+    SysCtlDelay(10);
+    uDMAControlBaseSet(&psDMAControlTable[0]);
+    uDMAEnable();
+
+    Kentec320x240x16_SSD2119Init(g_ui32SysClock);
+    TouchScreenInit(g_ui32SysClock);
+    TouchScreenCallbackSet(WidgetPointerMessage);
     /* Configure device pins. */
     PinoutSet(false, false);
 
@@ -110,6 +128,7 @@ static void prvSetupHardware(void)
     /* Set-up interrupts for hall sensors */
     prvConfigureHallInts();
 }
+/*-----------------------------------------------------------*/
 /*-----------------------------------------------------------*/
 
 void vApplicationMallocFailedHook(void)
@@ -141,7 +160,6 @@ static void prvConfigureHallInts(void)
     /* Enable global interrupts in the NVIC. */
     IntMasterEnable();
 }
-
 /*-----------------------------------------------------------*/
 
 void vApplicationIdleHook(void)

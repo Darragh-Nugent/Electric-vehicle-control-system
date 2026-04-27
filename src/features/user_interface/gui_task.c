@@ -1,70 +1,53 @@
-// #include "gui_task.h"
-// #include "../data.h"
-// #include "screens/scr_dashboard.h"
-// #include "grlib/widget.h"
-// #include "FreeRTOS.h"
-// #include "task.h"
-// #include "driver_lib/sysctl.h"
-// #include "driver_lib/udma.h"
-// #include "grlib.h"
-// #include "drivers/touch.h"
-// #include "drivers/Kentec320x240x16_ssd2119_spi.h"
-// #include "widget.h"
-// #include "semphr.h"
-// extern uint32_t g_ui32SysClock;
-// tContext sContext;
-// tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
-// SemaphoreHandle_t g_ui_mutex = NULL;
-// volatile UiData_t g_ui_data;
-// void vGuiTask(void *pvParams);
-// void vCreateGuiTask(void)
-// {
-//     Kentec320x240x16_SSD2119Init(g_ui32SysClock);
+#include <stdbool.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include "FreeRTOS.h"
+#include "task.h"
+#include "grlib/grlib.h"
+#include "grlib/widget.h"
+#include "utils/uartstdio.h"
+#include "gui_task.h"
+#include "../priorities.h"
 
-//     GrContextInit(&sContext, &g_sKentec320x240x16_SSD2119);
 
-//     g_ui_mutex = xSemaphoreCreateMutex();
-//     // configASSERT here will hard-fault before scheduler if mutex fails
-//     configASSERT(g_ui_mutex != NULL);
+static void vGuiTask(void *pvParam) {
+    (void)pvParam;
 
-//     // DMA init
-//     SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
-//     SysCtlDelay(10);
-//     uDMAControlBaseSet(&psDMAControlTable[0]);
-//     uDMAEnable();
+    UARTprintf("GUI task started\n");
+    UARTprintf("Free heap before paint: %u bytes\n",
+               (unsigned)xPortGetFreeHeapSize());
 
-//     // Touch init
-//     TouchScreenInit(g_ui32SysClock);
-//     TouchScreenCallbackSet(WidgetPointerMessage);
+    // Allow the scheduler and other tasks to fully settle.
+    // SPI bus and touch interrupt need a few ms to stabilise
+    // after the scheduler takes over from main().
+    vTaskDelay(pdMS_TO_TICKS(100));
 
-//     // Widget tree setup (ONE TIME ONLY)
-//     WidgetAdd(WIDGET_ROOT, (tWidget *)&g_sDashboardPanel);
-//     WidgetPaint(WIDGET_ROOT);
-//     xTaskCreate(vGuiTask, "GUI", 1024, NULL, 2, NULL);
-// }
+    // First and only call to WidgetPaint(WIDGET_ROOT).
+    // This triggers the full initial render of all widgets.
+    // Runs here — on the task stack — which is sized to handle it.
+    // All hardware is already initialised so the SPI writes succeed.
+    WidgetPaint(WIDGET_ROOT);
 
-// void vGuiTask(void *pvParams)
-// {
-//     (void)pvParams;
-//     GrContextForegroundSet(&sContext, ClrRed);
-//     GrStringDraw(&sContext, "GUI TASK ALIVE", -1, 10, 10, 0);
-//     for (;;)
-//     {
-//         // // 1. Push latest state into UI layer
-//         // scr_dashboard_refresh();
+    // Confirm stack headroom immediately after the heaviest operation.
+    // Target: watermark > 200 words. If below 100, increase task stack.
+    UBaseType_t watermark = uxTaskGetStackHighWaterMark(NULL);
+    UARTprintf("GUI watermark after paint: %u words (%u bytes)\n",
+               (unsigned)watermark, (unsigned)(watermark * sizeof(StackType_t)));
 
-//         // // 2. Process touch + widget events
-//         // WidgetMessageQueueProcess();
+    while (1) {
+        // Drain the widget message queue completely each tick.
+        // Processes touch events, queued WidgetPaint() calls from
+        // callbacks (OnNext, OnButtonPress, etc.), and auto-repeat.
+        WidgetMessageQueueProcess();
 
-//         // // 3. Let other tasks run
-//         // vTaskDelay(pdMS_TO_TICKS(40));
+        // 10ms delay — 100Hz pump rate.
+        // Do NOT use 50ms: a button press generates 3-4 messages
+        // (PTR_DOWN, PTR_MOVE, PTR_UP, PAINT). At 50ms you drop messages.
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+}
 
-//         GrContextForegroundSet(&sContext, ClrWhite);
-//         GrRectFill(&sContext, &(tRectangle){0, 0, 319, 239});
-
-//         GrContextForegroundSet(&sContext, ClrRed);
-//         GrStringDraw(&sContext, "TEST", -1, 10, 10, 0);
-
-//         vTaskDelay(pdMS_TO_TICKS(1000));
-//     }
-// }
+void vCreateGUITask(void) {
+    UARTprintf("Creating GUI task\n");
+    xTaskCreate(vGuiTask, "GUI", 4096, NULL, GUI_PRIORITY, NULL);
+}
