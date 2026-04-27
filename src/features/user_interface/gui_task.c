@@ -201,8 +201,8 @@ void prvGuiTask(void *pvParameters)
         // Clamp just to prevent UI sleeping for way too long
         if (delay_ms < 1)
             delay_ms = 1;
-        if (delay_ms > 20)
-            delay_ms = 20;
+        if (delay_ms > 10)
+            delay_ms = 10;
 
         // Wait -> allow other tasks to run
         vTaskDelay(pdMS_TO_TICKS(delay_ms));
