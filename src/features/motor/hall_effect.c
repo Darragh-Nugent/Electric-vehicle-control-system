@@ -32,6 +32,8 @@ void hallSensorHandler(void)
     GPIOIntClear(GPIO_PORTN_BASE, GPIO_PIN_2);
 
     updateMotor(hall_a, hall_b, hall_c);
+
+    // speed measuring code here
 }
 
 void hallSensorGPIOConfig(void)

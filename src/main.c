@@ -6,6 +6,7 @@
 /* Kernel includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 
 /* Hardware includes. */
 #include "driverlib/pin_map.h"
@@ -27,8 +28,6 @@
 // Motor lib
 #include <motorlib.h>
 
-/*-----------------------------------------------------------*/
-
 /* The system clock frequency. */
 uint32_t g_ui32SysClock;
 
@@ -46,12 +45,19 @@ extern void vCreateGuiTask(void);
 extern void hallSensorGPIOConfig(void);
 extern void hallSensorIntEnable(void);
 
+extern SemaphoreHandle_t motorStateMutex;
+extern SemaphoreHandle_t motorSetSpeedMutex;
 /*-----------------------------------------------------------*/
 
 int main( void )
 {
     prvSetupHardware();
     IntMasterEnable();
+
+    motorStateMutex = xSemaphoreCreateMutex();
+    motorSetSpeedMutex = xSemaphoreCreateMutex();
+
+    while (motorStateMutex == NULL || motorSetSpeedMutex == NULL) {}
 
     vCreateMotorTask();
     vCreateSensorTasks();
