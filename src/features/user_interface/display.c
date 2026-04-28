@@ -1,29 +1,50 @@
+#include <stdlib.h>
+#include <stdint.h>
 #include "lvgl.h"
-#include "grlib/grlib.h"
+#include "grlib.h"
 #include "drivers/Kentec320x240x16_ssd2119_spi.h"
+#include "display.h"
+extern tContext g_sContext;
 
-extern const tDisplay g_sKentec320x240x16_SSD2119;
+static uint16_t line_buf[DISP_BUF_PIXELS]; 
 
+// NOTE:
+// line_buf assumes LVGL partial rendering with buffer size = DISP_BUF_WIDTH * DISP_BUF_LINES.
+// LVGL guarantees flush areas will not exceed this size.
+// If you change buffer size, render mode, or resolution, this may overflow.
+// Update line_buf or implement chunking if that happens.
 void disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
-    // 1. Calculate how many pixels we are drawing
-    uint32_t width = (area->x2 - area->x1 + 1);
-    uint32_t height = (area->y2 - area->y1 + 1);
+    uint16_t *src = (uint16_t *)px_map;
+    const tDisplay *pDisplay = g_sContext.psDisplay;
 
-    // 2. Use the existing GrLib driver function to send the pixels
-    // We use the pointer-based function inside the tDisplay struct
-    for (int y = 0; y < height; y++)
+    int32_t width = area->x2 - area->x1 + 1;
+    int32_t height = area->y2 - area->y1 + 1;
+    int32_t total_pixels = width * height;
+
+    for (int32_t i = 0; i < total_pixels; i++)
     {
-        g_sKentec320x240x16_SSD2119.pfnPixelDrawMultiple(
-            g_sKentec320x240x16_SSD2119.pvDisplayData,
-            area->x1, area->y1 + y, // X, Y start
-            0,                  // No offsets
-            width,              // Number of pixels to draw
-            16,                 // Bits per pixel (RGB565)
-            px_map,             // The pixel data from LVGL
-            0                   // No palette
-        );
+        uint16_t px = src[i];
+        line_buf[i] = px; 
     }
-    // 3. IMPORTANT: Tell LVGL the hardware transfer is finished
+
+    // Send row by row WITHOUT reallocating
+    uint16_t *buf_ptr = line_buf;
+
+    for (int32_t y = area->y1; y <= area->y2; y++)
+    {
+        pDisplay->pfnPixelDrawMultiple(
+            pDisplay->pvDisplayData,
+            area->x1,
+            y,
+            area->x1,
+            width,
+            16,
+            (uint8_t *)buf_ptr,
+            NULL);
+
+        buf_ptr += width;
+    }
+
     lv_display_flush_ready(disp);
 }

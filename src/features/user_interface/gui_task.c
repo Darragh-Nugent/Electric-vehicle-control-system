@@ -41,34 +41,29 @@
 #include "timers.h"
 #include "gui_task.h"
 #include "lvgl.h"
+#include "grlib.h"
+
 
 #define GUI_TICK 5
-#ifdef ewarm
-#pragma data_alignment = 1024
-tDMAControlTable psDMAControlTable[64];
-#elif defined(ccs)
-#pragma DATA_ALIGN(psDMAControlTable, 1024)
-tDMAControlTable psDMAControlTable[64];
-#else
-tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
-#endif
+
 //*****************************************************************************
 //
 // Gloal variable used to store the frequency of the system clock.
 //
 //*****************************************************************************
-extern uint32_t g_ui32SysClock;
+extern volatile uint32_t g_ui32SysClock;
 
 // Queue handle (producers include data.h and use this queue)
 QueueHandle_t g_ui_queue;
 
+tContext g_sContext;
 static lv_display_t *my_display;
-static lv_color_t draw_buf1[320 * 20]; // 20 line buffer
-static lv_color_t draw_buf2[320 * 20]; // 20 line buffer
+static lv_color_t draw_buf1[DISP_BUF_PIXELS]; // 20 line buffer
+static lv_color_t draw_buf2[DISP_BUF_PIXELS]; // 20 line buffer
 
 void vCreateGuiTask(void);
 static void prvGuiTask(void *pvParameters);
-
+void prvGuiHardwareInit(void);
 //*****************************************************************************
 //
 // Tick Timer callback (This is required for LVGL)
@@ -146,7 +141,7 @@ static void prvDrainQueue(void)
 
 void display_init(void)
 {
-    my_display = lv_display_create(320, 240);
+    my_display = lv_display_create(DISP_RES_WIDTH, DISP_RES_HEIGHT);
 
     lv_display_set_flush_cb(my_display, disp_flush);
 
@@ -159,56 +154,30 @@ void display_init(void)
 
 void vCreateGuiTask(void)
 {
-    xTaskCreate(
+    g_ui_queue = xQueueCreate(UI_QUEUE_DEPTH, sizeof(UiMsg_t));
+
+    prvGuiHardwareInit();
+    BaseType_t ret = xTaskCreate(
         prvGuiTask,
         "GuiTask",
-        256,
+        4096,
         NULL,
         GUI_PRIORITY,
         NULL);
+
+    configASSERT(ret == pdPASS);    
 }
 
 void prvGuiHardwareInit(void)
 {
-    //
-    // The FPU should be enabled because some compilers will use floating-
-    // point registers, even for non-floating-point code.  If the FPU is not
-    // enabled this will cause a fault.  This also ensures that floating-
-    // point operations could be added to this application and would work
-    // correctly and use the hardware floating-point unit.  Finally, lazy
-    // stacking is enabled for interrupt handlers.  This allows floating-
-    // point instructions to be used within interrupt handlers, but at the
-    // expense of extra stack usage.
-    //
-    FPUEnable();
-    FPULazyStackingEnable();
-
-    //
-    // Initialize the display driver.
-    //
-    Kentec320x240x16_SSD2119Init(g_ui32SysClock);
-
-    // Configure and enable uDMA
-
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
-    SysCtlDelay(10);
-    uDMAControlBaseSet(&psDMAControlTable[0]);
-    uDMAEnable();
-
-    //
-    // Initialize the touch screen driver and have it route its messages to the
-    // TouchCallBack.
-    //
-    TouchScreenInit(g_ui32SysClock);
-    TouchScreenCallbackSet(TouchCallBack);
+    GrContextInit(&g_sContext, &g_sKentec320x240x16_SSD2119);
+    GrContextForegroundSet(&g_sContext, ClrLightGreen);
+    GrContextBackgroundSet(&g_sContext, ClrBlack);
 }
 
 void prvGuiTask(void *pvParameters)
 {
-    g_ui_queue = xQueueCreate(UI_QUEUE_DEPTH, sizeof(UiMsg_t));
-
     lv_init();
-    prvGuiHardwareInit();
     display_init();
     touch_driver_init();
     screen_manager_init();
@@ -221,7 +190,6 @@ void prvGuiTask(void *pvParameters)
         prvLvglTickCb);
 
     xTimerStart(xTickTimer, portMAX_DELAY);
-
     for (;;)
     {
         // Consume all pending data updates
@@ -233,8 +201,8 @@ void prvGuiTask(void *pvParameters)
         // Clamp just to prevent UI sleeping for way too long
         if (delay_ms < 1)
             delay_ms = 1;
-        if (delay_ms > 20)
-            delay_ms = 20;
+        if (delay_ms > 10)
+            delay_ms = 10;
 
         // Wait -> allow other tasks to run
         vTaskDelay(pdMS_TO_TICKS(delay_ms));
