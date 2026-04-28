@@ -43,7 +43,6 @@
 #include "lvgl.h"
 #include "grlib.h"
 
-
 #define GUI_TICK 5
 
 //*****************************************************************************
@@ -93,11 +92,14 @@ static void prvDispatchMsg(const UiMsg_t *msg)
         scr_motor_set_current(msg->payload.f);
         break;
 
-    case UI_MSG_MOTOR_STATE:
+    case UI_MSG_MOTOR_IDLE:
         scr_motor_set_state((uint8_t)msg->payload.u);
         scr_dashboard_set_motor_state((uint8_t)msg->payload.u);
         break;
-
+    case UI_MSG_MOTOR_RUNNING:
+        scr_motor_set_state((uint8_t)msg->payload.u);
+        scr_dashboard_set_motor_state((uint8_t)msg->payload.u);
+        break;
     // Sensor data
     case UI_MSG_SENSOR_A:
         scr_sensors_set_value(0, msg->payload.f);
@@ -165,8 +167,8 @@ void vCreateGuiTask(void)
         GUI_PRIORITY,
         NULL);
 
-    configASSERT(ret == pdPASS);    
-    (void) ret;
+    configASSERT(ret == pdPASS);
+    (void)ret;
 }
 
 void prvGuiHardwareInit(void)

@@ -12,7 +12,8 @@ typedef enum
 {
     UI_MSG_MOTOR_RPM = 0,
     UI_MSG_MOTOR_CURRENT,
-    UI_MSG_MOTOR_STATE, // enabled/disabled/fault -> add more if needed
+    UI_MSG_MOTOR_IDLE, // enabled/disabled/fault -> add more if needed
+    UI_MSG_MOTOR_RUNNING,
     UI_MSG_SENSOR_A,    // change later, potentially add more
     UI_MSG_SENSOR_B,
     UI_MSG_SENSOR_C,

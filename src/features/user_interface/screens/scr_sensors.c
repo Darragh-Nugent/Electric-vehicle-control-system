@@ -66,6 +66,7 @@ void scr_sensors_init(void)
 
     // Home
     lv_obj_t *home_button = create_icon_button(s_screen, LV_SYMBOL_HOME, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
+    (void) home_button;
 }
 
 lv_obj_t *scr_sensors_get(void)
