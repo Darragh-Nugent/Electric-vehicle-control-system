@@ -51,6 +51,7 @@ extern void xI2C2Handler(void);
 extern void xOPT3001Handler(void);
 extern void xBMI160Handler(void);
 extern void xSHT31Handler(void);
+extern void xSpeedHandler(void);
 
 extern void hallSensorHandler(void);
 
@@ -129,7 +130,7 @@ void (* const g_pfnVectors[])(void) =
     hallSensorHandler,                      // GPIO Port H
     IntDefaultHandler,                      // UART2 Rx and Tx
     IntDefaultHandler,                      // SSI1 Rx and Tx
-    IntDefaultHandler,                      // Timer 3 subtimer A
+    xSpeedHandler,                          // Timer 3 subtimer A
     IntDefaultHandler,                      // Timer 3 subtimer B
     IntDefaultHandler,                      // I2C1 Master and Slave
     IntDefaultHandler,                      // CAN0

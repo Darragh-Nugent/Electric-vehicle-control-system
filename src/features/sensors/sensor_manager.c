@@ -29,7 +29,6 @@
 #include "sensor_filters.h"
 
 /*-----------------------------------------------------------*/
-
 /*
  * Current clock period
  */

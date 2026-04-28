@@ -25,6 +25,7 @@
 #include "motorlib.h"
 #include "features/priorities.h"
 #include "sensor_events.h"
+#include "sensors_api.h"
 
 /*-----------------------------------------------------------*/
 
@@ -39,6 +40,7 @@ extern void xI2C2Handler(void);
 extern void xOPT3001Handler(void);
 extern void xSHT31Handler(void);
 extern void xBMI160Handler(void);
+extern void xSpeedHandler(void);
 
 /*-----------------------------------------------------------*/
 
@@ -77,7 +79,8 @@ void vCreateSensorTasks(void)
 
     prvI2CInit();
     prvTimerInit();
-
+    Sensor_Init();
+    
     xTaskCreate(
         vI2CManagerTask,
         "I2CManagerTask",
@@ -173,7 +176,8 @@ static void prvTimerInit(void)
     // Enable the sensor timers
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // Enable the Timer 0 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 0 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 2 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); // Enable the Timer 3 Module.
 
     // Configure the interrupt time
     TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
@@ -184,6 +188,9 @@ static void prvTimerInit(void)
 
     TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock); // set to ~ 1Hz
+
+    TimerConfigure(TIMER3_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER3_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
 
     // Regester and enable the interrupts
     TimerIntRegister(TIMER0_BASE, TIMER_A, xOPT3001Handler);
@@ -197,6 +204,10 @@ static void prvTimerInit(void)
     TimerIntRegister(TIMER2_BASE, TIMER_A, xSHT31Handler);
     TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER2_BASE, TIMER_A);
+
+    TimerIntRegister(TIMER3_BASE, TIMER_A, xSpeedHandler);
+    TimerIntEnable(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER3_BASE, TIMER_A);
 
     // Enable Master Interrupts
     IntMasterEnable();

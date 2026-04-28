@@ -22,6 +22,7 @@
 #include "motorlib.h"
 #include "features/priorities.h"
 #include "motor_api.h"
+#include "features/sensors/sensors_api.h"
 
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
 
@@ -38,6 +39,8 @@ void hallSensorHandler(void)
     bool hall_c = GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_2);
 
     updateMotor(hall_a, hall_b, hall_c);
+
+    addRotation();
 
     // speed measuring code here
 

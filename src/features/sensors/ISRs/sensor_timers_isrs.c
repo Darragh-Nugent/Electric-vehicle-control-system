@@ -44,3 +44,9 @@ void xSHT31Handler(void)
     TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, TEMP_SENSOR_EVENT);
 }
+
+void xSpeedHandler(void)
+{
+    TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+    xEventGroupSetBits(xSensorEvents, SPEED_SENSOR_EVENT);
+}
