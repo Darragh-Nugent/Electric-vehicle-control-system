@@ -1,0 +1,13 @@
+#ifndef MOTOR_STATES_H
+#define MOTOR_STATES_H
+
+typedef enum
+{
+    MOTOR_STATE_IDLE,
+    MOTOR_STATE_STARTING,
+    MOTOR_STATE_RUNNING,
+    MOTOR_STATE_BRAKING,
+    MOTOR_STATE_FAULT
+} motor_state_t;
+
+#endif

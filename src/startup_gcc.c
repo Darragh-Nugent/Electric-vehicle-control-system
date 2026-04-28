@@ -52,6 +52,7 @@ extern void xOPT3001Handler(void);
 extern void xBMI160Handler(void);
 extern void xSHT31Handler(void);
 
+extern void hallSensorHandler(void);
 
 //*****************************************************************************
 //
@@ -125,7 +126,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // FLASH Control
     IntDefaultHandler,                      // GPIO Port F
     IntDefaultHandler,                      // GPIO Port G
-    IntDefaultHandler,                      // GPIO Port H
+    hallSensorHandler,                      // GPIO Port H
     IntDefaultHandler,                      // UART2 Rx and Tx
     IntDefaultHandler,                      // SSI1 Rx and Tx
     IntDefaultHandler,                      // Timer 3 subtimer A
@@ -165,8 +166,8 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     IntDefaultHandler,                      // I2C4 Master and Slave
     IntDefaultHandler,                      // I2C5 Master and Slave
-    IntDefaultHandler,                      // GPIO Port M - HALL A
-    IntDefaultHandler,                      // GPIO Port N - HALL C
+    hallSensorHandler,                      // GPIO Port M - HALL A
+    hallSensorHandler,                      // GPIO Port N - HALL C
     0,                                      // Reserved
     IntDefaultHandler,                      // Tamper
     IntDefaultHandler,                      // GPIO Port P (Summary or P0)
