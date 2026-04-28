@@ -29,12 +29,7 @@
 /*-----------------------------------------------------------*/
 
 extern void vI2CManagerTask(void *pvParameters);
-extern void vAccelerationSensorTask(void *pvParameters);
-extern void vDistanceSensorTask(void *pvParameters);
-extern void vEnvSensorTask(void *pvParameters);
-extern void vLightSensorTask(void *pvParameters);
-extern void vPowerSensorTask(void *pvParameters);
-extern void vSpeedSensorTask(void *pvParameters);
+extern void vSensorManagerTask(void *pvParameters);
 
 /*-----------------------------------------------------------*/
 
@@ -82,7 +77,6 @@ void vCreateSensorTasks(void)
 
     prvI2CInit();
     prvTimerInit();
-    // vTaskDelay(pdMS_TO_TICKS(1000)); // delay to ensure sensor is initialised before testing
 
     xTaskCreate(
         vI2CManagerTask,
@@ -93,7 +87,7 @@ void vCreateSensorTasks(void)
         NULL);
 
     xTaskCreate(
-        vLightSensorTask,
+        vSensorManagerTask,
         "LightSensorTask",
         256,
         NULL,

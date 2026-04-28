@@ -97,7 +97,7 @@ void vCreateOPTTask(void);
 
 /*-----------------------------------------------------------*/
 
-void vLightSensorTask(void *pvParameters)
+void vSensorManagerTask(void *pvParameters)
 {
     bool success = false;
     uint16_t rawData = 0;
