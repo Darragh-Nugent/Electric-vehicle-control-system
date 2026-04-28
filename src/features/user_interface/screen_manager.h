@@ -1,6 +1,8 @@
 #pragma once
 #include "lvgl.h"
 
+#define COLOR_BACKGROUND_GREEN lv_color_make(124, 218, 124)
+
 typedef enum {
     SCREEN_DASHBOARD = 0,
     SCREEN_MOTOR,

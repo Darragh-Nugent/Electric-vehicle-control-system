@@ -3,6 +3,7 @@
 #include "scr_dashboard.h"
 #include "../screen_manager.h"
 #include "lvgl.h"
+#include "../gui_utils.h"
 
 void scr_dashboard_show_fault_banner(bool hasFault) {};
 void scr_dashboard_set_rpm(float f) {};
@@ -30,32 +31,16 @@ static void btn_alert_cb(lv_event_t *e)
     screen_manager_goto(SCREEN_ALERT);
 }
 
-// Nav Button
-static lv_obj_t *prv_nav_button_init(lv_obj_t *parent, const char *label, lv_event_cb_t cb,
-                                     lv_align_t align, int32_t x_ofs, int32_t y_ofs)
-{
-    lv_obj_t *button = lv_button_create(parent);
-    lv_obj_set_size(button, 90, 40);
-    lv_obj_add_event_cb(button, cb, LV_EVENT_CLICKED, NULL);
 
-    lv_obj_t *lbl = lv_label_create(button);
-    lv_label_set_text(lbl, label);
-    lv_obj_center(lbl);
-
-    return button;
-}
 void scr_dashboard_init(void)
 {
     // To Do: Modularise colour
-    lv_color_t green = {124, 218, 124};
     s_screen = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(s_screen, green, LV_PART_MAIN);
+    lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
 
     // Label
-    lv_obj_t *title_label = lv_label_create(s_screen);
-    lv_label_set_text(title_label, "Group #30");
-    lv_obj_set_style_text_font(title_label, &lv_font_montserrat_30, 0);
-    lv_obj_align(title_label, LV_ALIGN_TOP_MID, 0, 8);
+    lv_obj_t *label = create_label(s_screen,"Group #30");
+    (void) label; // ignore label for now, return value is kept for possible future use
 
     // Create a container for the navigation bar at the bottom
     lv_obj_t *nav_bar = lv_obj_create(s_screen);
@@ -63,9 +48,9 @@ void scr_dashboard_init(void)
     lv_obj_align(nav_bar, LV_ALIGN_BOTTOM_MID, 0, 0); // Align it to the bottom of the screen
 
     // Create the buttons within the navigation bar, spaced evenly
-    lv_obj_t *motor_btn = prv_nav_button_init(nav_bar, "Motor", btn_motor_cb, LV_ALIGN_LEFT_MID, 10, 0);
-    lv_obj_t *sensors_btn = prv_nav_button_init(nav_bar, "Sensors", btn_sensors_cb, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_t *alerts_btn = prv_nav_button_init(nav_bar, "Alerts", btn_alert_cb, LV_ALIGN_RIGHT_MID, -10, 0);
+    lv_obj_t *motor_btn = nav_button_init(nav_bar, "Motor", btn_motor_cb, LV_ALIGN_LEFT_MID, 10, 0);
+    lv_obj_t *sensors_btn = nav_button_init(nav_bar, "Sensors", btn_sensors_cb, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_t *alerts_btn = nav_button_init(nav_bar, "Alerts", btn_alert_cb, LV_ALIGN_RIGHT_MID, -10, 0);
 
     // Align the buttons horizontally within the navigation bar
     lv_obj_set_width(motor_btn, 80);

@@ -166,6 +166,7 @@ void vCreateGuiTask(void)
         NULL);
 
     configASSERT(ret == pdPASS);    
+    (void) ret;
 }
 
 void prvGuiHardwareInit(void)
