@@ -7,7 +7,6 @@
 #include "utils/uartstdio.h"
 #include "../gui_utils.h"
 #include "../../data.h"
-#include "features/motor/motor_api.h"
 #include "features/motor/states.h"
 
 static lv_obj_t *s_screen;
@@ -67,12 +66,12 @@ static void on_state_changed(const char *state)
     if (lv_strcmp(state, "IDLE") == 0)
     {
         UARTprintf("IDLE\n");
-        res = ui_push_u(UI_MSG_MOTOR_IDLE,MOTOR_STATE_IDLE);
+        res = ui_push_u(UI_MSG_MOTOR_IDLE, MOTOR_STATE_IDLE);
     }
     else if (lv_strcmp(state, "STARTING") == 0)
     {
         UARTprintf("STARTING\n");
-        res = ui_push_u(UI_MSG_MOTOR_STARTING,MOTOR_STATE_STARTING);
+        res = ui_push_u(UI_MSG_MOTOR_STARTING, MOTOR_STATE_STARTING);
     }
     else if (lv_strcmp(state, "EXPLODE") == 0)
     {
@@ -119,12 +118,14 @@ void scr_motor_init(void)
     lv_obj_set_size(rpm_input, 80, 30);
     lv_obj_align(rpm_input, LV_ALIGN_LEFT_MID, 10, 0);
 
+
     // Submit button
     lv_obj_t *btn = lv_button_create(nav_bar);
     lv_obj_add_event_cb(btn, submit_rpm_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_size(btn, 40, 15);
-    lv_label_set_text(btn, "SET");
+    // lv_label_set_text(btn, "SET");        --> Bon: DO NOT SET A LABEL FOR THIS DAM BUTTON OTHERWISE DISPLAY WILL CRASH, My guess is maybe the text is too large for button?
 
+    UARTprintf("scr_motor Drop down\n");
     // Drop Down
     lv_obj_t *mode_dd = create_dropdown(
         nav_bar,

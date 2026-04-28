@@ -64,7 +64,6 @@ int main(void)
     prvSetupHardware();
     IntMasterEnable();
 
-    
     motorStateMutex = xSemaphoreCreateMutex();
     motorSetSpeedMutex = xSemaphoreCreateMutex();
     motorStartSemaphore = xSemaphoreCreateBinary();
@@ -76,10 +75,12 @@ int main(void)
         motorSetSpeedMutex == NULL ||
         motorStartSemaphore == NULL ||
         motorUpToSpeedSemaphore == NULL ||
-        faultAcknowledgedSemaphore == NULL) {}
+        faultAcknowledgedSemaphore == NULL)
+    {
+    }
 
     vCreateMotorTask();
-    vCreateSensorTasks();
+    // vCreateSensorTasks();
     vCreateGuiTask();
 
     vTaskStartScheduler();

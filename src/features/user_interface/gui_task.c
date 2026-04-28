@@ -81,6 +81,7 @@ static void prvLvglTickCb(TimerHandle_t xTimer)
 // - side note - relevant getters and setters for motor/sensors are called via api functions depending on which screen is currently displayed (not implemented yet)
 static void prvDispatchMsg(const UiMsg_t *msg)
 {
+    UARTprintf("Dispatching MSGS");
     switch (msg->type)
     {
 
@@ -159,7 +160,7 @@ void display_init(void)
 void vCreateGuiTask(void)
 {
     g_ui_queue = xQueueCreate(UI_QUEUE_DEPTH, sizeof(UiMsg_t));
-
+    UARTprintf("Inside create gui, after queue\n");
     prvGuiHardwareInit();
     BaseType_t ret = xTaskCreate(
         prvGuiTask,
