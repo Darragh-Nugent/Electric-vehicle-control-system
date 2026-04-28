@@ -58,8 +58,8 @@ QueueHandle_t g_ui_queue;
 
 tContext g_sContext;
 static lv_display_t *my_display;
-static lv_color_t draw_buf1[320 * 20]; // 20 line buffer
-static lv_color_t draw_buf2[320 * 20]; // 20 line buffer
+static lv_color_t draw_buf1[DISP_BUF_PIXELS]; // 20 line buffer
+static lv_color_t draw_buf2[DISP_BUF_PIXELS]; // 20 line buffer
 
 void vCreateGuiTask(void);
 static void prvGuiTask(void *pvParameters);
@@ -141,7 +141,7 @@ static void prvDrainQueue(void)
 
 void display_init(void)
 {
-    my_display = lv_display_create(320, 240);
+    my_display = lv_display_create(DISP_RES_WIDTH, DISP_RES_HEIGHT);
 
     lv_display_set_flush_cb(my_display, disp_flush);
 
