@@ -12,9 +12,10 @@ typedef enum
 {
     UI_MSG_MOTOR_RPM = 0,
     UI_MSG_MOTOR_CURRENT,
+    UI_MSG_MOTOR_STARTING,
     UI_MSG_MOTOR_IDLE, // enabled/disabled/fault -> add more if needed
     UI_MSG_MOTOR_RUNNING,
-    UI_MSG_SENSOR_A,    // change later, potentially add more
+    UI_MSG_SENSOR_A, // change later, potentially add more
     UI_MSG_SENSOR_B,
     UI_MSG_SENSOR_C,
     UI_MSG_FAULT_RAISED, // payload: fault code
@@ -44,28 +45,28 @@ extern QueueHandle_t g_ui_queue;
 //*****************************************************************************
 
 // Producer function when payload is a float
-static inline void ui_push_f(UiMsgType_t type, float value)
+inline bool ui_push_f(UiMsgType_t type, float value)
 {
     // Create struct when the payload is a float
     UiMsg_t msg = {.type = type, .payload.f = value};
-    xQueueSend(g_ui_queue, &msg, 0); // Non blocking. Drop if queue is full as 
-                                    // UI is low prio.
+    return xQueueSend(g_ui_queue, &msg, 0); // Non blocking. Drop if queue is full as
+                                            // UI is low prio.
 }
 
 // Producer function when payload is a uint
-static inline void ui_push_u(UiMsgType_t type, float value)
+inline bool ui_push_u(UiMsgType_t type, float value)
 {
     // Create struct when payload is fault code
     UiMsg_t msg = {.type = type, .payload.u = value};
-    xQueueSend(g_ui_queue, &msg, 0); // May have to change here
+    return xQueueSend(g_ui_queue, &msg, 0); // May have to change here
 }
 
 // Call this from ISR
-static inline void ui_push_from_isr(UiMsgType_t type, float value)
+inline bool ui_push_from_isr(UiMsgType_t type, float value)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     UiMsg_t msg = {.type = type, .payload.f = value};
-    xQueueSendFromISR(g_ui_queue, &msg, &xHigherPriorityTaskWoken);
+    return xQueueSendFromISR(g_ui_queue, &msg, &xHigherPriorityTaskWoken);
 }
 
 // EXAMPLE MOTOR PRODUCER API USE IN ISR

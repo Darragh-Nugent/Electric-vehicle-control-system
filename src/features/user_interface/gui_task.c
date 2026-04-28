@@ -36,12 +36,12 @@
 #include "screens/scr_alerts.h"
 #include "screen_manager.h"
 #include "touch_driver.h"
+#include "features/motor/motor_api.h"
 
 #include "features/data.h"
 #include "timers.h"
 #include "gui_task.h"
 #include "lvgl.h"
-#include "grlib.h"
 
 #define GUI_TICK 5
 
@@ -77,6 +77,8 @@ static void prvLvglTickCb(TimerHandle_t xTimer)
     lv_tick_inc(GUI_TICK);
 }
 
+// GUI uses an internal queue, which is populated via the screens through user input and consumed here in the task.
+// - side note - relevant getters and setters for motor/sensors are called via api functions depending on which screen is currently displayed (not implemented yet)
 static void prvDispatchMsg(const UiMsg_t *msg)
 {
     switch (msg->type)
@@ -84,21 +86,21 @@ static void prvDispatchMsg(const UiMsg_t *msg)
 
     // Motor data — update motor screen; dashboard shows summary
     case UI_MSG_MOTOR_RPM:
-        scr_motor_set_rpm(msg->payload.f);
-        scr_dashboard_set_rpm(msg->payload.f); // may need this for other motor
+        motorSetSpeed(msg->payload.f);
+        UARTprintf("MOTOR: SETTING RPM");
         break;
 
     case UI_MSG_MOTOR_CURRENT:
-        scr_motor_set_current(msg->payload.f);
+        scr_motor_set_current(msg->payload.f); // is this needed?
         break;
 
     case UI_MSG_MOTOR_IDLE:
-        scr_motor_set_state((uint8_t)msg->payload.u);
-        scr_dashboard_set_motor_state((uint8_t)msg->payload.u);
+        motorInit();
+        UARTprintf("MOTOR: SETTING STATE TO IDLE");
         break;
     case UI_MSG_MOTOR_RUNNING:
-        scr_motor_set_state((uint8_t)msg->payload.u);
-        scr_dashboard_set_motor_state((uint8_t)msg->payload.u);
+        motorRunning();
+        UARTprintf("MOTOR: SETTING STATE TO RUNNING");
         break;
     // Sensor data
     case UI_MSG_SENSOR_A:

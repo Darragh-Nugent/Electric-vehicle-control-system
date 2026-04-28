@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include "utils/uartstdio.h"
 #include "../gui_utils.h"
+#include "../../data.h"
+#include "features/motor/motor_api.h"
+#include "features/motor/states.h"
 
 static lv_obj_t *s_screen;
 static lv_obj_t *rpm_input;
@@ -29,6 +32,12 @@ static void submit_rpm_cb(lv_event_t *e)
     int rpm = atoi(text);
     UARTprintf("RPM: %i\n", rpm);
     LV_LOG_USER("RPM set: %d", rpm);
+
+    bool res = ui_push_f(UI_MSG_MOTOR_RPM, (float)rpm);
+    if (!res)
+    {
+        UARTprintf("Hmm, I'll see if i remember to fix this later");
+    }
 }
 
 // Text Area cb
@@ -54,18 +63,25 @@ static void ta_event_cb(lv_event_t *e)
 static void on_state_changed(const char *state)
 {
     LV_LOG_USER("Motor state: %s", state);
-
+    bool res = false;
     if (lv_strcmp(state, "IDLE") == 0)
     {
         UARTprintf("IDLE\n");
+        res = ui_push_u(UI_MSG_MOTOR_IDLE,MOTOR_STATE_IDLE);
     }
-    else if (lv_strcmp(state, "RUNNING") == 0)
+    else if (lv_strcmp(state, "STARTING") == 0)
     {
-        UARTprintf("RUNNING\n");
+        UARTprintf("STARTING\n");
+        res = ui_push_u(UI_MSG_MOTOR_STARTING,MOTOR_STATE_STARTING);
     }
     else if (lv_strcmp(state, "EXPLODE") == 0)
     {
         UARTprintf("KABOOOM\n");
+    }
+
+    if (!res)
+    {
+        UARTprintf("Let's hope this is never printed");
     }
 }
 
@@ -107,11 +123,12 @@ void scr_motor_init(void)
     lv_obj_t *btn = lv_button_create(nav_bar);
     lv_obj_add_event_cb(btn, submit_rpm_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_size(btn, 40, 15);
+    lv_label_set_text(btn, "SET");
 
     // Drop Down
     lv_obj_t *mode_dd = create_dropdown(
         nav_bar,
-        "IDLE\nRUNNING\nEXPLODE",
+        "IDLE\nSTARTING\nEXPLODE",
         on_state_changed);
 
     lv_obj_set_size(mode_dd, 120, 30);
