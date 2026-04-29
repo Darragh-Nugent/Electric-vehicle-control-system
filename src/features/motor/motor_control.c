@@ -1,12 +1,15 @@
 #include "motor_control.h"
 
 static float referenceSpeedRPM = 0.0f;
+static float integralError = 0.0f;
+static float dutyCommand = 0.0f;
 
 void initMotorControl(void)
 {
     referenceSpeedRPM = 0.0f;
+    integralError = 0.0f;
+    dutyCommand = 0.0f;
 }
-
 
 uint16_t motorRampUpdate(uint16_t desiredSpeedRPM, bool estopActive, float dtSeconds)
 {
@@ -63,4 +66,35 @@ uint16_t motorControlGetReferenceSpeed(void)
 void motorControlResetReferenceSpeed(void)
 {
     referenceSpeedRPM = 0.0f;
+}
+
+
+uint16_t motorPIUpdate(uint16_t referenceSpeedRPM, uint16_t actualSpeedRPM, float dtSeconds)
+{
+    float error = (float)referenceSpeedRPM - (float)actualSpeedRPM;
+
+    integralError += error * dtSeconds;
+
+    float controlOutput = MOTOR_KP * error + MOTOR_KI * integralError;
+
+    dutyCommand += controlOutput;
+
+    if(dutyCommand > MOTOR_DUTY_MAX)
+    {
+        dutyCommand = MOTOR_DUTY_MAX;
+        integralError -= error * dtSeconds; 
+    }
+    else if(dutyCommand < MOTOR_DUTY_MIN)
+    {
+        dutyCommand = MOTOR_DUTY_MIN;
+        integralError -= error * dtSeconds;
+    }
+
+    return (uint16_t)dutyCommand;
+}
+
+void motorPIReset(void)
+{
+    integralError = 0.0f;
+    dutyCommand = 0.0f;
 }

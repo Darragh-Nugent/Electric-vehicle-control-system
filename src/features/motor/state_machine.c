@@ -80,17 +80,17 @@ static void motorTask( void *pvParameters )
             break;
         case MOTOR_STATE_RUNNING:
         {    
-            // if e-stop triggered or fault occurs: transition to braking.
             
             uint16_t desiredSpeed = motorGetSpeed();
             uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
-            // placeholder!!! PI control here somthing like this:
-            // error = referenceSpeedRPM - measuredSpeedRPM
-            // duty = PI(error)
-            // setDuty(duty);
+            uint16_t actualSpeed = 0; // PLACEHOLDER !!!!!! should be reading from hall sensor
 
-            UARTprintf("Desired: %u, Reference: %u\n", desiredSpeed, referenceSpeed);
+            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
+            setDuty(duty);
+
+            UARTprintf("Desired: %u, Reference: %u, Duty: %u\n", desiredSpeed, referenceSpeed, duty);
+            
             vTaskDelay(controlPeriodTicks);
 
             break;
@@ -101,12 +101,17 @@ static void motorTask( void *pvParameters )
 
             uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
 
-            // placeholder!! PI control breaking will use referenceSpeed but for now just ramp the reference down
+            uint16_t actualSpeed = 0; // PLACEHOLDER !!!!!! should be reading from hall sensor
 
-            UARTprintf("E-STOP Reference: %u\n", referenceSpeed);
+            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
+
+            setDuty(duty);
+
+            UARTprintf("E-STOP Reference: %u, Duty: %u\n", referenceSpeed);
 
             if (referenceSpeed == 0) // also a placeholder,, should be actualSpeed == 0, or maybe <=5 in case theres noise
             {
+                setDuty(0);
                 motorFaultLatched();
             }
 
