@@ -22,6 +22,9 @@
 #include "features/priorities.h"
 #include "states.h"
 #include "motor_api.h"
+#include "motor_control.h"
+
+#define CONTROL_PERIOD_MS 10
 
 motor_state_t motor_state = MOTOR_STATE_IDLE;
 static void motorTask( void *pvParameters );
@@ -49,9 +52,12 @@ static void motorTask( void *pvParameters )
 {
     uint16_t duty_value = 10;
     uint16_t period_value = 50;
+    const TickType_t controlPeriodTicks = pdMS_TO_TICKS(CONTROL_PERIOD_MS);
+    const controlPeriodsSeconds = CONTROL_PERIOD_MS / 1000.0f;
 
     initMotorLib(period_value);
     setDuty(duty_value);
+    initMotorControl();
 
     for(;;) {
         switch (motor_state)
@@ -72,12 +78,36 @@ static void motorTask( void *pvParameters )
             break;
         case MOTOR_STATE_RUNNING:
             // if e-stop triggered or fault occurs: transition to braking.
-            vTaskDelay(pdMS_TO_TICKS(100)); // placeholder delay
-            // closed-loop control must be implemented here.
+            
+            uint16_t desiredSpeed = motorGetSpeed();
+            uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodsSeconds);
+
+            // placeholder!!! PI control here somthing like this:
+            // error = referenceSpeedRPM - measuredSpeedRPM
+            // duty = PI(error)
+            // setDuty(duty);
+
+            UARTprintf("Desired: %u, Reference: %u\n", desiredSpeed, referenceSpeed);
+            vTaskDelay(controlPeriodTicks);
+
             break;
         case MOTOR_STATE_BRAKING:
             vTaskDelay(pdMS_TO_TICKS(100)); // placeholder delay
             // if speed == 0: transition to fault state
+
+            uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodsSeconds);
+
+            // placeholder!! PI control breaking will use referenceSpeed but for now just ramp the reference down
+
+            UARTprintf("E-STOP Reference: %u\n", referenceSpeed);
+
+            if (referenceSpeed == 0) // also a placeholder,, should be actualSpeed == 0, or maybe <=5 in case theres noise
+            {
+                motorFaultLatched();
+            }
+
+            vtaskDelay(controlPeriodTicks);
+
             break;
         case MOTOR_STATE_FAULT:
             hallSensorIntDisable(); // need to decide later where the best state is to call this.

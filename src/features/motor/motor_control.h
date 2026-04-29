@@ -8,7 +8,7 @@
 #define MOTOR_DECEL_LIMIT_RPM_PER_S 500
 #define MOTOR_ESTOP_DECEL_RPM_PER_S 1000
 
-void motorControlInit(void);
+void initMotorControl(void);
 
 uint16_t motorRampUpdate(uint16_t desiredSpeedRPM,  bool estopActive, float dtSeconds);
 

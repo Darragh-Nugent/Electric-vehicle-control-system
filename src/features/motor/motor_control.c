@@ -2,7 +2,7 @@
 
 static float referenceSpeedRPM = 0.0f;
 
-void motorControlInit(void)
+void initMotorControl(void)
 {
     referenceSpeedRPM = 0.0f;
 }
