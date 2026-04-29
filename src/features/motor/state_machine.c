@@ -61,6 +61,7 @@ static void motorTask( void *pvParameters )
     setDuty(duty_value);
     
     initMotorControl();
+    // UARTprintf("Motor task started\n");
     
     for(;;) {
         switch (motor_state)
@@ -91,8 +92,8 @@ static void motorTask( void *pvParameters )
             uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
             setDuty(duty);
 
-            UARTprintf("Desired: %u, Reference: %u, Actual: %u, Duty: %u\n", desiredSpeed, referenceSpeed, actualSpeed, duty);
-            
+            // UARTprintf("Desired: %u, Reference: %u, Actual: %u, Duty: %u\n", desiredSpeed, referenceSpeed, actualSpeed, duty);
+
             vTaskDelay(controlPeriodTicks);
 
             break;
@@ -108,8 +109,8 @@ static void motorTask( void *pvParameters )
 
             setDuty(duty);
 
-            UARTprintf("E-STOP Reference: %u, Actual: %u, Duty: %u\n", referenceSpeed, actualSpeed, duty);
-
+            // UARTprintf("E-STOP Reference: %u, Actual: %u, Duty: %u\n", referenceSpeed, actualSpeed, duty);
+            
             if (referenceSpeed == 0) // a placeholder,, should be actualSpeed == 0, or maybe <=5 in case theres noise
             {
                 setDuty(0);
