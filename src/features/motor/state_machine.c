@@ -26,6 +26,7 @@
 // #include "sensors_api.h"                 // UNCOMMENT ONCE READY !!
 
 #define CONTROL_PERIOD_MS 10
+#define MOTOR_SERIALPLOT_ENABLE 1
 
 motor_state_t motor_state = MOTOR_STATE_IDLE;
 static void motorTask( void *pvParameters );
@@ -51,6 +52,7 @@ void vCreateMotorTask(void)
 
 static void motorTask( void *pvParameters )
 {
+
     uint16_t duty_value = 10;
     uint16_t period_value = 50;
     
@@ -61,8 +63,7 @@ static void motorTask( void *pvParameters )
     setDuty(duty_value);
     
     initMotorControl();
-    // UARTprintf("Motor task started\n");
-    
+
     for(;;) {
         switch (motor_state)
         {
@@ -92,7 +93,9 @@ static void motorTask( void *pvParameters )
             uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
             setDuty(duty);
 
-            // UARTprintf("Desired: %u, Reference: %u, Actual: %u, Duty: %u\n", desiredSpeed, referenceSpeed, actualSpeed, duty);
+            #if MOTOR_SERIALPLOT_ENABLE
+                motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed, duty);
+            #endif
 
             vTaskDelay(controlPeriodTicks);
 
@@ -109,7 +112,9 @@ static void motorTask( void *pvParameters )
 
             setDuty(duty);
 
-            // UARTprintf("E-STOP Reference: %u, Actual: %u, Duty: %u\n", referenceSpeed, actualSpeed, duty);
+            #if MOTOR_SERIALPLOT_ENABLE
+                motorSerialPlotOutput(0, referenceSpeed, actualSpeed, duty);
+            #endif
             
             if (referenceSpeed == 0) // a placeholder,, should be actualSpeed == 0, or maybe <=5 in case theres noise
             {
