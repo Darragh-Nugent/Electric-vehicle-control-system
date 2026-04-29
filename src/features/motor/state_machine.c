@@ -61,40 +61,6 @@ static void motorTask( void *pvParameters )
     
     initMotorControl();
     
-    // TEMP TEST CODE FOR RAMP
-    uint16_t testDesiredSpeed = 100;
-    float testDt = 0.01f;
-
-    for (int i = 0; i < 30; i++)
-    {
-        uint16_t testReferenceSpeed =
-            motorRampUpdate(testDesiredSpeed, false, testDt);
-
-        UARTprintf("Desired: %u, Reference: %u\n",
-                testDesiredSpeed,
-                testReferenceSpeed);
-
-        SysCtlDelay(SysCtlClockGet() / 300); 
-    }
-    // normal deceleration test
-    // for (int i = 0; i < 30; i++)
-    // {
-    //     uint16_t ref = motorRampUpdate(0, false, 0.01f);
-    //     UARTprintf("Normal brake Reference: %u\n", ref);
-    //     SysCtlDelay(SysCtlClockGet() / 300);
-    // }
-    // e-stop test
-    motorRampUpdate(100, false, 0.01f); 
-    for (int i = 0; i < 20; i++)
-    {
-        uint16_t ref = motorRampUpdate(0, true, 0.01f);
-        UARTprintf("E-stop Reference: %u\n", ref);
-        SysCtlDelay(SysCtlClockGet() / 300);
-    }
-
-
-
-
     for(;;) {
         switch (motor_state)
         {
