@@ -52,12 +52,32 @@ static void motorTask( void *pvParameters )
 {
     uint16_t duty_value = 10;
     uint16_t period_value = 50;
+    
     const TickType_t controlPeriodTicks = pdMS_TO_TICKS(CONTROL_PERIOD_MS);
-    const controlPeriodsSeconds = CONTROL_PERIOD_MS / 1000.0f;
+    const float controlPeriodSeconds = CONTROL_PERIOD_MS / 1000.0f;
 
     initMotorLib(period_value);
     setDuty(duty_value);
+    
     initMotorControl();
+    
+    // TEMP TEST CODE FOR RAMP
+    uint16_t testDesiredSpeed = 100;
+    float testDt = 0.01f;
+
+    for (int i = 0; i < 30; i++)
+    {
+        uint16_t testReferenceSpeed =
+            motorRampUpdate(testDesiredSpeed, false, testDt);
+
+        UARTprintf("Desired: %u, Reference: %u\n",
+                testDesiredSpeed,
+                testReferenceSpeed);
+
+        SysCtlDelay(SysCtlClockGet() / 300); 
+    }
+
+
 
     for(;;) {
         switch (motor_state)
@@ -77,10 +97,11 @@ static void motorTask( void *pvParameters )
             }
             break;
         case MOTOR_STATE_RUNNING:
+        {    
             // if e-stop triggered or fault occurs: transition to braking.
             
             uint16_t desiredSpeed = motorGetSpeed();
-            uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodsSeconds);
+            uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
             // placeholder!!! PI control here somthing like this:
             // error = referenceSpeedRPM - measuredSpeedRPM
@@ -91,11 +112,13 @@ static void motorTask( void *pvParameters )
             vTaskDelay(controlPeriodTicks);
 
             break;
+        }
         case MOTOR_STATE_BRAKING:
+        {
             vTaskDelay(pdMS_TO_TICKS(100)); // placeholder delay
             // if speed == 0: transition to fault state
 
-            uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodsSeconds);
+            uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
 
             // placeholder!! PI control breaking will use referenceSpeed but for now just ramp the reference down
 
@@ -106,9 +129,10 @@ static void motorTask( void *pvParameters )
                 motorFaultLatched();
             }
 
-            vtaskDelay(controlPeriodTicks);
+            vTaskDelay(controlPeriodTicks);
 
             break;
+        }
         case MOTOR_STATE_FAULT:
             hallSensorIntDisable(); // need to decide later where the best state is to call this.
             speed_semaphore_given = false;
