@@ -97,7 +97,6 @@ static void motorTask( void *pvParameters )
         }
         case MOTOR_STATE_BRAKING:
         {
-            vTaskDelay(pdMS_TO_TICKS(100)); // placeholder delay
             // if speed == 0: transition to fault state
 
             uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
