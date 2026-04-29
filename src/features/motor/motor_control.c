@@ -1,5 +1,7 @@
 #include "motor_control.h"
 
+#include "utils/uartstdio.h"
+
 static float referenceSpeedRPM = 0.0f;
 static float integralError = 0.0f;
 static float dutyCommand = 0.0f;
@@ -97,4 +99,10 @@ void motorPIReset(void)
 {
     integralError = 0.0f;
     dutyCommand = 0.0f;
+}
+
+
+void motorSerialPlotOutput(uint16_t desiredSpeed, uint16_t referenceSpeed, uint16_t actualSpeed, uint16_t duty)
+{
+    UARTprintf("%u,%u,%u,%u\n", desiredSpeed, referenceSpeed, actualSpeed, duty);
 }
