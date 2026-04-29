@@ -23,5 +23,6 @@ void motorControlResetReferenceSpeed(void);
 
 
 uint16_t motorPIUpdate(uint16_t referenceSpeedRPM, uint16_t actualSpeedRPM, float dtSeconds);
+void motorPIReset(void);
 
 #endif

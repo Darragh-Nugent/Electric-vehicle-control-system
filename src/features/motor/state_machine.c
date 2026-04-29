@@ -23,6 +23,7 @@
 #include "states.h"
 #include "motor_api.h"
 #include "motor_control.h"
+// #include "sensors_api.h"                 // UNCOMMENT ONCE READY !!
 
 #define CONTROL_PERIOD_MS 10
 
@@ -84,12 +85,13 @@ static void motorTask( void *pvParameters )
             uint16_t desiredSpeed = motorGetSpeed();
             uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
-            uint16_t actualSpeed = 0; // PLACEHOLDER !!!!!! should be reading from hall sensor
+            // uint16_t actualSpeed = Sensor_GetSpeed(); // UNCOMMENT ONCE READY !!!
+            uint16_t actualSpeed = 0; // placeholder
 
             uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
             setDuty(duty);
 
-            UARTprintf("Desired: %u, Reference: %u, Duty: %u\n", desiredSpeed, referenceSpeed, duty);
+            UARTprintf("Desired: %u, Reference: %u, Actual: %u, Duty: %u\n", desiredSpeed, referenceSpeed, actualSpeed, duty);
             
             vTaskDelay(controlPeriodTicks);
 
@@ -97,21 +99,21 @@ static void motorTask( void *pvParameters )
         }
         case MOTOR_STATE_BRAKING:
         {
-            // if speed == 0: transition to fault state
-
             uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
 
-            uint16_t actualSpeed = 0; // PLACEHOLDER !!!!!! should be reading from hall sensor
+            // uint16_t actualSpeed = Sensor_GetSpeed();   /// UNCOMMENT ONCE READY !!!
+            uint16_t actualSpeed = 0; // placeholder
 
             uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
 
             setDuty(duty);
 
-            UARTprintf("E-STOP Reference: %u, Duty: %u\n", referenceSpeed);
+            UARTprintf("E-STOP Reference: %u, Actual: %u, Duty: %u\n", referenceSpeed, actualSpeed, duty);
 
-            if (referenceSpeed == 0) // also a placeholder,, should be actualSpeed == 0, or maybe <=5 in case theres noise
+            if (referenceSpeed == 0) // a placeholder,, should be actualSpeed == 0, or maybe <=5 in case theres noise
             {
                 setDuty(0);
+                motorPIReset();
                 motorFaultLatched();
             }
 
