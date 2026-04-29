@@ -23,6 +23,7 @@
 #include "states.h"
 #include "motor_api.h"
 #include "motor_control.h"
+// #include "sensors_api.h"                 // UNCOMMENT ONCE READY !!
 
 #define CONTROL_PERIOD_MS 10
 
@@ -60,6 +61,7 @@ static void motorTask( void *pvParameters )
     setDuty(duty_value);
     
     initMotorControl();
+    // UARTprintf("Motor task started\n");
     
     for(;;) {
         switch (motor_state)
@@ -80,34 +82,39 @@ static void motorTask( void *pvParameters )
             break;
         case MOTOR_STATE_RUNNING:
         {    
-            // if e-stop triggered or fault occurs: transition to braking.
             
             uint16_t desiredSpeed = motorGetSpeed();
             uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
-            // placeholder!!! PI control here somthing like this:
-            // error = referenceSpeedRPM - measuredSpeedRPM
-            // duty = PI(error)
-            // setDuty(duty);
+            // uint16_t actualSpeed = Sensor_GetSpeed(); // UNCOMMENT ONCE READY !!!
+            uint16_t actualSpeed = 0; // placeholder
 
-            UARTprintf("Desired: %u, Reference: %u\n", desiredSpeed, referenceSpeed);
+            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
+            setDuty(duty);
+
+            // UARTprintf("Desired: %u, Reference: %u, Actual: %u, Duty: %u\n", desiredSpeed, referenceSpeed, actualSpeed, duty);
+
             vTaskDelay(controlPeriodTicks);
 
             break;
         }
         case MOTOR_STATE_BRAKING:
         {
-            vTaskDelay(pdMS_TO_TICKS(100)); // placeholder delay
-            // if speed == 0: transition to fault state
-
             uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
 
-            // placeholder!! PI control breaking will use referenceSpeed but for now just ramp the reference down
+            // uint16_t actualSpeed = Sensor_GetSpeed();   /// UNCOMMENT ONCE READY !!!
+            uint16_t actualSpeed = 0; // placeholder
 
-            UARTprintf("E-STOP Reference: %u\n", referenceSpeed);
+            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
 
-            if (referenceSpeed == 0) // also a placeholder,, should be actualSpeed == 0, or maybe <=5 in case theres noise
+            setDuty(duty);
+
+            // UARTprintf("E-STOP Reference: %u, Actual: %u, Duty: %u\n", referenceSpeed, actualSpeed, duty);
+            
+            if (referenceSpeed == 0) // a placeholder,, should be actualSpeed == 0, or maybe <=5 in case theres noise
             {
+                setDuty(0);
+                motorPIReset();
                 motorFaultLatched();
             }
 

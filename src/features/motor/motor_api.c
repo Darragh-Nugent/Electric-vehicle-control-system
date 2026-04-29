@@ -69,7 +69,7 @@ void motorSetSpeed(uint16_t rpm)
     xSemaphoreGive(motorSetSpeedMutex);
 }
 
-// Get the speed of the motor (RPM).
+// Get the DESIRED speed of the motor (RPM).
 uint16_t motorGetSpeed(void)
 {
     uint16_t speed;
