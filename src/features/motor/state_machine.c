@@ -76,6 +76,22 @@ static void motorTask( void *pvParameters )
 
         SysCtlDelay(SysCtlClockGet() / 300); 
     }
+    // normal deceleration test
+    // for (int i = 0; i < 30; i++)
+    // {
+    //     uint16_t ref = motorRampUpdate(0, false, 0.01f);
+    //     UARTprintf("Normal brake Reference: %u\n", ref);
+    //     SysCtlDelay(SysCtlClockGet() / 300);
+    // }
+    // e-stop test
+    motorRampUpdate(100, false, 0.01f); 
+    for (int i = 0; i < 20; i++)
+    {
+        uint16_t ref = motorRampUpdate(0, true, 0.01f);
+        UARTprintf("E-stop Reference: %u\n", ref);
+        SysCtlDelay(SysCtlClockGet() / 300);
+    }
+
 
 
 
