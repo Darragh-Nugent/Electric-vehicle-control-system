@@ -26,7 +26,7 @@
 
 extern uint32_t g_ui32SysClock;
 
-extern void xBMI160Handler(void);
+extern void xBMI160TimerHandler(void);
 
 static void prvBmi160Delay(uint32_t period)
 {

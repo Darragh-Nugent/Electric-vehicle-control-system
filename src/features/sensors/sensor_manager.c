@@ -27,7 +27,9 @@
 #include "features/priorities.h"
 #include "features/sensors/sensor_events.h"
 #include "sensor_filters.h"
-#include "features/sensors/speed_sensor.h"
+#include "speed_sensor.h"
+#include "power_sensor.h"
+
 
 /*-----------------------------------------------------------*/
 /*
@@ -144,6 +146,7 @@ void vSensorManagerTask(void *pvParameters)
     moving_avg_t humidityFilter = {{0}, 0, 0};
     exp_filter_t accelFilter = {0.25, 0};
     exp_filter_t speedFilter = {0.25, 0};
+    exp_filter_t powerFilter = {0.25, 0};
 
     // Loop Forever
     while (1)
@@ -192,6 +195,12 @@ void vSensorManagerTask(void *pvParameters)
             float speed;
             speed = getRPM();
             float filtered_speed = filterExponential(&speedFilter, speed);
+        }
+
+        if (events & POWER_SENSOR_EVENT)
+        {
+            uint32_t power = getPower();
+            float filtered_power = filterExponential(&powerFilter, (float)power);
         }
     }
 }

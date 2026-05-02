@@ -48,10 +48,12 @@ extern void xPortSysTickHandler(void);
 extern void xI2C0Handler(void);
 extern void xI2C2Handler(void);
 
-extern void xOPT3001Handler(void);
-extern void xBMI160Handler(void);
-extern void xSHT31Handler(void);
-extern void xSpeedHandler(void);
+extern void xOPT3001TimerHandler(void);
+extern void xBMI160TimerHandler(void);
+extern void xSHT31TimerHandler(void);
+extern void xSpeedTimerHandler(void);
+
+extern void xPowerHandler(void);
 
 extern void hallSensorHandler(void);
 
@@ -109,16 +111,16 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // PWM Generator 1
     IntDefaultHandler,                      // PWM Generator 2
     IntDefaultHandler,                      // Quadrature Encoder 0
-    IntDefaultHandler,                      // ADC Sequence 0
+    xPowerHandler,                          // ADC Sequence 0
     IntDefaultHandler,                      // ADC Sequence 1
     IntDefaultHandler,                      // ADC Sequence 2
     IntDefaultHandler,                      // ADC Sequence 3
     IntDefaultHandler,                      // Watchdog timer
-    xOPT3001Handler,                        // Timer 0 subtimer A
+    xOPT3001TimerHandler,                        // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
-    xBMI160Handler,                         // Timer 1 subtimer A
+    xBMI160TimerHandler,                         // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
-    xSHT31Handler,                          // Timer 2 subtimer A
+    xSHT31TimerHandler,                          // Timer 2 subtimer A
     IntDefaultHandler,                      // Timer 2 subtimer B
     IntDefaultHandler,                      // Analog Comparator 0
     IntDefaultHandler,                      // Analog Comparator 1
@@ -130,7 +132,7 @@ void (* const g_pfnVectors[])(void) =
     hallSensorHandler,                      // GPIO Port H
     IntDefaultHandler,                      // UART2 Rx and Tx
     IntDefaultHandler,                      // SSI1 Rx and Tx
-    xSpeedHandler,                          // Timer 3 subtimer A
+    xSpeedTimerHandler,                          // Timer 3 subtimer A
     IntDefaultHandler,                      // Timer 3 subtimer B
     IntDefaultHandler,                      // I2C1 Master and Slave
     IntDefaultHandler,                      // CAN0

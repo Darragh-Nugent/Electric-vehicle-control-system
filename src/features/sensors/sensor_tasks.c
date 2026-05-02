@@ -21,6 +21,7 @@
 #include "driverlib/interrupt.h"
 #include "driverlib/timer.h"
 #include "drivers/i2cDriver.h"
+#include "driverlib/adc.h"
 
 #include "motorlib.h"
 #include "features/priorities.h"
@@ -37,10 +38,12 @@ extern void vSensorManagerTask(void *pvParameters);
 extern void xI2C0Handler(void);
 extern void xI2C2Handler(void);
 
-extern void xOPT3001Handler(void);
-extern void xSHT31Handler(void);
-extern void xBMI160Handler(void);
-extern void xSpeedHandler(void);
+extern void xOPT3001TimerHandler(void);
+extern void xSHT31TimerHandler(void);
+extern void xBMI160TimerHandler(void);
+extern void xSpeedTimerHandler(void);
+extern void xPowerTimerHandler(void);
+
 
 /*-----------------------------------------------------------*/
 
@@ -80,7 +83,7 @@ void vCreateSensorTasks(void)
     prvI2CInit();
     prvTimerInit();
     Sensor_Init();
-    
+
     xTaskCreate(
         vI2CManagerTask,
         "I2CManagerTask",
@@ -192,23 +195,60 @@ static void prvTimerInit(void)
     TimerConfigure(TIMER3_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER3_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
 
+    TimerConfigure(TIMER4_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER4_BASE, TIMER_A, g_ui32SysClock / 150); // set to ~ 150Hz
+
     // Regester and enable the interrupts
-    TimerIntRegister(TIMER0_BASE, TIMER_A, xOPT3001Handler);
+    TimerIntRegister(TIMER0_BASE, TIMER_A, xOPT3001TimerHandler);
     TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER0_BASE, TIMER_A);
 
-    TimerIntRegister(TIMER1_BASE, TIMER_A, xBMI160Handler);
+    TimerIntRegister(TIMER1_BASE, TIMER_A, xBMI160TimerHandler);
     TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER1_BASE, TIMER_A);
 
-    TimerIntRegister(TIMER2_BASE, TIMER_A, xSHT31Handler);
+    TimerIntRegister(TIMER2_BASE, TIMER_A, xSHT31TimerHandler);
     TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER2_BASE, TIMER_A);
 
-    TimerIntRegister(TIMER3_BASE, TIMER_A, xSpeedHandler);
+    TimerIntRegister(TIMER3_BASE, TIMER_A, xSpeedTimerHandler);
     TimerIntEnable(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER3_BASE, TIMER_A);
 
+    TimerIntRegister(TIMER4_BASE, TIMER_A, xPowerTimerHandler);
+    TimerIntEnable(TIMER4_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER4_BASE, TIMER_A);
+
     // Enable Master Interrupts
     IntMasterEnable();
+}
+
+static void prvADCInit(void)
+{
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC1);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+
+    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_ADC0))
+        ;
+    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_ADC1))
+        ;
+    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOE))
+        ;
+    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOD))
+        ;
+
+    GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_3);
+    GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_7);
+
+    // Step 0: PE3 (AIN0)
+    ADCSequenceStepConfigure(ADC0_BASE, 0, 0, ADC_CTL_CH0);
+
+    // Step 1: PD7 (AIN4), end + interrupt
+    ADCSequenceStepConfigure(ADC0_BASE, 0, 1,
+                             ADC_CTL_CH4 | ADC_CTL_END | ADC_CTL_IE);
+
+    ADCSequenceEnable(ADC0_BASE, 0);
+    ADCIntEnable(ADC0_BASE, 0);
 }

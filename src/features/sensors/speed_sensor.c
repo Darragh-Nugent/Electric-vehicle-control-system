@@ -34,7 +34,7 @@ void addRotation(void)
 float getRPM(void)
 {
     static uint32_t prev_time = 0;
-    uint32_t current_time = pdTICKS_TO_MS(xTaskGetTickCount());
+    uint32_t current_time = xTaskGetTickCount(); //<-------------************************************************** */
 
     uint32_t time_ms = current_time - prev_time;
     prev_time = current_time;

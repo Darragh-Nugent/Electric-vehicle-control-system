@@ -27,26 +27,32 @@
 
 extern EventGroupHandle_t xSensorEvents;
 
-void xOPT3001Handler(void)
+void xOPT3001TimerHandler(void)
 {
     TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, LIGHT_SENSOR_EVENT);
 }
 
-void xBMI160Handler(void)
+void xBMI160TimerHandler(void)
 {
     TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, ACCEL_SENSOR_EVENT);
 }
 
-void xSHT31Handler(void)
+void xSHT31TimerHandler(void)
 {
     TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, TEMP_SENSOR_EVENT);
 }
 
-void xSpeedHandler(void)
+void xSpeedTimerHandler(void)
 {
     TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, SPEED_SENSOR_EVENT);
+}
+
+void xPowerTimerHandler(void)
+{
+    TimerIntClear(TIMER4_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+    xEventGroupSetBits(xSensorEvents, POWER_SENSOR_EVENT);
 }
