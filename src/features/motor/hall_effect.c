@@ -28,7 +28,7 @@ extern SemaphoreHandle_t motorUpToSpeedSemaphore;
 
 volatile bool speed_semaphore_given = false; // bytes are atomic on Cortex-M4 processors.
 
-void hallSensorHandler(void)
+void xhallSensorHandler(void)
 {
     GPIOIntClear(GPIO_PORTM_BASE, GPIO_PIN_3);
     GPIOIntClear(GPIO_PORTH_BASE, GPIO_PIN_2);

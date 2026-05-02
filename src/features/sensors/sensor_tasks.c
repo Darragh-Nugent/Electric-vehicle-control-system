@@ -44,11 +44,11 @@ extern void xBMI160TimerHandler(void);
 extern void xSpeedTimerHandler(void);
 extern void xPowerTimerHandler(void);
 
-
 /*-----------------------------------------------------------*/
 
 static void prvI2CInit(void);
 static void prvTimerInit(void);
+static void prvButtonInit(void);
 
 /*-----------------------------------------------------------*/
 
@@ -82,6 +82,7 @@ void vCreateSensorTasks(void)
 
     prvI2CInit();
     prvTimerInit();
+    prvButtonInit();
     Sensor_Init();
 
     xTaskCreate(
@@ -181,6 +182,7 @@ static void prvTimerInit(void)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 2 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); // Enable the Timer 3 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER4); // Enable the Timer 4 Module.
 
     // Configure the interrupt time
     TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
@@ -251,4 +253,22 @@ static void prvADCInit(void)
 
     ADCSequenceEnable(ADC0_BASE, 0);
     ADCIntEnable(ADC0_BASE, 0);
+}
+
+static void prvButtonInit(void)
+{
+    /* Initialize the LaunchPad Buttons. */
+    ButtonsInit();
+
+    /* Configure both switches to trigger an interrupt on a falling edge. */
+    GPIOIntTypeSet(BUTTONS_GPIO_BASE, ALL_BUTTONS, GPIO_FALLING_EDGE);
+
+    /* Enable the interrupt for LaunchPad GPIO Port in the GPIO peripheral. */
+    GPIOIntEnable(BUTTONS_GPIO_BASE, ALL_BUTTONS);
+
+    /* Enable the Port F interrupt in the NVIC. */
+    IntEnable(INT_GPIOJ);
+
+    /* Enable global interrupts in the NVIC. */
+    IntMasterEnable();
 }
