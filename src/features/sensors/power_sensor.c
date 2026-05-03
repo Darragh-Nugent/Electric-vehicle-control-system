@@ -27,13 +27,15 @@ uint32_t current_values[2];
 void xPowerHandler(void)
 {
     BaseType_t xTaskWoken = pdFALSE;
-    ADCSequenceDataGet(ADC0_BASE, 0, current_values);
     ADCIntClear(ADC0_BASE, 0);
-    xSemaphoreGiveFromISR(xPowerSemaphore, xTaskWoken);
+
+    ADCSequenceDataGet(ADC0_BASE, 0, current_values);
+
+    xSemaphoreGiveFromISR(xPowerSemaphore, &xTaskWoken);
     portYIELD_FROM_ISR(xTaskWoken);
 }
 
-void PowerInit()
+void PowerInit(void)
 {
     xPowerSemaphore = xSemaphoreCreateBinary();
 }
@@ -49,7 +51,7 @@ float getPower(void)
     local_current[1] = current_values[1];
     taskEXIT_CRITICAL();
 
-    local_current[3] = local_current[0] + local_current[1] / 2;
+    local_current[2] = local_current[0] + local_current[1] / 2;
 
     return (local_current[0] + local_current[1] + local_current[2]) * VOLTS;
 }

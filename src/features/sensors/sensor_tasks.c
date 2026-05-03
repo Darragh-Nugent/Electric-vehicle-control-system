@@ -49,6 +49,7 @@ extern void xPowerTimerHandler(void);
 static void prvI2CInit(void);
 static void prvTimerInit(void);
 static void prvButtonInit(void);
+static void prvADCInit(void);
 
 /*-----------------------------------------------------------*/
 
@@ -83,6 +84,7 @@ void vCreateSensorTasks(void)
     prvI2CInit();
     prvTimerInit();
     prvButtonInit();
+    prvADCInit();
     Sensor_Init();
 
     xTaskCreate(
@@ -244,6 +246,9 @@ static void prvADCInit(void)
     GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_3);
     GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_7);
 
+    // Enable the proccessor to trigger the sample
+    ADCSequenceConfigure(ADC0_BASE, 0, ADC_TRIGGER_PROCESSOR, 0);
+
     // Step 0: PE3 (AIN0)
     ADCSequenceStepConfigure(ADC0_BASE, 0, 0, ADC_CTL_CH0);
 
@@ -253,6 +258,10 @@ static void prvADCInit(void)
 
     ADCSequenceEnable(ADC0_BASE, 0);
     ADCIntEnable(ADC0_BASE, 0);
+
+    IntEnable(INT_ADC0SS0);
+    /* Enable global interrupts in the NVIC. */
+    IntMasterEnable();
 }
 
 static void prvButtonInit(void)

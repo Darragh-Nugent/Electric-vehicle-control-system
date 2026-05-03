@@ -8,3 +8,4 @@
 
 
 uint32_t getPower(void);
+void PowerInit(void);

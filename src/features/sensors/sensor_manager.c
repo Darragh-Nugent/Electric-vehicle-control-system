@@ -132,6 +132,9 @@ void vSensorManagerTask(void *pvParameters)
     // Intialise env sensor
     // prvSensorSHT31Init();
 
+    // Initialise the power sensor
+    PowerInit();
+
     UARTprintf("Sensor start\n");
     // If the test fails, retry the full init + test sequence rather than
     // retesting a sensor that was never successfully enabled.
@@ -226,16 +229,16 @@ void vSensorManagerTask(void *pvParameters)
             }
         }
 
-        /***********************Currently blocking*********************************************/
-        // if (events & POWER_SENSOR_EVENT)
-        // {
-        //     uint32_t power = getPower();
-        //     float filtered_power = filterExponential(&powerFilter, (float)power);
+        if (events & POWER_SENSOR_EVENT)
+        {
+            uint32_t power = getPower();
+            float filtered_power = filterExponential(&powerFilter, (float)power);
 
-        //     if (uart_mode == POWER)
-        //     {
-        //         UARTprintf("%d,%d\n", power, (int)filtered_power);
-        //     }
-        // }
+            UARTprintf("%d,%d\n", power, (int)filtered_power);
+            if (uart_mode == POWER)
+            {
+                UARTprintf("%d,%d\n", power, (int)filtered_power);
+            }
+        }
     }
 }
