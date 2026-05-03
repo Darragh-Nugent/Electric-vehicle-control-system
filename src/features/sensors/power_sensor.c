@@ -51,6 +51,7 @@ float getPower(void)
     local_current[1] = current_values[1];
     taskEXIT_CRITICAL();
 
+    // May need to change ********************************************************************************888
     local_current[2] = local_current[0] + local_current[1] / 2;
 
     return (local_current[0] + local_current[1] + local_current[2]) * VOLTS;

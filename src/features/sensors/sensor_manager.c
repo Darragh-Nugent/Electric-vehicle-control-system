@@ -30,6 +30,7 @@
 #include "sensor_filters.h"
 #include "speed_sensor.h"
 #include "power_sensor.h"
+#include "sensors_api.h"
 
 /*-----------------------------------------------------------*/
 /*
@@ -176,6 +177,7 @@ void vSensorManagerTask(void *pvParameters)
                 float filteredLux = filterMovingAverage(&lightFilter, lux);
                 // UARTprintf("Lux: %5d\n", lux_int);
                 // UARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
+                Sensor_UpdateLux(filteredLux);
                 if (uart_mode == LIGHT)
                 {
                     UARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
@@ -187,7 +189,7 @@ void vSensorManagerTask(void *pvParameters)
             int8_t result = bmi160_get_sensor_data(BMI160_ACCEL_SEL, &bmi160_accel, NULL, &bmi160dev);
             int16_t absoluteAccel = getAbsoluteAccel(bmi160_accel);
             float filteredAccel = filterExponential(&accelFilter, (float)absoluteAccel);
-
+            Sensor_UpdateAccel(filteredAccel);
             if (uart_mode == ACCEL)
             {
                 UARTprintf("%d,%d\n", absoluteAccel, (int)(filteredAccel));
@@ -222,6 +224,7 @@ void vSensorManagerTask(void *pvParameters)
             float speed;
             speed = getRPM();
             float filtered_speed = filterExponential(&speedFilter, speed);
+            Sensor_UpdateSpeed(filtered_speed);
 
             if (uart_mode == SPEED)
             {
@@ -234,7 +237,8 @@ void vSensorManagerTask(void *pvParameters)
             uint32_t power = getPower();
             float filtered_power = filterExponential(&powerFilter, (float)power);
 
-            UARTprintf("%d,%d\n", power, (int)filtered_power);
+            Sensor_UpdatePower(filtered_power);
+            // UARTprintf("%d,%d\n", power, (int)filtered_power);
             if (uart_mode == POWER)
             {
                 UARTprintf("%d,%d\n", power, (int)filtered_power);
