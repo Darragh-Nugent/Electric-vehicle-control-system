@@ -187,19 +187,22 @@ void vSensorManagerTask(void *pvParameters)
         if (events & ACCEL_SENSOR_EVENT)
         {
             int8_t result = bmi160_get_sensor_data(BMI160_ACCEL_SEL, &bmi160_accel, NULL, &bmi160dev);
-            int16_t absoluteAccel = getAbsoluteAccel(bmi160_accel);
-            float filteredAccel = filterExponential(&accelFilter, (float)absoluteAccel);
-            Sensor_UpdateAccel(filteredAccel);
-            if (uart_mode == ACCEL)
+            if (result == 0)
             {
-                UARTprintf("%d,%d\n", absoluteAccel, (int)(filteredAccel));
-            }
+                int16_t absoluteAccel = getAbsoluteAccel(bmi160_accel);
+                float filteredAccel = filterExponential(&accelFilter, (float)absoluteAccel);
+                Sensor_UpdateAccel(filteredAccel);
+                if (uart_mode == ACCEL)
+                {
+                    UARTprintf("%d,%d\n", absoluteAccel, (int)(filteredAccel));
+                }
 
-            //     if (filteredAccel > 6000)
-            //     {
-            //         Motor_EStop();
-            //     }
-            // }
+                //     if (filteredAccel > 6000)
+                //     {
+                //         Motor_EStop();
+                //     }
+                // }
+            }
         }
 
         // if (events & TEMP_SENSOR_EVENT)
