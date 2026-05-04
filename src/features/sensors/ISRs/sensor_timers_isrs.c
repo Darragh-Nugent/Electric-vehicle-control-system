@@ -56,3 +56,9 @@ void xPowerTimerHandler(void)
     TimerIntClear(TIMER4_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, POWER_SENSOR_EVENT);
 }
+
+void xDistTimerHandler(void)
+{
+    TimerIntClear(TIMER5_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+    xEventGroupSetBits(xSensorEvents, DIST_SENSOR_EVENT);
+}

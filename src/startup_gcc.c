@@ -53,6 +53,7 @@ extern void xBMI160TimerHandler(void);
 extern void xSHT31TimerHandler(void);
 extern void xSpeedTimerHandler(void);
 extern void xPowerTimerHandler(void);
+extern void xDistTimerHandler(void);
 
 extern void xPowerHandler(void);
 extern void xhallSensorHandler(void);
@@ -164,7 +165,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // I2C3 Master and Slave
     xPowerTimerHandler,                     // Timer 4 subtimer A
     IntDefaultHandler,                      // Timer 4 subtimer B
-    IntDefaultHandler,                      // Timer 5 subtimer A
+    xDistTimerHandler,                      // Timer 5 subtimer A
     IntDefaultHandler,                      // Timer 5 subtimer B
     IntDefaultHandler,                      // FPU
     0,                                      // Reserved

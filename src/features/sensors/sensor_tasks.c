@@ -43,6 +43,7 @@ extern void xSHT31TimerHandler(void);
 extern void xBMI160TimerHandler(void);
 extern void xSpeedTimerHandler(void);
 extern void xPowerTimerHandler(void);
+extern void xDistTimerHandler(void);
 
 /*-----------------------------------------------------------*/
 
@@ -185,6 +186,7 @@ static void prvTimerInit(void)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 2 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); // Enable the Timer 3 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER4); // Enable the Timer 4 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER5); // Enable the Timer 5 Module.
 
     // Configure the interrupt time
     TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
@@ -201,6 +203,9 @@ static void prvTimerInit(void)
 
     TimerConfigure(TIMER4_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER4_BASE, TIMER_A, g_ui32SysClock / 150); // set to ~ 150Hz
+
+    TimerConfigure(TIMER5_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER5_BASE, TIMER_A, g_ui32SysClock / 20); // set to ~ 20Hz
 
     // Regester and enable the interrupts
     TimerIntRegister(TIMER0_BASE, TIMER_A, xOPT3001TimerHandler);
@@ -222,6 +227,10 @@ static void prvTimerInit(void)
     TimerIntRegister(TIMER4_BASE, TIMER_A, xPowerTimerHandler);
     TimerIntEnable(TIMER4_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER4_BASE, TIMER_A);
+
+    TimerIntRegister(TIMER5_BASE, TIMER_A, xDistTimerHandler);
+    TimerIntEnable(TIMER5_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER5_BASE, TIMER_A);
 
     // Enable Master Interrupts
     IntMasterEnable();

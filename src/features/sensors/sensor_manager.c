@@ -30,6 +30,7 @@
 #include "sensor_filters.h"
 #include "speed_sensor.h"
 #include "power_sensor.h"
+#include "distance_sensor.h"
 #include "sensors_api.h"
 
 /*-----------------------------------------------------------*/
@@ -136,6 +137,9 @@ void vSensorManagerTask(void *pvParameters)
     // Initialise the power sensor
     PowerInit();
 
+    // Initialise the distance sensor
+    SensorVL53L0xInit();
+
     UARTprintf("Sensor start\n");
     // If the test fails, retry the full init + test sequence rather than
     // retesting a sensor that was never successfully enabled.
@@ -159,6 +163,7 @@ void vSensorManagerTask(void *pvParameters)
     exp_filter_t accelFilter = {0.25, 0};
     exp_filter_t speedFilter = {0.25, 0};
     exp_filter_t powerFilter = {0.25, 0};
+    exp_filter_t distFilter = {0.25, 0};
 
     // Loop Forever
     while (1)
@@ -226,25 +231,36 @@ void vSensorManagerTask(void *pvParameters)
         {
             float speed;
             speed = getRPM();
-            float filtered_speed = filterExponential(&speedFilter, speed);
-            Sensor_UpdateSpeed(filtered_speed);
+            float filteredSpeed = filterExponential(&speedFilter, speed);
+            Sensor_UpdateSpeed(filteredSpeed);
 
             if (uart_mode == SPEED)
             {
-                UARTprintf("%d,%d\n", (int)speed, (int)filtered_speed);
+                UARTprintf("%d,%d\n", (int)speed, (int)filteredSpeed);
             }
         }
 
         if (events & POWER_SENSOR_EVENT)
         {
             uint32_t power = getPower();
-            float filtered_power = filterExponential(&powerFilter, (float)power);
+            float filteredPower = filterExponential(&powerFilter, (float)power);
 
-            Sensor_UpdatePower(filtered_power);
-            // UARTprintf("%d,%d\n", power, (int)filtered_power);
+            Sensor_UpdatePower(filteredPower);
+            // UARTprintf("%d,%d\n", power, (int)filteredPower);
             if (uart_mode == POWER)
             {
-                UARTprintf("%d,%d\n", power, (int)filtered_power);
+                UARTprintf("%d,%d\n", power, (int)filteredPower);
+            }
+        }
+
+        if (events & DIST_SENSOR_EVENT) 
+        {
+            uint16_t distance = getDistance();
+            float filteredDistance = filterExponential(&distFilter, distance);
+            Sensor_UpdateDistance(filteredDistance);
+            if (uart_mode == POWER)
+            {
+                UARTprintf("%d,%d\n", distFilter, (int)filteredDistance);
             }
         }
     }
