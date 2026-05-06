@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define SHT31_ADDR    0x44
+#define SHT31_ADDR                 0x44
 #define SHT31_MEAS_HIGHREP_STRETCH 0x2C06
 #define SHT31_MEAS_MEDREP_STRETCH  0x2C0D
 #define SHT31_MEAS_LOWREP_STRETCH  0x2C10
@@ -25,9 +25,7 @@ typedef void (*sht31_delay_fptr_t)(uint32_t period);
 typedef struct  
 {
   sht31_read_fptr_t write;
-
   sht31_write_fptr_t read;
-
   sht31_delay_fptr_t delay;
 } sht31_dev;
 

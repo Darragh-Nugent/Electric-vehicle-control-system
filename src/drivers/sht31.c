@@ -23,8 +23,6 @@
 #include "motorlib.h"
 #include "features/priorities.h"
 
-#define SHT31_I2C_ADDRESS 0x00
-
 static sht31_dev config;
 
 bool sht31_write_command(uint16_t command)
@@ -49,31 +47,35 @@ bool sht31_init(sht31_dev new_config)
     sht31_reset();
 }
 
-uint8_t sht31_crc8(const uint8_t* data, int len) {
+uint8_t sht31_crc8(const uint8_t *data, int len)
+{
     const uint8_t POLYNOMIAL = 0x31;
     uint8_t crc = 0xFF;
 
-    for (int j = len; j; --j) {
+    for (int j = len; j; --j)
+    {
         crc ^= *data++;
 
-        for (int i = 8; i; --i) {
+        for (int i = 8; i; --i)
+        {
             crc = (crc & 0x80)
-                  ? (crc << 1) ^ POLYNOMIAL
-                  : (crc << 1);
+                      ? (crc << 1) ^ POLYNOMIAL
+                      : (crc << 1);
         }
     }
     return crc;
 }
 
-
-bool sht31_getTempHum(float *temp, float *humidity) {
+bool sht31_getTempHum(float *temp, float *humidity)
+{
     uint8_t readbuffer[6];
 
     sht31_write_command(SHT31_MEAS_HIGHREP);
 
     config.delay(50);
-    bool result = config.read(SHT31_ADDR, *readbuffer, 6);
-    if (!result) 
+    bool result = config.read(SHT31_ADDR, readbuffer, 6);
+
+    if (!result)
     {
         return false;
     }
@@ -83,7 +85,8 @@ bool sht31_getTempHum(float *temp, float *humidity) {
     ST <<= 8;
     ST |= readbuffer[1];
 
-    if (readbuffer[2] != sht31_crc8(readbuffer, 2)) {
+    if (readbuffer[2] != sht31_crc8(readbuffer, 2))
+    {
         return false;
     }
 
@@ -91,7 +94,8 @@ bool sht31_getTempHum(float *temp, float *humidity) {
     SRH <<= 8;
     SRH |= readbuffer[4];
 
-    if (readbuffer[5] != sht31_crc8(readbuffer + 3, 2)) {
+    if (readbuffer[5] != sht31_crc8(readbuffer + 3, 2))
+    {
         return false;
     }
 

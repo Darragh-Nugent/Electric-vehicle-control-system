@@ -142,7 +142,7 @@ void Sensor_UpdatePower(uint16_t power)
     xSemaphoreGive(xPowerMutex);
 }
 
-uint16_t Sensor_GetDist(void)
+uint16_t Sensor_GetDistance(void)
 {
     uint16_t value;
     xSemaphoreTake(xDistMutex, portMAX_DELAY);
@@ -152,7 +152,7 @@ uint16_t Sensor_GetDist(void)
     return value;
 }
 
-void Sensor_UpdateDist(uint16_t dist)
+void Sensor_UpdateDistance(uint16_t dist)
 {
     xSemaphoreTake(xDistMutex, portMAX_DELAY);
     sensor.distance = dist;

@@ -132,13 +132,14 @@ void vSensorManagerTask(void *pvParameters)
     prvSensorBmi160Init(&bmi160dev);
 
     // Intialise env sensor
-    // prvSensorSHT31Init();
+    prvSensorSHT31Init();
+    UARTprintf("Env sensor initialised\n");
 
     // Initialise the power sensor
     PowerInit();
 
     // Initialise the distance sensor
-    SensorVL53L0xInit();
+    // SensorVL53L0xInit();
 
     UARTprintf("Sensor start\n");
     // If the test fails, retry the full init + test sequence rather than
@@ -180,7 +181,6 @@ void vSensorManagerTask(void *pvParameters)
                 sensorOpt3001Convert(rawData, &convertedLux);
                 float lux = convertedLux;
                 float filteredLux = filterMovingAverage(&lightFilter, lux);
-                // UARTprintf("Lux: %5d\n", lux_int);
                 // UARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
                 Sensor_UpdateLux(filteredLux);
                 if (uart_mode == LIGHT)
@@ -210,58 +210,58 @@ void vSensorManagerTask(void *pvParameters)
             }
         }
 
-        // if (events & TEMP_SENSOR_EVENT)
+        if (events & TEMP_SENSOR_EVENT)
+        {
+            float temp;
+            float humidity;
+            bool result = sht31_getTempHum(&temp, &humidity);
+            float filteredTemp = filterMovingAverage(&tempFilter, temp);
+            float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
+            if (uart_mode == TEMP)
+            {
+                UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));
+            }
+            else if (uart_mode == HUMIDITY)
+            {
+                UARTprintf("%d,%d\n", (int)(humidity), (int)(filteredHumidity));
+            }
+        }
+
+        // if (events & SPEED_SENSOR_EVENT)
         // {
-        //     float temp;
-        //     float humidity;
-        //     bool result = sht31_getTempHum(&temp, &humidity);
-        //     float filteredTemp = filterMovingAverage(&tempFilter, temp);
-        //     float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
-        //     if (uart_mode == TEMP)
+        //     float speed;
+        //     speed = getRPM();
+        //     float filteredSpeed = filterExponential(&speedFilter, speed);
+        //     Sensor_UpdateSpeed(filteredSpeed);
+
+        //     if (uart_mode == SPEED)
         //     {
-        //         UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));
-        //     }
-        //     else if (uart_mode == HUMIDITY)
-        //     {
-        //         UARTprintf("%d,%d\n", (int)(humidity), (int)(filteredHumidity));
+        //         UARTprintf("%d,%d\n", (int)speed, (int)filteredSpeed);
         //     }
         // }
 
-        if (events & SPEED_SENSOR_EVENT)
-        {
-            float speed;
-            speed = getRPM();
-            float filteredSpeed = filterExponential(&speedFilter, speed);
-            Sensor_UpdateSpeed(filteredSpeed);
+        // if (events & POWER_SENSOR_EVENT)
+        // {
+        //     uint32_t power = getPower();
+        //     float filteredPower = filterExponential(&powerFilter, (float)power);
 
-            if (uart_mode == SPEED)
-            {
-                UARTprintf("%d,%d\n", (int)speed, (int)filteredSpeed);
-            }
-        }
+        //     Sensor_UpdatePower(filteredPower);
+        //     // UARTprintf("%d,%d\n", power, (int)filteredPower);
+        //     if (uart_mode == POWER)
+        //     {
+        //         UARTprintf("%d,%d\n", power, (int)filteredPower);
+        //     }
+        // }
 
-        if (events & POWER_SENSOR_EVENT)
-        {
-            uint32_t power = getPower();
-            float filteredPower = filterExponential(&powerFilter, (float)power);
-
-            Sensor_UpdatePower(filteredPower);
-            // UARTprintf("%d,%d\n", power, (int)filteredPower);
-            if (uart_mode == POWER)
-            {
-                UARTprintf("%d,%d\n", power, (int)filteredPower);
-            }
-        }
-
-        if (events & DIST_SENSOR_EVENT) 
-        {
-            uint16_t distance = getDistance();
-            float filteredDistance = filterExponential(&distFilter, distance);
-            Sensor_UpdateDistance(filteredDistance);
-            if (uart_mode == POWER)
-            {
-                UARTprintf("%d,%d\n", distFilter, (int)filteredDistance);
-            }
-        }
+        // if (events & DIST_SENSOR_EVENT) 
+        // {
+        //     uint16_t distance = getDistance();
+        //     float filteredDistance = filterExponential(&distFilter, distance);
+        //     Sensor_UpdateDistance(filteredDistance);
+        //     if (uart_mode == POWER)
+        //     {
+        //         UARTprintf("%d,%d\n", distFilter, (int)filteredDistance);
+        //     }
+        // }
     }
 }

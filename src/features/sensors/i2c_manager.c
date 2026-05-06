@@ -28,7 +28,7 @@
 
 #define LIGHT_SENSOR_ADDRESS 0x47
 #define ACCEL_SENSOR_ADDRESS 0x69
-#define TEMP_SENSOR_ADDRESS 0x00
+#define TEMP_SENSOR_ADDRESS  0x44
 
 /*-----------------------------------------------------------*/
 
@@ -123,7 +123,8 @@ void vI2CManagerTask(void *pvParameters)
         response.sensor = message.sensor;
         response.success = true;
 
-        uint32_t I2C_Base = message.sensor == TEMP_SENSOR_ADDRESS ? I2C2_BASE : I2C0_BASE;
+        // uint32_t I2C_Base = message.sensor == TEMP_SENSOR_ADDRESS ? I2C2_BASE : I2C0_BASE;
+        uint32_t I2C_Base = I2C2_BASE;
 
         switch (message.type)
         {
