@@ -22,7 +22,7 @@
 #include "motorlib.h"
 #include "features/priorities.h"
 #include "motor_api.h"
-#include "features/sensors/sensors_api.h"
+#include "features/sensors/api/sensors_api.h"
 
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
 

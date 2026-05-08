@@ -26,7 +26,7 @@
 #include "motorlib.h"
 #include "features/priorities.h"
 #include "sensor_events.h"
-#include "sensors_api.h"
+#include "features/sensors/api/sensors_api.h"
 
 /*-----------------------------------------------------------*/
 

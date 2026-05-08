@@ -23,7 +23,7 @@
 
 #include "motorlib.h"
 #include "features/priorities.h"
-#include "../sensor_events.h"
+#include "features/sensors/core/sensor_events.h"
 
 extern EventGroupHandle_t xSensorEvents;
 

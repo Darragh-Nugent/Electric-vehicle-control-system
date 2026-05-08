@@ -11,16 +11,16 @@
 #include "utils/uartstdio.h"
 
 #include "features/priorities.h"
-#include "uart_mode.h"
+#include "features/sensors/uart_mode.h"
 #include "sensor_events.h"
 #include "sensor_filters.h"
-#include "light_sensor.h"
-#include "acceleration_sensor.h"
-#include "env_sensor.h"
-#include "speed_sensor.h"
-#include "power_sensor.h"
-#include "distance_sensor.h"
-#include "sensors_api.h"
+#include "features/sensors/devices/light_sensor.h"
+#include "features/sensors/devices/acceleration_sensor.h"
+#include "features/sensors/devices/env_sensor.h"
+#include "features/sensors/devices/speed_sensor.h"
+#include "features/sensors/devices/power_sensor.h"
+#include "features/sensors/devices/distance_sensor.h"
+#include "features/sensors/api/sensors_api.h"
 
 /*-----------------------------------------------------------*/
 
@@ -41,6 +41,7 @@ extern void prvSensorOPT3001TimerInit(void);
  * Uart enum
  */
 uart_mode_t uart_mode = NONE;
+uart_mode_t local_uart_mode = NONE;
 
 /*-----------------------------------------------------------*/
 
@@ -82,6 +83,10 @@ void vSensorManagerTask(void *pvParameters)
     {
         events = xEventGroupWaitBits(xSensorEvents, ALL_SENSOR_EVENTS, pdTRUE, pdFALSE, portMAX_DELAY);
 
+        taskENTER_CRITICAL();
+        local_uart_mode = uart_mode;
+        taskEXIT_CRITICAL();
+
         if (events & LIGHT_SENSOR_EVENT)
         {
             float lux;
@@ -91,7 +96,7 @@ void vSensorManagerTask(void *pvParameters)
                 float filteredLux = filterMovingAverage(&lightFilter, lux);
                 // UARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
                 Sensor_UpdateLux(filteredLux);
-                if (uart_mode == LIGHT)
+                if (local_uart_mode == LIGHT)
                 {
                     UARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
                 }
@@ -104,7 +109,7 @@ void vSensorManagerTask(void *pvParameters)
             {
                 float filteredAccel = filterExponential(&accelFilter, (float)absoluteAccel);
                 Sensor_UpdateAccel(filteredAccel);
-                if (uart_mode == ACCEL)
+                if (local_uart_mode == ACCEL)
                 {
                     UARTprintf("%d,%d\n", absoluteAccel, (int)(filteredAccel));
                 }
@@ -125,11 +130,11 @@ void vSensorManagerTask(void *pvParameters)
             {
                 float filteredTemp = filterMovingAverage(&tempFilter, temp);
                 float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
-                if (uart_mode == TEMP)
+                if (local_uart_mode == TEMP)
                 {
                     UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));
                 }
-                else if (uart_mode == HUMIDITY)
+                else if (local_uart_mode == HUMIDITY)
                 {
                     UARTprintf("%d,%d\n", (int)(humidity), (int)(filteredHumidity));
                 }
@@ -143,7 +148,7 @@ void vSensorManagerTask(void *pvParameters)
         //     float filteredSpeed = filterExponential(&speedFilter, speed);
         //     Sensor_UpdateSpeed(filteredSpeed);
 
-        //     if (uart_mode == SPEED)
+        //     if (local_uart_mode == SPEED)
         //     {
         //         UARTprintf("%d,%d\n", (int)speed, (int)filteredSpeed);
         //     }
@@ -156,7 +161,7 @@ void vSensorManagerTask(void *pvParameters)
 
         //     Sensor_UpdatePower(filteredPower);
         //     // UARTprintf("%d,%d\n", power, (int)filteredPower);
-        //     if (uart_mode == POWER)
+        //     if (local_uart_mode == POWER)
         //     {
         //         UARTprintf("%d,%d\n", power, (int)filteredPower);
         //     }
@@ -169,7 +174,7 @@ void vSensorManagerTask(void *pvParameters)
             {
                 float filteredDistance = filterExponential(&distFilter, distance);
                 Sensor_UpdateDistance(filteredDistance);
-                if (uart_mode == DIST)
+                if (local_uart_mode == DIST)
                 {
                     UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);
                 }
