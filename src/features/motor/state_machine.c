@@ -22,6 +22,11 @@
 #include "features/priorities.h"
 #include "states.h"
 #include "motor_api.h"
+#include "motor_control.h"
+// #include "sensors_api.h"                 // UNCOMMENT ONCE READY !!
+
+#define CONTROL_PERIOD_MS 10
+#define MOTOR_SERIALPLOT_ENABLE 1
 
 motor_state_t motor_state = MOTOR_STATE_IDLE;
 static void motorTask( void *pvParameters );
@@ -47,11 +52,17 @@ void vCreateMotorTask(void)
 
 static void motorTask( void *pvParameters )
 {
+
     uint16_t duty_value = 10;
     uint16_t period_value = 50;
+    
+    const TickType_t controlPeriodTicks = pdMS_TO_TICKS(CONTROL_PERIOD_MS);
+    const float controlPeriodSeconds = CONTROL_PERIOD_MS / 1000.0f;
 
     initMotorLib(period_value);
     setDuty(duty_value);
+    
+    initMotorControl();
 
     for(;;) {
         switch (motor_state)
@@ -71,14 +82,51 @@ static void motorTask( void *pvParameters )
             }
             break;
         case MOTOR_STATE_RUNNING:
-            // if e-stop triggered or fault occurs: transition to braking.
-            vTaskDelay(pdMS_TO_TICKS(100)); // placeholder delay
-            // closed-loop control must be implemented here.
+        {    
+            
+            uint16_t desiredSpeed = motorGetSpeed();
+            uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
+
+            // uint16_t actualSpeed = Sensor_GetSpeed(); // UNCOMMENT ONCE READY !!!
+            uint16_t actualSpeed = 0; // placeholder
+
+            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
+            setDuty(duty);
+
+            #if MOTOR_SERIALPLOT_ENABLE
+                motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed, duty);
+            #endif
+
+            vTaskDelay(controlPeriodTicks);
+
             break;
+        }
         case MOTOR_STATE_BRAKING:
-            vTaskDelay(pdMS_TO_TICKS(100)); // placeholder delay
-            // if speed == 0: transition to fault state
+        {
+            uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
+
+            // uint16_t actualSpeed = Sensor_GetSpeed();   /// UNCOMMENT ONCE READY !!!
+            uint16_t actualSpeed = 0; // placeholder
+
+            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
+
+            setDuty(duty);
+
+            #if MOTOR_SERIALPLOT_ENABLE
+                motorSerialPlotOutput(0, referenceSpeed, actualSpeed, duty);
+            #endif
+            
+            if (referenceSpeed == 0) // a placeholder,, should be actualSpeed == 0, or maybe <=5 in case theres noise
+            {
+                setDuty(0);
+                motorPIReset();
+                motorFaultLatched();
+            }
+
+            vTaskDelay(controlPeriodTicks);
+
             break;
+        }
         case MOTOR_STATE_FAULT:
             hallSensorIntDisable(); // need to decide later where the best state is to call this.
             speed_semaphore_given = false;
