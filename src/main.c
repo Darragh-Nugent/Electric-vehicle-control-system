@@ -33,11 +33,8 @@
 // Motor lib
 #include <motorlib.h>
 
-<<<<<<< HEAD
 /*-----------------------------------------------------------*/
 tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
-=======
->>>>>>> 39bf49ef5d25aa886f668f8ca6f5733de68280e4
 /* The system clock frequency. */
 uint32_t g_ui32SysClock;
 
@@ -52,9 +49,6 @@ extern void vCreateMotorTask(void);
 extern void vCreateSensorTasks(void);
 extern void vCreateGuiTask(void);
 
-<<<<<<< HEAD
-static void prvConfigureHallInts(void);
-=======
 extern void hallSensorGPIOConfig(void);
 extern void hallSensorIntDisable(void);
 
@@ -64,7 +58,6 @@ extern SemaphoreHandle_t motorStartSemaphore;
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
 
 SemaphoreHandle_t faultAcknowledgedSemaphore = NULL;
->>>>>>> 39bf49ef5d25aa886f668f8ca6f5733de68280e4
 
 /*-----------------------------------------------------------*/
 
@@ -173,23 +166,6 @@ void vApplicationMallocFailedHook(void)
         ;
 }
 /*-----------------------------------------------------------*/
-<<<<<<< HEAD
-static void prvConfigureHallInts(void)
-{
-
-    /* Configure GPIO ports to trigger an interrupt on rising/falling or both edges. */
-
-    /* Enable the interrupt for LaunchPad GPIO Port in the GPIO peripheral. */
-
-    /* Enable the Ports interrupt in the NVIC. */
-
-    /* Enable global interrupts in the NVIC. */
-    IntMasterEnable();
-}
-
-/*-----------------------------------------------------------*/
-=======
->>>>>>> 39bf49ef5d25aa886f668f8ca6f5733de68280e4
 
 void vApplicationIdleHook(void)
 {
