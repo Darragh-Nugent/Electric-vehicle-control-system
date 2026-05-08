@@ -31,38 +31,65 @@ void SensorVL53L0xInit(void)
     uint32_t refSpadCount;
     uint8_t isApertureSpads;
 
-    sensor.I2cDevAddr = 0x52;
+    sensor.I2cDevAddr = 0x29;
     sensor.comms_type = 1;
-    sensor.comms_speed_khz = 400;
+    sensor.comms_speed_khz = 100;
 
-    VL53L0X_Error result = VL53L0X_DataInit(&sensor);
+    VL53L0X_Error result;
+
+    result = VL53L0X_DataInit(&sensor);
+    if (result)
+        goto fail;
+
+    UARTprintf("Data init\n");
+
     result = VL53L0X_StaticInit(&sensor);
-    result = VL53L0X_PerformRefCalibration(&sensor, &VhvSettings, &PhaseCal);
-    result = VL53L0X_PerformRefSpadManagement(&sensor, &refSpadCount, &isApertureSpads);
-    result = VL53L0X_SetDeviceMode(&sensor, VL53L0X_DEVICEMODE_SINGLE_RANGING);
+    if (result)
+        goto fail;
 
-    if (result != VL53L0X_ERROR_NONE)
-    {
-        UARTprintf("Distance sensor intitialisation failed\n");
-    }
+    UARTprintf("static init\n");
+
+    result = VL53L0X_PerformRefCalibration(&sensor, &VhvSettings, &PhaseCal);
+    if (result)
+        goto fail;
+
+    UARTprintf("ref calibrate\n");
+
+    result = VL53L0X_PerformRefSpadManagement(&sensor, &refSpadCount, &isApertureSpads);
+    if (result)
+        goto fail;
+    UARTprintf("ref mesaure\n");
+
+    result = VL53L0X_SetDeviceMode(&sensor, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING);
+    if (result)
+        goto fail;
+    UARTprintf("device mode\n");
+
+    result = VL53L0X_StartMeasurement(&sensor);
+    if (result)
+        goto fail;
+
+    UARTprintf("measurment start\n");
+
+    return;
+
+fail:
+    UARTprintf("VL53L0X init failed: %d\n", result);
 }
 
-uint16_t getDistance(void)
+bool getDistance(uint16_t *dist)
 {
+    uint8_t dataReady;
+
+    if (VL53L0X_GetMeasurementDataReady(&sensor, &dataReady) != VL53L0X_ERROR_NONE || dataReady == 0)
+    {
+        return false;
+    }
+
     VL53L0X_RangingMeasurementData_t data;
+    VL53L0X_GetRangingMeasurementData(&sensor, &data);
+    VL53L0X_ClearInterruptMask(&sensor, 0);
 
-    VL53L0X_Error result = VL53L0X_PerformSingleRangingMeasurement(&sensor, &data);
-
-    if (result != VL53L0X_ERROR_NONE)
-    {
-        UARTprintf("Distance sensor communication failed\n");
-        return 0xFFFF;
-    }
-
-    if (data.RangeStatus != 0)
-    {
-        return 0xFFFF;
-    }
-
-    return data.RangeMilliMeter;
+    *dist = data.RangeMilliMeter;
+    return true;
 }

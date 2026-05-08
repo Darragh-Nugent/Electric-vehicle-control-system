@@ -45,6 +45,7 @@ bool sht31_init(sht31_dev new_config)
     config.read = new_config.read;
     config.delay = new_config.delay;
     sht31_reset();
+    return true;
 }
 
 uint8_t sht31_crc8(const uint8_t *data, int len)

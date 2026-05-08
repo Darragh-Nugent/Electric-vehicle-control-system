@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright © 2016, STMicroelectronics International N.V.
+ * Copyright ï¿½ 2016, STMicroelectronics International N.V.
  All rights reserved.
 
  Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,13 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************/
 
+
 #include "vl53l0x_api.h"
 #include "vl53l0x_api_core.h"
 #include "vl53l0x_api_calibration.h"
+
+#include "utils/uartstdio.h"
+
 
 #ifndef __KERNEL__
 #include <stdlib.h>
@@ -740,7 +744,6 @@ VL53L0X_Error VL53L0X_perform_ref_spad_management(VL53L0X_DEV Dev,
 	 */
 	for (index = 0; index < spadArraySize; index++)
 		Dev->Data.SpadData.RefSpadEnables[index] = 0;
-
 
 	Status = VL53L0X_WrByte(Dev, 0xFF, 0x01);
 

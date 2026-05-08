@@ -99,7 +99,7 @@ void vCreateSensorTasks(void)
     xTaskCreate(
         vSensorManagerTask,
         "LightSensorTask",
-        256,
+        1026,
         NULL,
         LIGHT_SENSOR_PRIORITY,
         NULL);

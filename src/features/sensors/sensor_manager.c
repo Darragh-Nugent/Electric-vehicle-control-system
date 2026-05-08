@@ -133,13 +133,14 @@ void vSensorManagerTask(void *pvParameters)
 
     // Intialise env sensor
     prvSensorSHT31Init();
-    UARTprintf("Env sensor initialised\n");
 
     // Initialise the power sensor
     PowerInit();
 
     // Initialise the distance sensor
-    // SensorVL53L0xInit();
+    UARTprintf("Dist init start\n");
+    SensorVL53L0xInit();
+    UARTprintf("Dist init success\n");
 
     UARTprintf("Sensor start\n");
     // If the test fails, retry the full init + test sequence rather than
@@ -253,15 +254,20 @@ void vSensorManagerTask(void *pvParameters)
         //     }
         // }
 
-        // if (events & DIST_SENSOR_EVENT) 
-        // {
-        //     uint16_t distance = getDistance();
-        //     float filteredDistance = filterExponential(&distFilter, distance);
-        //     Sensor_UpdateDistance(filteredDistance);
-        //     if (uart_mode == POWER)
-        //     {
-        //         UARTprintf("%d,%d\n", distFilter, (int)filteredDistance);
-        //     }
-        // }
+        if (events & DIST_SENSOR_EVENT)
+        {
+            uint16_t distance;
+            bool success = getDistance(&distance);
+            if (success)
+            {
+                float filteredDistance = filterExponential(&distFilter, distance);
+                Sensor_UpdateDistance(filteredDistance);
+                UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);
+                if (uart_mode == DIST)
+                {
+                    UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);
+                }
+            }
+        }
     }
 }

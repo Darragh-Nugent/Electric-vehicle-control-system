@@ -32,9 +32,8 @@ bool I2C_write_reg(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
 
     i2c_send_message_t message;
     message.id = 0;   // writer task id (not used in this implementation)
-    message.type = 1; // write
-    message.sensor = ui8Addr;
     message.type = I2C_REG_WRITE;
+    message.sensor = ui8Addr;
     message.reg = ui8Reg;
     message.len = len;
 
@@ -107,7 +106,8 @@ bool I2C_read_reg(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
 
     xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
     // UARTprintf("wait on semaphore in writei2c\n");
-    xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
+    // xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
+    xQueueReceive(xI2CRecvQueue, &response, portMAX_DELAY);
 
     for (uint16_t i = 0; i < len; i++)
     {
