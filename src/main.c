@@ -6,6 +6,7 @@
 /* Kernel includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 
 /* Hardware includes. */
 #include "driverlib/pin_map.h"
@@ -32,8 +33,11 @@
 // Motor lib
 #include <motorlib.h>
 
+<<<<<<< HEAD
 /*-----------------------------------------------------------*/
 tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
+=======
+>>>>>>> 39bf49ef5d25aa886f668f8ca6f5733de68280e4
 /* The system clock frequency. */
 uint32_t g_ui32SysClock;
 
@@ -48,13 +52,39 @@ extern void vCreateMotorTask(void);
 extern void vCreateSensorTasks(void);
 extern void vCreateGuiTask(void);
 
+<<<<<<< HEAD
 static void prvConfigureHallInts(void);
+=======
+extern void hallSensorGPIOConfig(void);
+extern void hallSensorIntDisable(void);
+
+extern SemaphoreHandle_t motorStateMutex;
+extern SemaphoreHandle_t motorSetSpeedMutex;
+extern SemaphoreHandle_t motorStartSemaphore;
+extern SemaphoreHandle_t motorUpToSpeedSemaphore;
+
+SemaphoreHandle_t faultAcknowledgedSemaphore = NULL;
+>>>>>>> 39bf49ef5d25aa886f668f8ca6f5733de68280e4
 
 /*-----------------------------------------------------------*/
 
 int main(void)
 {
     prvSetupHardware();
+    IntMasterEnable();
+
+    motorStateMutex = xSemaphoreCreateMutex();
+    motorSetSpeedMutex = xSemaphoreCreateMutex();
+    motorStartSemaphore = xSemaphoreCreateBinary();
+    motorUpToSpeedSemaphore = xSemaphoreCreateBinary();
+    faultAcknowledgedSemaphore = xSemaphoreCreateBinary();
+
+    while (
+        motorStateMutex == NULL ||
+        motorSetSpeedMutex == NULL ||
+        motorStartSemaphore == NULL ||
+        motorUpToSpeedSemaphore == NULL ||
+        faultAcknowledgedSemaphore == NULL) {}
 
     // vCreateMotorTask();
     // vCreateSensorTasks();
@@ -121,8 +151,8 @@ static void prvSetupHardware(void)
     prvConfigureUART();
 
     /* Set-up interrupts for hall sensors */
-    prvConfigureHallInts();
-
+    hallSensorGPIOConfig();
+    hallSensorIntDisable(); // the hall effect ISR should be disabled by default (IDLE)
 }
 /*-----------------------------------------------------------*/
 
@@ -143,6 +173,7 @@ void vApplicationMallocFailedHook(void)
         ;
 }
 /*-----------------------------------------------------------*/
+<<<<<<< HEAD
 static void prvConfigureHallInts(void)
 {
 
@@ -157,6 +188,8 @@ static void prvConfigureHallInts(void)
 }
 
 /*-----------------------------------------------------------*/
+=======
+>>>>>>> 39bf49ef5d25aa886f668f8ca6f5733de68280e4
 
 void vApplicationIdleHook(void)
 {
