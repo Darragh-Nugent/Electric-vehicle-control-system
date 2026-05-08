@@ -9,8 +9,13 @@
 #include "../../data.h"
 #include "features/motor/states.h"
 
+// LV_IMAGE_DECLARE(img_hand);
 static lv_obj_t *s_screen;
 static lv_obj_t *rpm_input;
+
+lv_obj_t *needle_line;
+lv_obj_t *needle_img;
+int32_t speed = 0;
 void scr_motor_set_rpm(float rpm) {};
 
 void scr_motor_set_current(float amps) {};
@@ -84,11 +89,66 @@ static void on_state_changed(const char *state)
     }
 }
 
+// Obtained from https://lvgl.io/docs/open/9.2/examples
+static void set_needle_line_value(lv_timer_t *t)
+{
+    lv_obj_t *scale = lv_timer_get_user_data(t);
+
+    int32_t value = lv_rand(-1, 2);
+    speed += value;
+    if (speed < 0)
+        speed = 0;
+    if (speed > 40)
+        speed = 40;
+    // if(xQueueReceive(tempQueue, &temp, 0) == pdPASS)
+    // {
+    //     lv_bar_set_value(bar, temp, LV_ANIM_ON);
+    // }
+    // OR a api call that handles queues internally
+
+    lv_scale_set_line_needle_value(scale, needle_line, 60, speed);
+}
+
+lv_obj_t * lv_speedometer(lv_obj_t *s_screen)
+{
+    lv_obj_t *scale_line = lv_scale_create(s_screen);
+
+    lv_obj_set_size(scale_line, 150, 150);
+    lv_scale_set_mode(scale_line, LV_SCALE_MODE_ROUND_INNER);
+    lv_obj_set_style_bg_opa(scale_line, LV_OPA_COVER, 0);
+    lv_obj_set_style_bg_color(scale_line, lv_palette_lighten(LV_PALETTE_GREY, 5), 0);
+    lv_obj_set_style_radius(scale_line, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_clip_corner(scale_line, true, 0);
+    lv_obj_align(scale_line, LV_ALIGN_CENTER, LV_PCT(2), 0);
+
+    lv_scale_set_label_show(scale_line, true);
+
+    lv_scale_set_total_tick_count(scale_line, 41);
+    lv_scale_set_major_tick_every(scale_line, 5);
+
+    lv_obj_set_style_length(scale_line, 5, LV_PART_ITEMS);
+    lv_obj_set_style_length(scale_line, 10, LV_PART_INDICATOR);
+    lv_scale_set_range(scale_line, 0, 40);
+
+    lv_scale_set_angle_range(scale_line, 270);
+    lv_scale_set_rotation(scale_line, 135);
+
+    needle_line = lv_line_create(scale_line);
+    lv_obj_set_style_line_width(needle_line, 6, LV_PART_MAIN);
+    lv_obj_set_style_line_rounded(needle_line, true, LV_PART_MAIN);
+
+    lv_timer_create(set_needle_line_value, 50, scale_line);
+
+    return scale_line;
+
+}
+
 void scr_motor_init(void)
 {
     s_screen = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
 
+    lv_obj_t * scale_line = lv_speedometer(s_screen);
     // To DO:
     // Add relevant buttons and diagnostics for motor
 
@@ -117,7 +177,6 @@ void scr_motor_init(void)
     lv_obj_add_event_cb(rpm_input, ta_event_cb, LV_EVENT_ALL, kb);
     lv_obj_set_size(rpm_input, 80, 30);
     lv_obj_align(rpm_input, LV_ALIGN_LEFT_MID, 10, 0);
-
 
     // Submit button
     lv_obj_t *btn = lv_button_create(nav_bar);
