@@ -28,21 +28,21 @@
 #include "features/priorities.h"
 #include "features/sensors/sensor_events.h"
 
-#define PREV_NUM 8
-
-
-extern uint32_t g_ui32SysClock;
-
 static void prvSHT31Delay(uint32_t period)
 {
     vTaskDelay(pdMS_TO_TICKS(period));
 }
 
-extern void prvSensorSHT31Init(void) 
+void SensorSHT31Init(void) 
 {
     sht31_dev sht31dev;
     sht31dev.read = I2C_read_bytes;
     sht31dev.write = I2C_write_bytes;
     sht31dev.delay = prvSHT31Delay;
     sht31_init(sht31dev);
+}
+
+bool SensorSHT31GetTemHum(float *temp, float *humidity)
+{
+    return sht31_getTempHum(temp, humidity);
 }

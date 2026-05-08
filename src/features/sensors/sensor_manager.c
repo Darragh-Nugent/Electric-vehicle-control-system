@@ -8,64 +8,23 @@
 #include "semphr.h"
 #include "event_groups.h"
 
-#include "inc/hw_ints.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_gpio.h"
-#include "inc/hw_types.h"
-#include "driverlib/sysctl.h"
-#include "drivers/rtos_hw_drivers.h"
 #include "utils/uartstdio.h"
-#include "driverlib/gpio.h"
-#include "driverlib/pwm.h"
-#include "drivers/opt3001.h"
-#include "driverlib/i2c.h"
-#include "driverlib/interrupt.h"
-#include "drivers/bmi160.h"
-#include "drivers/sht31.h"
 
-#include "motorlib.h"
 #include "features/priorities.h"
 #include "uart_mode.h"
-#include "features/sensors/sensor_events.h"
+#include "sensor_events.h"
 #include "sensor_filters.h"
+#include "light_sensor.h"
+#include "acceleration_sensor.h"
+#include "env_sensor.h"
 #include "speed_sensor.h"
 #include "power_sensor.h"
 #include "distance_sensor.h"
 #include "sensors_api.h"
 
 /*-----------------------------------------------------------*/
-/*
- * Current clock period
- */
-extern uint32_t g_ui32SysClock;
-
-/*
- * Time stamp global variable.
- */
-volatile uint32_t g_ui32TimeStamp;
-/*
- * Global variable to log the last GPIO button pressed.
- */
-volatile static uint32_t g_pui32ButtonPressed = NULL;
-
-/*
- * The binary semaphore used by the switch ISR & task.
- */
-extern SemaphoreHandle_t xButtonSemaphore;
 
 extern EventGroupHandle_t xSensorEvents;
-
-/*-----------------------------------------------------------*/
-
-/*
- * The configuration struct for the acceleration sensor
- */
-struct bmi160_dev bmi160dev;
-
-/*
- * The struct for holding the acceleration data
- */
-struct bmi160_sensor_data bmi160_accel;
 
 /*-----------------------------------------------------------*/
 
@@ -79,60 +38,23 @@ extern void prvSensorOPT3001TimerInit(void);
 /*-----------------------------------------------------------*/
 
 /*
- * Functions for the acceleration sensor
- */
-extern void prvSensorBmi160Init(struct bmi160_dev *bmi160dev);
-extern int16_t getAbsoluteAccel(struct bmi160_sensor_data bmi160_accel);
-
-/*-----------------------------------------------------------*/
-
-/*
- * Functions for the temperature and humidity sensor
- */
-extern void prvSensorSHT31Init(void);
-
-/*-----------------------------------------------------------*/
-
-/*
  * Uart enum
  */
 uart_mode_t uart_mode = NONE;
 
 /*-----------------------------------------------------------*/
 
-/*
- * Called by main() to do example specific hardware configurations and to
- * create the Process Switch task.
- */
-void vCreateOPTTask(void);
-
-/*-----------------------------------------------------------*/
-
 void vSensorManagerTask(void *pvParameters)
 {
     UARTprintf("Sensor Manager start\n");
-    bool success = false;
-    uint16_t rawData = 0;
-    float convertedLux = 0;
-
-    // UARTprintf("Starting Light Sensor Task\n");
-
-    // // Test that sensor is set up correctly
-    // UARTprintf("Testing OPT3001 Sensor:\n");
-    // success = sensorOpt3001Test();
-
     // Initialise light sensor
-    bool result = sensorOpt3001Init();
-    if (!result)
-    {
-        UARTprintf("Sensor not init\n");
-    }
+    SensorOPT3001Init();
 
     // Intialise acceleration sensor
-    prvSensorBmi160Init(&bmi160dev);
+    SensorBmi160Init();
 
     // Intialise env sensor
-    prvSensorSHT31Init();
+    SensorSHT31Init();
 
     // Initialise the power sensor
     PowerInit();
@@ -142,21 +64,7 @@ void vSensorManagerTask(void *pvParameters)
     SensorVL53L0xInit();
     UARTprintf("Dist init success\n");
 
-    UARTprintf("Sensor start\n");
-    // If the test fails, retry the full init + test sequence rather than
-    // retesting a sensor that was never successfully enabled.
-    while (!success)
-    {
-        SysCtlDelay(g_ui32SysClock);
-        UARTprintf("Test Failed, Trying again\n");
-        success = sensorOpt3001Test();
-    }
-
     UARTprintf("All Tests Passed!\n\n");
-
-    // uint32_t id = 0;
-
-    uint32_t events;
 
     // Create filters for sensors
     moving_avg_t lightFilter = {{0}, 0, 0};
@@ -167,6 +75,8 @@ void vSensorManagerTask(void *pvParameters)
     exp_filter_t powerFilter = {0.25, 0};
     exp_filter_t distFilter = {0.25, 0};
 
+    uint32_t events;
+
     // Loop Forever
     while (1)
     {
@@ -174,13 +84,10 @@ void vSensorManagerTask(void *pvParameters)
 
         if (events & LIGHT_SENSOR_EVENT)
         {
+            float lux;
             // Read and convert OPT values
-            success = sensorOpt3001Read(&rawData);
-
-            if (success)
+            if (getLux(&lux))
             {
-                sensorOpt3001Convert(rawData, &convertedLux);
-                float lux = convertedLux;
                 float filteredLux = filterMovingAverage(&lightFilter, lux);
                 // UARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
                 Sensor_UpdateLux(filteredLux);
@@ -192,10 +99,9 @@ void vSensorManagerTask(void *pvParameters)
         }
         if (events & ACCEL_SENSOR_EVENT)
         {
-            int8_t result = bmi160_get_sensor_data(BMI160_ACCEL_SEL, &bmi160_accel, NULL, &bmi160dev);
-            if (result == 0)
+            uint16_t absoluteAccel;
+            if (getAbsoluteAccel(&absoluteAccel))
             {
-                int16_t absoluteAccel = getAbsoluteAccel(bmi160_accel);
                 float filteredAccel = filterExponential(&accelFilter, (float)absoluteAccel);
                 Sensor_UpdateAccel(filteredAccel);
                 if (uart_mode == ACCEL)
@@ -215,16 +121,18 @@ void vSensorManagerTask(void *pvParameters)
         {
             float temp;
             float humidity;
-            bool result = sht31_getTempHum(&temp, &humidity);
-            float filteredTemp = filterMovingAverage(&tempFilter, temp);
-            float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
-            if (uart_mode == TEMP)
+            if (SensorSHT31GetTemHum(&temp, &humidity))
             {
-                UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));
-            }
-            else if (uart_mode == HUMIDITY)
-            {
-                UARTprintf("%d,%d\n", (int)(humidity), (int)(filteredHumidity));
+                float filteredTemp = filterMovingAverage(&tempFilter, temp);
+                float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
+                if (uart_mode == TEMP)
+                {
+                    UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));
+                }
+                else if (uart_mode == HUMIDITY)
+                {
+                    UARTprintf("%d,%d\n", (int)(humidity), (int)(filteredHumidity));
+                }
             }
         }
 
@@ -257,12 +165,10 @@ void vSensorManagerTask(void *pvParameters)
         if (events & DIST_SENSOR_EVENT)
         {
             uint16_t distance;
-            bool success = getDistance(&distance);
-            if (success)
+            if (getDistance(&distance))
             {
                 float filteredDistance = filterExponential(&distFilter, distance);
                 Sensor_UpdateDistance(filteredDistance);
-                UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);
                 if (uart_mode == DIST)
                 {
                     UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);

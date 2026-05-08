@@ -98,35 +98,31 @@
  */
 
 /**************************************************************************************************
- * @fn          sensorOpt3001Init
+ * @fn          Opt3001Init
  *
  * @brief       Initialize the temperature sensor by reseting the sensor
  *
  * @return      none
  **************************************************************************************************/
-bool sensorOpt3001Init(void)
+bool Opt3001Init(void)
 {
 	// Disable the sensor
-	if (!sensorOpt3001Enable(false))
+	if (!Opt3001Enable(false))
 	{
-		UARTprintf("Bad\n");
-
 		return false;
 	}
-	UARTprintf("Outside sensorOpt3001Init\n");
-
 	// Enable the sensor
-	return sensorOpt3001Enable(true);
+	return Opt3001Enable(true);
 }
 
 /**************************************************************************************************
- * @fn          sensorOpt3001Enable
+ * @fn          Opt3001Enable
  *
  * @brief       Turn the sensor on or off
  *
  * @return      none
  **************************************************************************************************/
-bool sensorOpt3001Enable(bool enable)
+bool Opt3001Enable(bool enable)
 {
 	uint16_t val;
 
@@ -143,7 +139,7 @@ bool sensorOpt3001Enable(bool enable)
 }
 
 /**************************************************************************************************
- * @fn          sensorOpt3001Read
+ * @fn          Opt3001Read
  *
  * @brief       Read the result register
  *
@@ -151,7 +147,7 @@ bool sensorOpt3001Enable(bool enable)
  *
  * @return      TRUE if valid data
  **************************************************************************************************/
-bool sensorOpt3001Read(uint16_t *rawData)
+bool Opt3001Read(uint16_t *rawData)
 {
 	bool data_ready;
 	uint16_t val;
@@ -186,13 +182,13 @@ bool sensorOpt3001Read(uint16_t *rawData)
 }
 
 /**************************************************************************************************
- * @fn          sensorOpt3001Test
+ * @fn          Opt3001Test
  *
  * @brief       Run a sensor self-test
  *
  * @return      TRUE if passed, FALSE if failed
  **************************************************************************************************/
-bool sensorOpt3001Test(void)
+bool Opt3001Test(void)
 {
 	uint16_t val;
 
@@ -235,7 +231,7 @@ bool sensorOpt3001Test(void)
 }
 
 /**************************************************************************************************
- * @fn          sensorOpt3001Convert
+ * @fn          Opt3001Convert
  *
  * @brief       Convert raw data to object and ambience temperature
  *
@@ -245,7 +241,7 @@ bool sensorOpt3001Test(void)
  *
  * @return      none
  **************************************************************************************************/
-void sensorOpt3001Convert(uint16_t rawData, float *convertedLux)
+void Opt3001Convert(uint16_t rawData, float *convertedLux)
 {
 	uint16_t e, m;
 

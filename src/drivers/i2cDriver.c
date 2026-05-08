@@ -80,13 +80,6 @@ bool I2C_write_bytes(uint8_t ui8Addr, uint8_t *data, uint16_t len)
     return response.success;
 }
 
-int8_t I2C_write_BMI160(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
-{
-    return I2C_write_reg(ui8Addr, ui8Reg, data, len)
-               ? BMI160_OK
-               : BMI160_E_COM_FAIL;
-}
-
 /*
  * Read 2-byte value from I2C register
  */
@@ -143,16 +136,4 @@ bool I2C_read_bytes(uint8_t ui8Addr, uint8_t *data, uint16_t len)
     }
 
     return response.success;
-}
-
-int8_t I2C_read_BMI160(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
-{
-    bool result = I2C_read_reg(ui8Addr, ui8Reg, data, len);
-    if (!result)
-    {
-        // UARTprintf("BMI bad");
-    }
-    return result
-        ? BMI160_OK
-        : BMI160_E_COM_FAIL;
 }

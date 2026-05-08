@@ -46,11 +46,11 @@ extern "C"
 /*********************************************************************
  * FUNCTIONS
  */
-extern bool sensorOpt3001Init(void);
-extern bool sensorOpt3001Enable(bool enable);
-extern bool sensorOpt3001Read(uint16_t *rawData);
-extern void sensorOpt3001Convert(uint16_t rawData, float *convertedLux);
-extern bool sensorOpt3001Test(void);
+extern bool Opt3001Init(void);
+extern bool Opt3001Enable(bool enable);
+extern bool Opt3001Read(uint16_t *rawData);
+extern void Opt3001Convert(uint16_t rawData, float *convertedLux);
+extern bool Opt3001Test(void);
 
 #ifdef __cplusplus
 }
