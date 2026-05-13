@@ -72,9 +72,9 @@ int main( void )
         motorUpToSpeedSemaphore == NULL ||
         faultAcknowledgedSemaphore == NULL) {}
 
-    vCreateMotorTask();
+    // vCreateMotorTask();
     vCreateSensorTasks();
-    vCreateGuiTask();
+    // vCreateGuiTask();
 
     vTaskStartScheduler();
 

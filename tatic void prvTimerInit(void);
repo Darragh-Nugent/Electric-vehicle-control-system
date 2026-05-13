@@ -1,0 +1,161 @@
+[33mcommit 102cdcb17c13ba9d6623b8bbb9b2b866c2adabc2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32msensors[m[33m, [m[1;31morigin/sensors[m[33m)[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Tue Apr 28 21:12:06 2026 +1000
+
+    Added sensor api code
+
+[33mcommit e93abbc33f4d3df4d3946e1d62b5d160c419e37b[m
+Merge: b51c761 d0ff903
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Tue Apr 28 18:14:05 2026 +1000
+
+    merged main with motor code into sensors
+
+[33mcommit b51c761948ae1177ae637f9c4aa9972eb7f86d1e[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Tue Apr 28 17:59:23 2026 +1000
+
+    changed the name of the sensor manager task to be more clear
+
+[33mcommit d0ff9036c91c23318a49789d133006628d6ded16[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Merge: a022647 eafbb33
+Author: ZackariyaTaylor <potato21master@gmail.com>
+Date:   Tue Apr 28 09:45:01 2026 +1000
+
+    Merge pull request #3 from Darragh-Nugent/state-machine
+    
+    Hall effect enable/disable functions to avoid motor from running when…
+
+[33mcommit eafbb338d0c091aa31b4804ab93fbd70e0e13649[m
+Author: mngv7 <zackariya.taylor@gmail.com>
+Date:   Tue Apr 28 09:42:48 2026 +1000
+
+    Hall effect enable/disable functions to avoid motor from running when not wanted. Better state handling. Semaphores for fault ack. and motor up to speed.
+
+[33mcommit a022647d0f2d647d5b0561f6239c4bc52dbee845[m
+Merge: ef870ab 58c6b78
+Author: ZackariyaTaylor <potato21master@gmail.com>
+Date:   Tue Apr 28 08:04:43 2026 +1000
+
+    Merge pull request #2 from Darragh-Nugent/motor-init
+    
+    Motor init
+
+[33mcommit 58c6b784d1592bdb17d4453c2ab692cb2eb46c67[m
+Author: mngv7 <zackariya.taylor@gmail.com>
+Date:   Tue Apr 28 08:03:32 2026 +1000
+
+    Base for motor API template and state machine
+
+[33mcommit 3231d0a8696b9a45790c42b0625dd6387bbd7b4d[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Mon Apr 27 21:47:57 2026 +1000
+
+    Refactored timer init and filter functions into their own files
+
+[33mcommit 6523d53abce5c49c37aba054f101c50b1f4f3ed6[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Sun Apr 26 22:06:12 2026 +1000
+
+    Added code for temp and humidity sensor. Will need to wait to get the motor board to test it
+
+[33mcommit c8e22681dbbb47b920dd9ce364f976f15a3091bb[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Sun Apr 26 21:24:08 2026 +1000
+
+    Update I2C code to work with unique non-register transmissions for the SHT31 sensor
+
+[33mcommit 379cd10527fcf8b0a34ea70f590289af99848803[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Sun Apr 26 19:15:34 2026 +1000
+
+    Added code to swap between I2C bases for different sensors.
+
+[33mcommit e7dff1b3ff93a0cc56c6376005fa91fd158c5b94[m
+Author: mngv7 <zackariya.taylor@gmail.com>
+Date:   Sun Apr 26 13:18:07 2026 +1000
+
+    Separation of state machine and hall effect ISR routines
+
+[33mcommit 31fa0545ae07d50cd0d0ba1a269f89d3d0d7697b[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Sun Apr 26 12:56:34 2026 +1000
+
+    Got filters working for both light and acceleration sensor
+
+[33mcommit 8fe4cdf37667e2bf149d5225314f047d2c1d0dd8[m[33m ([m[1;31morigin/motor-init[m[33m, [m[1;32mmotor-init[m[33m)[m
+Author: mngv7 <zackariya.taylor@gmail.com>
+Date:   Sun Apr 26 12:54:13 2026 +1000
+
+    Hall sensor reading and motor updating ISR
+
+[33mcommit 500deaba929ddb039087afc2ab5e6d3e94151783[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Sun Apr 26 11:10:53 2026 +1000
+
+    Accel data now printing. Need to filter
+
+[33mcommit c4ea42fefc47e3152a7d31dc9280e6980b30f039[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Sat Apr 25 11:38:45 2026 +1000
+
+    Got timer working for light sensor
+
+[33mcommit 477dc3f61abdee898a3adcdd5758d01c6b5460d9[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Fri Apr 24 20:56:43 2026 +1000
+
+    Queue messages now send data array instead of pointer
+
+[33mcommit 23bb4c5f5e3c8683dd01874cf71d1c0669288fc5[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Fri Apr 24 18:56:36 2026 +1000
+
+    Split I2C into its own task with a queue
+
+[33mcommit 721e62912cd36e3742ae412efd38e8fcac781614[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Fri Apr 24 16:26:51 2026 +1000
+
+    Got basic light sensor code to work. Note that I had to disable the motor and GUI tasks due to priority shinanigans
+
+[33mcommit ef870ab17f906f673a959a9a6e2e2e7c019ffc4b[m
+Merge: b8fd871 0b2f5fb
+Author: ZackariyaTaylor <potato21master@gmail.com>
+Date:   Mon Apr 20 19:12:35 2026 +1000
+
+    Merge pull request #1 from Darragh-Nugent/project-boilerplate
+    
+    Template for feature tasks
+
+[33mcommit 0b2f5fb68f3c0d768601ab60f795bd137c54ecda[m
+Author: mngv7 <zackariya.taylor@gmail.com>
+Date:   Mon Apr 20 18:59:58 2026 +1000
+
+    Template for feature tasks
+
+[33mcommit b8fd871087952143a952782446399205f3fba96b[m
+Author: HuanNguyen-Dev <hnguy138@outlook.com>
+Date:   Sat Apr 18 14:16:55 2026 +1000
+
+    Create README.md
+    
+    Optional to add names
+
+[33mcommit 985b1e3a3d7b09368f54e56de4d89d992837d112[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Sat Apr 18 13:34:35 2026 +1000
+
+    removed addtional motor driver files
+
+[33mcommit 9ac07e3de07d2cead216f90adbad7b3679d87ab6[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Sat Apr 18 13:31:24 2026 +1000
+
+    Added rest of example files
+
+[33mcommit 766a5075064870c60d4040f729ae8ddfcfdf3cd0[m
+Author: Darragh Nugent <darraghnugent312@gmail.com>
+Date:   Sat Apr 18 13:28:54 2026 +1000
+
+    It begins
