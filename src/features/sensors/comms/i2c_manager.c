@@ -87,7 +87,7 @@ void xI2C2Handler(void)
     BaseType_t xI2CTaskWoken;
     uint32_t ui32I2CStatus;
 
-    // UARTprintf("Should never fire\n");
+    UARTprintf("Should never fire\n"); 
 
     /* Read interrupt status */
     ui32I2CStatus = I2CMasterIntStatusEx(I2C2_BASE, true);
@@ -131,7 +131,7 @@ void vI2CManagerTask(void *pvParameters)
         case I2C_REG_READ:
             if (!I2C_read_reg_internal(I2C_Base, message.sensor, message.reg, message.data, message.len))
             {
-                // UARTprintf("Bad read\n");
+                UARTprintf("Bad read\n"); 
                 response.success = false;
                 break;
             }
@@ -352,7 +352,7 @@ bool I2C_write_single_internal(uint32_t base, uint8_t ui8Addr, uint8_t data)
     // Send register address
     I2CMasterDataPut(base, data);
     I2CMasterControl(base, I2C_MASTER_CMD_SINGLE_SEND);
-    // UARTprintf("Sent reg\n");
+    UARTprintf("Sent reg\n"); 
     if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(10)) != pdTRUE || errorFlag)
     {
         return false;

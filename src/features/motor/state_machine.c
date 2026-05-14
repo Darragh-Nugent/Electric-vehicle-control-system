@@ -26,7 +26,7 @@
 #include "features/sensors/api/sensors_api.h"            
 
 #define CONTROL_PERIOD_MS 10
-#define MOTOR_SERIALPLOT_ENABLE 1
+#define MOTOR_SERIALPLOT_ENABLE 0
 
 motor_state_t motor_state = MOTOR_STATE_IDLE;
 static void motorTask( void *pvParameters );
@@ -75,8 +75,8 @@ static void motorTask( void *pvParameters )
         {
         case MOTOR_STATE_IDLE:
             vTaskDelay(pdMS_TO_TICKS(15000)); 
-            UARTprintf("IDLE done, starting motor\n");
-            motorSetSpeed(1500);
+            // UARTprintf("IDLE done, starting motor\n");
+            // motorSetSpeed(1500);
             // xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
             motorStart();
             break;

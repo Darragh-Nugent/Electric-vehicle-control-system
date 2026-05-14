@@ -25,7 +25,7 @@ bool SensorOPT3001Init(void)
     while (!success)
     {
         vTaskDelay(pdMS_TO_TICKS(100));
-        // UARTprintf("OPT3001 Test Failed, Trying again\n");
+        UARTprintf("OPT3001 Test Failed, Trying again\n");
         success = Opt3001Test();
     }
 

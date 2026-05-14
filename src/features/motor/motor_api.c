@@ -22,7 +22,7 @@ extern SemaphoreHandle_t faultAcknowledgedSemaphore;
 
 extern motor_state_t motor_state;
 extern void hallSensorIntEnable(void);
-extern void kickStartMotor(void);\
+extern void kickStartMotor(void);
 
 volatile bool motorEStopRequested = false;
 
@@ -30,7 +30,7 @@ volatile bool motorEStopRequested = false;
 // Transition state to idle
 void motorInit(void)
 {
-    UARTprintf("STATE: IDLE\n");
+    // UARTprintf("STATE: IDLE\n");
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_IDLE;
     xSemaphoreGive(motorStateMutex);
@@ -39,7 +39,7 @@ void motorInit(void)
 // Transition state to running.
 void motorRunning(void)
 {
-    UARTprintf("STATE: RUNNING\n");
+    // UARTprintf("STATE: RUNNING\n");
     vTaskDelay(pdMS_TO_TICKS(100));
 
     uint16_t currentSpeed = Sensor_GetSpeed();
@@ -56,7 +56,7 @@ void motorRunning(void)
 // Enable the hall effect sensor ISR and kick start the motor.
 void motorStart(void)
 {
-    UARTprintf("STATE: STARTING\n");
+    // UARTprintf("STATE: STARTING\n");
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_STARTING;
     xSemaphoreGive(motorStateMutex);
@@ -67,7 +67,7 @@ void motorStart(void)
 // Transition state to e-stop braking
 void motorEStop(void)
 {
-    UARTprintf("STATE: BRAKING\n");
+    // UARTprintf("STATE: BRAKING\n");
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_BRAKING;
     xSemaphoreGive(motorStateMutex);
@@ -76,7 +76,7 @@ void motorEStop(void)
 // Transition state to fault latched.
 void motorFaultLatched(void)
 {
-    UARTprintf("STATE: FAULT\n");
+    // UARTprintf("STATE: FAULT\n");
     
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_FAULT;

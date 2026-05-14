@@ -195,7 +195,7 @@ bool Opt3001Test(void)
 	// Check manufacturer ID
 	if (!I2C_read_reg(OPT3001_I2C_ADDRESS, REG_MANUFACTURER_ID, (uint8_t *)&val, 2))
 	{
-		// UARTprintf("Bad man id read\n");
+		// UARTprintf("Bad man id read\n"); 
 		return false;
 	}
 

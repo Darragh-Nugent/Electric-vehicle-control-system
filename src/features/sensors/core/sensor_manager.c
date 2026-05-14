@@ -51,7 +51,7 @@ uart_mode_t local_uart_mode = NONE;
 
 void vSensorManagerTask(void *pvParameters)
 {
-    // UARTprintf("Sensor Manager start\n"); ///////////////
+    UARTprintf("Sensor Manager start\n"); ///////////////
     // Initialise light sensor
     SensorOPT3001Init();
 
@@ -65,11 +65,11 @@ void vSensorManagerTask(void *pvParameters)
     PowerInit();
 
     // Initialise the distance sensor
-    // UARTprintf("Dist init start\n"); ///////////////
+    UARTprintf("Dist init start\n"); ///////////////
     SensorVL53L0xInit();
-    // UARTprintf("Dist init success\n"); ///////////////
+    UARTprintf("Dist init success\n"); ///////////////
 
-    // UARTprintf("All Tests Passed!\n\n"); ///////////////
+    UARTprintf("All Tests Passed!\n\n"); ///////////////
 
     // Create filters for sensors
     moving_avg_t lightFilter = {{0}, 0, 0};
@@ -99,7 +99,7 @@ void vSensorManagerTask(void *pvParameters)
             if (getLux(&lux))
             {
                 float filteredLux = filterMovingAverage(&lightFilter, lux);
-                // UARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
+                UARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
                 Sensor_UpdateLux(filteredLux);
                 if (local_uart_mode == LIGHT)
                 {
