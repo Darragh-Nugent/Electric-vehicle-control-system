@@ -31,12 +31,13 @@
 motor_state_t motor_state = MOTOR_STATE_IDLE;
 static void motorTask( void *pvParameters );
 void kickStartMotor(void);
-volatile bool motorEStopRequested = false;
 
 extern SemaphoreHandle_t motorStartSemaphore;
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
 extern SemaphoreHandle_t faultAcknowledgedSemaphore;
 extern volatile bool speed_semaphore_given;
+extern volatile bool motorEStopRequested;
+
 extern void hallSensorIntDisable(void);
 
 void vCreateMotorTask(void)
@@ -81,7 +82,20 @@ static void motorTask( void *pvParameters )
             break;
         case MOTOR_STATE_STARTING:
         {
-            // if e-stop triggered: transition to braking
+            if (motorEStopRequested)
+            {
+                motorEStopRequested = false;
+
+                UARTprintf("STARTING EXIT: e-stop requested\n");
+
+                setDuty(0);
+                motorPIReset();
+                hallSensorIntDisable();  // remove?
+                motorEStop();
+                break;
+            }
+
+
             static uint8_t validSpeedCount = 0;
             uint16_t actualSpeed = Sensor_GetSpeed();
 
@@ -113,30 +127,30 @@ static void motorTask( void *pvParameters )
             uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
             uint16_t actualSpeed = Sensor_GetSpeed(); 
-            
-            // test deacelleration!!
-            static uint16_t speedChangeTestCount = 0;
-            speedChangeTestCount++;
-
-            if (speedChangeTestCount == 300)   // about 3 seconds at 10 ms
-            {
-                motorSetSpeed(1000);
-            }
 
             if (motorEStopRequested)
             {
                 motorEStopRequested = false;
 
-                UARTprintf("RUNNING EXIT: user e-stop\n");
+                UARTprintf("RUNNING EXIT: e-stop requested\n");
 
                 setDuty(0);
                 motorPIReset();
-
-                hallSensorIntDisable();   // stop hall ISR commutation during e-stop
+                hallSensorIntDisable();  // remove?
 
                 motorEStop();
                 break;
             }
+            
+            // // test deacelleration!!
+            // static uint16_t speedChangeTestCount = 0;
+            // speedChangeTestCount++;
+
+            // if (speedChangeTestCount == 300)   // about 3 seconds at 10 ms
+            // {
+            //     motorSetSpeed(1000);
+            // }
+
 
             static uint16_t prevActualSpeed = 0;
             static uint16_t frozenSpeedCount = 0;
@@ -178,7 +192,7 @@ static void motorTask( void *pvParameters )
                 break;
             }
 
-            // Low-speed recovery only applies when speed is low but not zero.
+            // ;ow-speed recovery only applies when speed is low but not zero. /////
             if (referenceSpeed > 100 && actualSpeed < 200)
             {
                 lowSpeedCount++;
@@ -187,15 +201,14 @@ static void motorTask( void *pvParameters )
             {
                 lowSpeedCount = 0;
             }
-
-            // One-time recovery kick if the motor is slowing but still moving.
+            // one recovery kick if the motor is slowing but still moving
             if (lowSpeedCount == 5)
             {
                 motorPIInit(MOTOR_DUTY_START);
                 kickStartMotor();
             }
 
-            // If recovery fails, enter e-stop braking.
+            // if recovery fails enter e-stop 
             if (lowSpeedCount > 50)
             {
                 UARTprintf("RUNNING EXIT: lowSpeed timeout\n");
@@ -218,7 +231,7 @@ static void motorTask( void *pvParameters )
                 static uint8_t plotCount = 0;
                 plotCount++;
 
-                if (plotCount >= 5)   // print every 50 ms instead of every 10 ms
+                if (plotCount >= 5)  
                 {
                     motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed, duty);
                     plotCount = 0;
@@ -234,7 +247,6 @@ static void motorTask( void *pvParameters )
             
             static uint8_t stoppedCount = 0;
 
-            UARTprintf("IN BRAKING\n");
             uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
             uint16_t actualSpeed = Sensor_GetSpeed();
             setDuty(0);
@@ -269,8 +281,8 @@ static void motorTask( void *pvParameters )
             
             hallSensorIntDisable(); // need to decide later where the best state is to call this.
             speed_semaphore_given = false;
-            // xSemaphoreTake(faultAcknowledgedSemaphore, portMAX_DELAY); // give from UI
-            xSemaphoreTake(faultAcknowledgedSemaphore, pdMS_TO_TICKS(5000)); // 5s timeout instead of portMAX_DELAY
+            xSemaphoreTake(faultAcknowledgedSemaphore, portMAX_DELAY); // give from UI
+            // xSemaphoreTake(faultAcknowledgedSemaphore, pdMS_TO_TICKS(5000)); // for testing
             lowSpeedCount = 0;
             zeroSpeedCount = 0;
             motorInit();

@@ -8,7 +8,7 @@
 
 #include "utils/uartstdio.h"
 
-#define INT_PER_ROTATION 24
+#define INT_PER_ROTATION 24 // got this number by counting the number of interrupts in full rotation! dont change pls
 #define SPEED_SAMPLING_TIME 100
 
 extern uint32_t g_ui32SysClock;

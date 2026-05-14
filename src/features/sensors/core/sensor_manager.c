@@ -146,47 +146,6 @@ void vSensorManagerTask(void *pvParameters)
             }
         }
 
-        // if (events & SPEED_SENSOR_EVENT)
-        // {
-        //     float speed;
-        //     speed = getRPM();
-        //     float filteredSpeed = filterExponential(&speedFilter, speed);
-            
-        //     if (filteredSpeed < 0.0f)
-        //     {
-        //         filteredSpeed = 0.0f;
-        //     }
-
-        //     if (filteredSpeed > MAX_VALID_RPM)
-        //     {
-        //         invalidSpeedCount++;
-
-        //         if (invalidSpeedCount <= MAX_INVALID_SPEED_COUNT)
-        //         {
-        //             filteredSpeed = lastValidSpeed;
-        //         }
-        //         else
-        //         {
-        //             filteredSpeed = 0.0f;
-        //         }
-        //     }
-
-        //     else
-        //     {
-        //         invalidSpeedCount = 0;
-        //         lastValidSpeed = filteredSpeed;
-        //     }
-
-        //     Sensor_UpdateSpeed((uint16_t)filteredSpeed);
-
-        //     // UARTprintf("RAW:%d,FILT:%d\n", (int)speed, (int)filteredSpeed);
-
-        //     if (local_uart_mode == SPEED)
-        //     {
-        //         UARTprintf("%d,%d\n", (int)speed, (int)filteredSpeed);
-        //     }
-        // }
-
         // if (events & POWER_SENSOR_EVENT)
         // {
         //     uint32_t power = getPower();

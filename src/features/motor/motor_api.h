@@ -20,6 +20,8 @@ void motorStart(void);
 void motorRunning(void);
 void motorEStop(void);
 void motorFaultLatched(void);
+void motorRequestEStop(void);
+void motorAcknowledgeFault(void);
 
 // State accessors
 
