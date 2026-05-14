@@ -21,6 +21,7 @@
 #include "features/sensors/devices/power_sensor.h"
 #include "features/sensors/devices/distance_sensor.h"
 #include "features/sensors/api/sensors_api.h"
+#include "features/motor/motor_api.h"
 
 #define MAX_VALID_RPM 6000
 #define MAX_INVALID_SPEED_COUNT 10
@@ -28,7 +29,6 @@
 /*-----------------------------------------------------------*/
 
 extern EventGroupHandle_t xSensorEvents;
-extern SemaphoreHandle_t xSpeedSemaphore;
 
 /*-----------------------------------------------------------*/
 

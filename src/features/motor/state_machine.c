@@ -77,7 +77,7 @@ static void motorTask( void *pvParameters )
             vTaskDelay(pdMS_TO_TICKS(15000)); 
             // UARTprintf("IDLE done, starting motor\n");
             // motorSetSpeed(1500);
-            // xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
+            xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
             motorStart();
             break;
         case MOTOR_STATE_STARTING:
