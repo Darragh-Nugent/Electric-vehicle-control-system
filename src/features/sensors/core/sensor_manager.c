@@ -208,7 +208,8 @@ void vSpeedSensorTask(void *pvParameters)
             }
             else
             {
-                filteredSpeed = 0.0f;
+                filteredSpeed = lastValidSpeed;
+                motorRequestEStop();
             }
         }
         else
