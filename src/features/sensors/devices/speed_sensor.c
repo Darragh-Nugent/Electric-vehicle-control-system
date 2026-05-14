@@ -27,6 +27,7 @@ float getRPM(void)
     uint32_t current_time = xTaskGetTickCount(); //<-------------************************************************** */
 
     uint32_t time_ms = current_time - prev_time;
+    if (time_ms == 0) return 0.0f;
     prev_time = current_time;
 
     uint32_t local_partial_rotation;
