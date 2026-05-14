@@ -31,6 +31,7 @@
 motor_state_t motor_state = MOTOR_STATE_IDLE;
 static void motorTask( void *pvParameters );
 void kickStartMotor(void);
+volatile bool motorEStopRequested = false;
 
 extern SemaphoreHandle_t motorStartSemaphore;
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
@@ -112,6 +113,30 @@ static void motorTask( void *pvParameters )
             uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
             uint16_t actualSpeed = Sensor_GetSpeed(); 
+            
+            // test deacelleration!!
+            static uint16_t speedChangeTestCount = 0;
+            speedChangeTestCount++;
+
+            if (speedChangeTestCount == 300)   // about 3 seconds at 10 ms
+            {
+                motorSetSpeed(1000);
+            }
+
+            if (motorEStopRequested)
+            {
+                motorEStopRequested = false;
+
+                UARTprintf("RUNNING EXIT: user e-stop\n");
+
+                setDuty(0);
+                motorPIReset();
+
+                hallSensorIntDisable();   // stop hall ISR commutation during e-stop
+
+                motorEStop();
+                break;
+            }
 
             static uint16_t prevActualSpeed = 0;
             static uint16_t frozenSpeedCount = 0;
@@ -206,19 +231,12 @@ static void motorTask( void *pvParameters )
         }
         case MOTOR_STATE_BRAKING:
         {
+            
+            static uint8_t stoppedCount = 0;
 
             UARTprintf("IN BRAKING\n");
             uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
             uint16_t actualSpeed = Sensor_GetSpeed();
-
-            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
-            
-            // setDuty(duty);
-
-            // #if MOTOR_SERIALPLOT_ENABLE
-            //     motorSerialPlotOutput(0, referenceSpeed, actualSpeed, duty);
-            // #endif
-
             setDuty(0);
 
             #if MOTOR_SERIALPLOT_ENABLE
@@ -227,6 +245,16 @@ static void motorTask( void *pvParameters )
 
             if (actualSpeed <= 50)
             {
+                stoppedCount++;
+            }
+            else
+            {
+                stoppedCount = 0;
+            }
+
+            if (stoppedCount >= 5 && referenceSpeed == 0)
+            {
+                stoppedCount = 0;
                 setDuty(0);
                 motorPIReset();
                 motorControlResetReferenceSpeed();

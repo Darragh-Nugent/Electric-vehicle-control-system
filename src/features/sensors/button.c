@@ -8,6 +8,9 @@
 #include "semphr.h"
 #include "event_groups.h"
 
+#include "features/motor/states.h"
+#include "features/motor/motor_api.h"
+
 /* Hardware includes. */
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
@@ -29,9 +32,13 @@
 
 extern uart_mode_t uart_mode;
 
+extern volatile bool motorEStopRequested;
+extern SemaphoreHandle_t faultAcknowledgedSemaphore;
+extern motor_state_t motor_state;
+
 void xButtonsHandler(void)
 {
-    UARTprintf("Button\n");
+    // UARTprintf("Button\n");
     static uint32_t g_ui32TimeStamp = 0;   
     BaseType_t xOPTTaskWoken;
     uint32_t ui32Status;
@@ -57,6 +64,14 @@ void xButtonsHandler(void)
         }
         else if ((ui32Status & USR_SW2) == USR_SW2)
         {
+            if (motor_state == MOTOR_STATE_FAULT)
+                {
+                    xSemaphoreGiveFromISR(faultAcknowledgedSemaphore, &xOPTTaskWoken);
+                }
+                else
+                {
+                    motorEStopRequested = true;
+                }
         }
 
         /* This FreeRTOS API call will handle the context switch if it is
