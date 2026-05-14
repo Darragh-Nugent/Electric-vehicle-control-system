@@ -41,7 +41,6 @@ void motorRunning(void)
     motorControlSetReferenceSpeed(userSetSpeed);  // start ramp at desired speed, not actual
     motorPIInit(MOTOR_DUTY_START);
 
-    motorPIInit(MOTOR_DUTY_START);                   // start at 10  
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_RUNNING;
     xSemaphoreGive(motorStateMutex);

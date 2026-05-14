@@ -13,7 +13,7 @@
 
 extern uint32_t g_ui32SysClock;
 
-static uint32_t partial_rotation = 0;
+static volatile uint32_t partial_rotation = 0;
 
 // Adds an additional turn of the hall effect sensors
 void addRotation(void)
@@ -26,7 +26,7 @@ float getRPM(void)
     static uint32_t prev_time = 0;
     uint32_t current_time = xTaskGetTickCount(); //<-------------************************************************** */
 
-    uint32_t time_ms = current_time - prev_time;
+    uint32_t time_ms = (current_time - prev_time)* portTICK_PERIOD_MS;
     if (time_ms == 0) return 0.0f;
     prev_time = current_time;
 

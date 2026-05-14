@@ -32,6 +32,7 @@
 
 extern void vI2CManagerTask(void *pvParameters);
 extern void vSensorManagerTask(void *pvParameters);
+extern void vSpeedSensorTask(void *pvParameters);
 
 /*-----------------------------------------------------------*/
 
@@ -63,6 +64,7 @@ extern uint32_t g_ui32SysClock;
 SemaphoreHandle_t xButtonSemaphore = NULL;
 SemaphoreHandle_t xI2CSemaphore = NULL;
 SemaphoreHandle_t xOPT3001Semaphore = NULL;
+SemaphoreHandle_t xSpeedSemaphore = NULL;
 
 QueueHandle_t xI2CSendQueue;
 QueueHandle_t xI2CRecvQueue;
@@ -76,7 +78,7 @@ void vCreateSensorTasks(void)
     xButtonSemaphore = xSemaphoreCreateBinary();
     xI2CSemaphore = xSemaphoreCreateBinary();
     xOPT3001Semaphore = xSemaphoreCreateBinary();
-
+    xSpeedSemaphore = xSemaphoreCreateBinary();
     xI2CSendQueue = xQueueCreate(10, sizeof(i2c_send_message_t));
     xI2CRecvQueue = xQueueCreate(10, sizeof(i2c_recv_message_t));
 
@@ -104,7 +106,13 @@ void vCreateSensorTasks(void)
         LIGHT_SENSOR_PRIORITY,
         NULL);
 
-        
+    xTaskCreate(
+        vSpeedSensorTask,
+        "SpeedSensorTask",
+        configMINIMAL_STACK_SIZE * 2,
+        NULL,
+        SPEED_SENSOR_PRIORITY,
+        NULL);
 }
 
 /*-----------------------------------------------------------*/

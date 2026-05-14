@@ -26,6 +26,7 @@
 #include "features/sensors/core/sensor_events.h"
 
 extern EventGroupHandle_t xSensorEvents;
+extern SemaphoreHandle_t xSpeedSemaphore;
 
 void xOPT3001TimerHandler(void)
 {
@@ -45,10 +46,20 @@ void xSHT31TimerHandler(void)
     xEventGroupSetBits(xSensorEvents, TEMP_SENSOR_EVENT);
 }
 
+// void xSpeedTimerHandler(void)
+// {
+//     TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+//     xEventGroupSetBits(xSensorEvents, SPEED_SENSOR_EVENT);
+// }
 void xSpeedTimerHandler(void)
 {
-    TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
-    xEventGroupSetBits(xSensorEvents, SPEED_SENSOR_EVENT);
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
+
+    xSemaphoreGiveFromISR(xSpeedSemaphore, &xHigherPriorityTaskWoken);
+
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 void xPowerTimerHandler(void)

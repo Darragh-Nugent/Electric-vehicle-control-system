@@ -28,6 +28,7 @@
 /*-----------------------------------------------------------*/
 
 extern EventGroupHandle_t xSensorEvents;
+extern SemaphoreHandle_t xSpeedSemaphore;
 
 /*-----------------------------------------------------------*/
 
@@ -75,19 +76,17 @@ void vSensorManagerTask(void *pvParameters)
     moving_avg_t tempFilter = {{0}, 0, 0};
     moving_avg_t humidityFilter = {{0}, 0, 0};
     exp_filter_t accelFilter = {0.25, 0};
-    exp_filter_t speedFilter = {0.3, 0};
+    // exp_filter_t speedFilter = {0.3, 0};
     exp_filter_t powerFilter = {0.25, 0};
     exp_filter_t distFilter = {0.25, 0};
-
-    float lastValidSpeed = 0.0f;
-    uint8_t invalidSpeedCount = 0;
 
     uint32_t events;
 
     // Loop Forever
     while (1)
     {
-        events = xEventGroupWaitBits(xSensorEvents, ALL_SENSOR_EVENTS, pdTRUE, pdFALSE, portMAX_DELAY);
+        // events = xEventGroupWaitBits(xSensorEvents, ALL_SENSOR_EVENTS, pdTRUE, pdFALSE, portMAX_DELAY);
+        events = xEventGroupWaitBits(xSensorEvents, SENSOR_MANAGER_EVENTS, pdTRUE, pdFALSE, portMAX_DELAY);
 
         taskENTER_CRITICAL();
         local_uart_mode = uart_mode;
@@ -147,46 +146,46 @@ void vSensorManagerTask(void *pvParameters)
             }
         }
 
-        if (events & SPEED_SENSOR_EVENT)
-        {
-            float speed;
-            speed = getRPM();
-            float filteredSpeed = filterExponential(&speedFilter, speed);
+        // if (events & SPEED_SENSOR_EVENT)
+        // {
+        //     float speed;
+        //     speed = getRPM();
+        //     float filteredSpeed = filterExponential(&speedFilter, speed);
             
-            if (filteredSpeed < 0.0f)
-            {
-                filteredSpeed = 0.0f;
-            }
+        //     if (filteredSpeed < 0.0f)
+        //     {
+        //         filteredSpeed = 0.0f;
+        //     }
 
-            if (filteredSpeed > MAX_VALID_RPM)
-            {
-                invalidSpeedCount++;
+        //     if (filteredSpeed > MAX_VALID_RPM)
+        //     {
+        //         invalidSpeedCount++;
 
-                if (invalidSpeedCount <= MAX_INVALID_SPEED_COUNT)
-                {
-                    filteredSpeed = lastValidSpeed;
-                }
-                else
-                {
-                    filteredSpeed = 0.0f;
-                }
-            }
+        //         if (invalidSpeedCount <= MAX_INVALID_SPEED_COUNT)
+        //         {
+        //             filteredSpeed = lastValidSpeed;
+        //         }
+        //         else
+        //         {
+        //             filteredSpeed = 0.0f;
+        //         }
+        //     }
 
-            else
-            {
-                invalidSpeedCount = 0;
-                lastValidSpeed = filteredSpeed;
-            }
+        //     else
+        //     {
+        //         invalidSpeedCount = 0;
+        //         lastValidSpeed = filteredSpeed;
+        //     }
 
-            Sensor_UpdateSpeed((uint16_t)filteredSpeed);
+        //     Sensor_UpdateSpeed((uint16_t)filteredSpeed);
 
-            // UARTprintf("RAW:%d,FILT:%d\n", (int)speed, (int)filteredSpeed);
+        //     // UARTprintf("RAW:%d,FILT:%d\n", (int)speed, (int)filteredSpeed);
 
-            if (local_uart_mode == SPEED)
-            {
-                UARTprintf("%d,%d\n", (int)speed, (int)filteredSpeed);
-            }
-        }
+        //     if (local_uart_mode == SPEED)
+        //     {
+        //         UARTprintf("%d,%d\n", (int)speed, (int)filteredSpeed);
+        //     }
+        // }
 
         // if (events & POWER_SENSOR_EVENT)
         // {
@@ -219,3 +218,46 @@ void vSensorManagerTask(void *pvParameters)
 
 
 
+void vSpeedSensorTask(void *pvParameters)
+{
+    exp_filter_t speedFilter = {0.3f, 0};
+    float lastValidSpeed = 0.0f;
+    uint8_t invalidSpeedCount = 0;
+
+    const TickType_t speedPeriod = pdMS_TO_TICKS(10);
+    TickType_t lastWakeTime = xTaskGetTickCount();
+
+    for (;;)
+    {
+        vTaskDelayUntil(&lastWakeTime, speedPeriod);
+
+        float rawSpeed = getRPM();
+        float filteredSpeed = filterExponential(&speedFilter, rawSpeed);
+
+        if (filteredSpeed < 0.0f)
+        {
+            filteredSpeed = 0.0f;
+        }
+
+        if (filteredSpeed > MAX_VALID_RPM)
+        {
+            invalidSpeedCount++;
+
+            if (invalidSpeedCount <= MAX_INVALID_SPEED_COUNT)
+            {
+                filteredSpeed = lastValidSpeed;
+            }
+            else
+            {
+                filteredSpeed = 0.0f;
+            }
+        }
+        else
+        {
+            invalidSpeedCount = 0;
+            lastValidSpeed = filteredSpeed;
+        }
+
+        Sensor_UpdateSpeed((uint16_t)filteredSpeed);
+    }
+}

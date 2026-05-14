@@ -43,7 +43,7 @@ void vCreateMotorTask(void)
     xTaskCreate(
         motorTask,
         "motorTask",
-        configMINIMAL_STACK_SIZE,
+        configMINIMAL_STACK_SIZE*4,
         NULL,
         MOTOR_CONTROL_PRIORITY,
         NULL
@@ -126,7 +126,7 @@ static void motorTask( void *pvParameters )
                 prevActualSpeed = actualSpeed;
             }
 
-            if (frozenSpeedCount > 30)  // 300ms of identical readings
+            if (frozenSpeedCount > 300)  // 300ms of identical readings
             {
                 UARTprintf("RUNNING EXIT: sensor freeze\n");
                 setDuty(0);
@@ -190,7 +190,14 @@ static void motorTask( void *pvParameters )
             setDuty(duty);
 
             #if MOTOR_SERIALPLOT_ENABLE
-                motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed, duty);
+                static uint8_t plotCount = 0;
+                plotCount++;
+
+                if (plotCount >= 5)   // print every 50 ms instead of every 10 ms
+                {
+                    motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed, duty);
+                    plotCount = 0;
+                }
             #endif
 
             vTaskDelay(controlPeriodTicks);
@@ -205,10 +212,17 @@ static void motorTask( void *pvParameters )
             uint16_t actualSpeed = Sensor_GetSpeed();
 
             uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
-            setDuty(duty);
+            
+            // setDuty(duty);
+
+            // #if MOTOR_SERIALPLOT_ENABLE
+            //     motorSerialPlotOutput(0, referenceSpeed, actualSpeed, duty);
+            // #endif
+
+            setDuty(0);
 
             #if MOTOR_SERIALPLOT_ENABLE
-                motorSerialPlotOutput(0, referenceSpeed, actualSpeed, duty);
+                motorSerialPlotOutput(0, referenceSpeed, actualSpeed, 0);
             #endif
 
             if (actualSpeed <= 50)
