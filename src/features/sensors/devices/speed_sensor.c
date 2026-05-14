@@ -8,7 +8,7 @@
 
 #include "utils/uartstdio.h"
 
-#define INT_PER_ROTATION 6
+#define INT_PER_ROTATION 24
 #define SPEED_SAMPLING_TIME 100
 
 extern uint32_t g_ui32SysClock;
