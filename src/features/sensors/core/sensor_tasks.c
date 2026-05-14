@@ -103,6 +103,8 @@ void vCreateSensorTasks(void)
         NULL,
         LIGHT_SENSOR_PRIORITY,
         NULL);
+
+        
 }
 
 /*-----------------------------------------------------------*/

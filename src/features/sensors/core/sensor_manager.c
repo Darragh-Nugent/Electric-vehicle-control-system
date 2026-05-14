@@ -22,6 +22,9 @@
 #include "features/sensors/devices/distance_sensor.h"
 #include "features/sensors/api/sensors_api.h"
 
+#define MAX_VALID_RPM 6000
+#define MAX_INVALID_SPEED_COUNT 10
+
 /*-----------------------------------------------------------*/
 
 extern EventGroupHandle_t xSensorEvents;
@@ -47,7 +50,7 @@ uart_mode_t local_uart_mode = NONE;
 
 void vSensorManagerTask(void *pvParameters)
 {
-    UARTprintf("Sensor Manager start\n");
+    // UARTprintf("Sensor Manager start\n"); ///////////////
     // Initialise light sensor
     SensorOPT3001Init();
 
@@ -61,20 +64,23 @@ void vSensorManagerTask(void *pvParameters)
     PowerInit();
 
     // Initialise the distance sensor
-    UARTprintf("Dist init start\n");
+    // UARTprintf("Dist init start\n"); ///////////////
     SensorVL53L0xInit();
-    UARTprintf("Dist init success\n");
+    // UARTprintf("Dist init success\n"); ///////////////
 
-    UARTprintf("All Tests Passed!\n\n");
+    // UARTprintf("All Tests Passed!\n\n"); ///////////////
 
     // Create filters for sensors
     moving_avg_t lightFilter = {{0}, 0, 0};
     moving_avg_t tempFilter = {{0}, 0, 0};
     moving_avg_t humidityFilter = {{0}, 0, 0};
     exp_filter_t accelFilter = {0.25, 0};
-    exp_filter_t speedFilter = {0.25, 0};
+    exp_filter_t speedFilter = {0.3, 0};
     exp_filter_t powerFilter = {0.25, 0};
     exp_filter_t distFilter = {0.25, 0};
+
+    float lastValidSpeed = 0.0f;
+    uint8_t invalidSpeedCount = 0;
 
     uint32_t events;
 
@@ -141,18 +147,46 @@ void vSensorManagerTask(void *pvParameters)
             }
         }
 
-        // if (events & SPEED_SENSOR_EVENT)
-        // {
-        //     float speed;
-        //     speed = getRPM();
-        //     float filteredSpeed = filterExponential(&speedFilter, speed);
-        //     Sensor_UpdateSpeed(filteredSpeed);
+        if (events & SPEED_SENSOR_EVENT)
+        {
+            float speed;
+            speed = getRPM();
+            float filteredSpeed = filterExponential(&speedFilter, speed);
+            
+            if (filteredSpeed < 0.0f)
+            {
+                filteredSpeed = 0.0f;
+            }
 
-        //     if (local_uart_mode == SPEED)
-        //     {
-        //         UARTprintf("%d,%d\n", (int)speed, (int)filteredSpeed);
-        //     }
-        // }
+            if (filteredSpeed > MAX_VALID_RPM)
+            {
+                invalidSpeedCount++;
+
+                if (invalidSpeedCount <= MAX_INVALID_SPEED_COUNT)
+                {
+                    filteredSpeed = lastValidSpeed;
+                }
+                else
+                {
+                    filteredSpeed = 0.0f;
+                }
+            }
+
+            else
+            {
+                invalidSpeedCount = 0;
+                lastValidSpeed = filteredSpeed;
+            }
+
+            Sensor_UpdateSpeed((uint16_t)filteredSpeed);
+
+            // UARTprintf("RAW:%d,FILT:%d\n", (int)speed, (int)filteredSpeed);
+
+            if (local_uart_mode == SPEED)
+            {
+                UARTprintf("%d,%d\n", (int)speed, (int)filteredSpeed);
+            }
+        }
 
         // if (events & POWER_SENSOR_EVENT)
         // {
@@ -182,3 +216,6 @@ void vSensorManagerTask(void *pvParameters)
         }
     }
 }
+
+
+

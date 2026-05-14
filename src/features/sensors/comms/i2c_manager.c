@@ -131,7 +131,7 @@ void vI2CManagerTask(void *pvParameters)
         case I2C_REG_READ:
             if (!I2C_read_reg_internal(I2C_Base, message.sensor, message.reg, message.data, message.len))
             {
-                UARTprintf("Bad read\n");
+                // UARTprintf("Bad read\n");
                 response.success = false;
                 break;
             }
