@@ -23,13 +23,14 @@
 #include "states.h"
 #include "motor_api.h"
 #include "motor_control.h"
-#include "features/sensors/api/sensors_api.h"            
+#include "features/sensors/api/sensors_api.h"
+#include "utils/muart.h"
 
 #define CONTROL_PERIOD_MS 10
 #define MOTOR_SERIALPLOT_ENABLE 0
 
 motor_state_t motor_state = MOTOR_STATE_IDLE;
-static void motorTask( void *pvParameters );
+static void motorTask(void *pvParameters);
 void kickStartMotor(void);
 
 extern SemaphoreHandle_t motorStartSemaphore;
@@ -45,39 +46,38 @@ void vCreateMotorTask(void)
     xTaskCreate(
         motorTask,
         "motorTask",
-        configMINIMAL_STACK_SIZE*4,
+        configMINIMAL_STACK_SIZE * 4,
         NULL,
         MOTOR_CONTROL_PRIORITY,
-        NULL
-    );
+        NULL);
 }
 
-static void motorTask( void *pvParameters )
+static void motorTask(void *pvParameters)
 {
     UARTprintf("Motor task started\n");
     uint16_t duty_value = 10;
     uint16_t period_value = 50;
     uint16_t lowSpeedCount = 0;
     uint16_t zeroSpeedCount = 0;
-    
+
     const TickType_t controlPeriodTicks = pdMS_TO_TICKS(CONTROL_PERIOD_MS);
     const float controlPeriodSeconds = CONTROL_PERIOD_MS / 1000.0f;
 
     initMotorLib(period_value);
     setDuty(duty_value);
-    
+
     initMotorControl();
 
-    
-
-    for(;;) {
+    for (;;)
+    {
+        vTaskDelay(pdMS_TO_TICKS(100));
         switch (motor_state)
         {
         case MOTOR_STATE_IDLE:
-            vTaskDelay(pdMS_TO_TICKS(15000)); 
+            vTaskDelay(pdMS_TO_TICKS(15000));
             // UARTprintf("IDLE done, starting motor\n");
             // motorSetSpeed(1500);
-            xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
+            // xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
             motorStart();
             break;
         case MOTOR_STATE_STARTING:
@@ -94,7 +94,6 @@ static void motorTask( void *pvParameters )
                 motorEStop();
                 break;
             }
-
 
             static uint8_t validSpeedCount = 0;
             uint16_t actualSpeed = Sensor_GetSpeed();
@@ -113,20 +112,22 @@ static void motorTask( void *pvParameters )
                 validSpeedCount = 0;
                 motorRunning();
             }
-           
+
             else if (xSemaphoreTake(motorUpToSpeedSemaphore, pdMS_TO_TICKS(100)) != pdTRUE)
             {
                 kickStartMotor();
             }
-            
+
+            vTaskDelay(pdMS_TO_TICKS(50));
+
             break;
         }
         case MOTOR_STATE_RUNNING:
-        {    
+        {
             uint16_t desiredSpeed = motorGetSpeed();
             uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
-            uint16_t actualSpeed = Sensor_GetSpeed(); 
+            uint16_t actualSpeed = Sensor_GetSpeed();
 
             if (motorEStopRequested)
             {
@@ -141,7 +142,7 @@ static void motorTask( void *pvParameters )
                 motorEStop();
                 break;
             }
-            
+
             // // test deacelleration!!
             // static uint16_t speedChangeTestCount = 0;
             // speedChangeTestCount++;
@@ -150,7 +151,6 @@ static void motorTask( void *pvParameters )
             // {
             //     motorSetSpeed(1000);
             // }
-
 
             static uint16_t prevActualSpeed = 0;
             static uint16_t frozenSpeedCount = 0;
@@ -208,7 +208,7 @@ static void motorTask( void *pvParameters )
                 kickStartMotor();
             }
 
-            // if recovery fails enter e-stop 
+            // if recovery fails enter e-stop
             if (lowSpeedCount > 50)
             {
                 UARTprintf("RUNNING EXIT: lowSpeed timeout\n");
@@ -219,7 +219,7 @@ static void motorTask( void *pvParameters )
             }
 
             uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
-            
+
             if (lowSpeedCount > 0 && duty < MOTOR_DUTY_START)
             {
                 duty = MOTOR_DUTY_START;
@@ -231,7 +231,7 @@ static void motorTask( void *pvParameters )
                 static uint8_t plotCount = 0;
                 plotCount++;
 
-                if (plotCount >= 5)  
+                if (plotCount >= 5)
                 {
                     motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed, duty);
                     plotCount = 0;
@@ -244,7 +244,7 @@ static void motorTask( void *pvParameters )
         }
         case MOTOR_STATE_BRAKING:
         {
-            
+
             static uint8_t stoppedCount = 0;
 
             uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
@@ -278,7 +278,7 @@ static void motorTask( void *pvParameters )
         }
         case MOTOR_STATE_FAULT:
             UARTprintf("STATE: FAULT\n");
-            
+
             hallSensorIntDisable(); // need to decide later where the best state is to call this.
             speed_semaphore_given = false;
             xSemaphoreTake(faultAcknowledgedSemaphore, portMAX_DELAY); // give from UI

@@ -64,6 +64,7 @@
 #define configUSE_MUTEXES                   1
 #define configUSE_RECURSIVE_MUTEXES         1
 #define configCHECK_FOR_STACK_OVERFLOW      2
+#define configUSE_MALLOC_FAILED_HOOK        1
 
 //#define configMAX_PRIORITIES                ( ( unsigned portBASE_TYPE ) 16 )
 #define configMAX_PRIORITIES ( 16 )

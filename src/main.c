@@ -49,6 +49,7 @@ extern SemaphoreHandle_t motorStateMutex;
 extern SemaphoreHandle_t motorSetSpeedMutex;
 extern SemaphoreHandle_t motorStartSemaphore;
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
+extern SemaphoreHandle_t uartMutex;
 
 SemaphoreHandle_t faultAcknowledgedSemaphore = NULL;
 
@@ -65,12 +66,15 @@ int main( void )
     motorUpToSpeedSemaphore = xSemaphoreCreateBinary();
     faultAcknowledgedSemaphore = xSemaphoreCreateBinary();
 
+    uartMutex = xSemaphoreCreateMutex();
+
     while (
         motorStateMutex == NULL ||
         motorSetSpeedMutex == NULL ||
         motorStartSemaphore == NULL ||
         motorUpToSpeedSemaphore == NULL ||
-        faultAcknowledgedSemaphore == NULL) {}
+        faultAcknowledgedSemaphore == NULL ||
+        uartMutex == NULL) {}
 
     vCreateMotorTask();
     vCreateSensorTasks();
@@ -140,6 +144,7 @@ void vApplicationMallocFailedHook( void )
     to query the size of free heap space that remains (although it does not
     provide information on how the remaining heap might be fragmented). */
     IntMasterDisable();
+    UARTprintf("\nMALLOC FAILED\n");
     for( ;; );
 }
 /*-----------------------------------------------------------*/
@@ -167,7 +172,9 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
     function is called if a stack overflow is detected. */
     IntMasterDisable();
+    UARTprintf("\nSTACK OVERFLOW: %s\n", pcTaskName);
     for( ;; );
+
 }
 /*-----------------------------------------------------------*/
 

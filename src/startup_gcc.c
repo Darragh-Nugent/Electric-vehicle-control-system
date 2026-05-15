@@ -119,7 +119,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // ADC Sequence 2
     IntDefaultHandler,                      // ADC Sequence 3
     IntDefaultHandler,                      // Watchdog timer
-    xOPT3001TimerHandler,                        // Timer 0 subtimer A
+    IntDefaultHandler,                      // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
     xBMI160TimerHandler,                         // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
@@ -198,7 +198,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // AES 0
     IntDefaultHandler,                      // DES3DES 0
     IntDefaultHandler,                      // LCD Controller 0
-    IntDefaultHandler,                      // Timer 6 subtimer A
+    xOPT3001TimerHandler,                   // Timer 6 subtimer A
     IntDefaultHandler,                      // Timer 6 subtimer B
     IntDefaultHandler,                      // Timer 7 subtimer A
     IntDefaultHandler,                      // Timer 7 subtimer B

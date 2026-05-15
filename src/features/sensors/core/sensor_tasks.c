@@ -93,7 +93,7 @@ void vCreateSensorTasks(void)
         "I2CManagerTask",
         256,
         NULL,
-        LIGHT_SENSOR_PRIORITY,
+        I2C_PRIORITY,
         NULL);
 
     xTaskCreate(
@@ -189,7 +189,7 @@ static void prvI2CInit(void)
 static void prvTimerInit(void)
 {
     // Enable the sensor timers
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0); // Enable the Timer 0 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER6); // Enable the Timer 0 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 2 Module.
     // SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); // Enable the Timer 3 Module.
@@ -197,8 +197,8 @@ static void prvTimerInit(void)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER5); // Enable the Timer 5 Module.
 
     // Configure the interrupt time
-    TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
-    TimerLoadSet(TIMER0_BASE, TIMER_A, g_ui32SysClock / 2); // set to ~ 2Hz
+    TimerConfigure(TIMER6_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER6_BASE, TIMER_A, g_ui32SysClock / 2); // set to ~ 2Hz
 
     TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
@@ -216,9 +216,9 @@ static void prvTimerInit(void)
     TimerLoadSet(TIMER5_BASE, TIMER_A, g_ui32SysClock / 20); // set to ~ 20Hz
 
     // Regester and enable the interrupts
-    TimerIntRegister(TIMER0_BASE, TIMER_A, xOPT3001TimerHandler);
-    TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
-    TimerEnable(TIMER0_BASE, TIMER_A);
+    TimerIntRegister(TIMER6_BASE, TIMER_A, xOPT3001TimerHandler);
+    TimerIntEnable(TIMER6_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER6_BASE, TIMER_A);
 
     TimerIntRegister(TIMER1_BASE, TIMER_A, xBMI160TimerHandler);
     TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
