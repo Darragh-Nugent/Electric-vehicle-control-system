@@ -74,6 +74,8 @@ void xButtonsHandler(void)
                 }
         }
 
+        UARTprintf("Button: %d\n", uart_mode);
+
         /* This FreeRTOS API call will handle the context switch if it is
          * required or have no effect if that is not needed. */
         portYIELD_FROM_ISR(xOPTTaskWoken);

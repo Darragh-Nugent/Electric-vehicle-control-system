@@ -13,6 +13,7 @@
 
 extern uint32_t g_ui32SysClock;
 
+
 static volatile uint32_t partial_rotation = 0;
 
 // Adds an additional turn of the hall effect sensors

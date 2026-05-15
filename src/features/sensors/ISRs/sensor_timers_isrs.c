@@ -50,7 +50,7 @@ void xSHT31TimerHandler(void)
 void xSpeedTimerHandler(void)
 {
     TimerIntClear(TIMER3_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
-    // xEventGroupSetBits(xSensorEvents, SPEED_SENSOR_EVENT);
+    xEventGroupSetBits(xSensorEvents, SPEED_SENSOR_EVENT);
 }
 
 void xPowerTimerHandler(void)

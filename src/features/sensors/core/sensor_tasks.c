@@ -42,7 +42,7 @@ extern void xI2C2Handler(void);
 extern void xOPT3001TimerHandler(void);
 extern void xSHT31TimerHandler(void);
 extern void xBMI160TimerHandler(void);
-// extern void xSpeedTimerHandler(void);
+extern void xSpeedTimerHandler(void);
 extern void xPowerTimerHandler(void);
 extern void xDistTimerHandler(void);
 
@@ -104,13 +104,13 @@ void vCreateSensorTasks(void)
         LIGHT_SENSOR_PRIORITY,
         NULL);
 
-    xTaskCreate(
-        vSpeedSensorTask,
-        "SpeedSensorTask",
-        configMINIMAL_STACK_SIZE * 2,
-        NULL,
-        SPEED_SENSOR_PRIORITY,
-        NULL);
+    // xTaskCreate(
+    //     vSpeedSensorTask,
+    //     "SpeedSensorTask",
+    //     configMINIMAL_STACK_SIZE * 2,
+    //     NULL,
+    //     SPEED_SENSOR_PRIORITY,
+    //     NULL);
 }
 
 /*-----------------------------------------------------------*/
@@ -192,7 +192,7 @@ static void prvTimerInit(void)
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER6); // Enable the Timer 0 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 2 Module.
-    // SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); // Enable the Timer 3 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); // Enable the Timer 3 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER4); // Enable the Timer 4 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER5); // Enable the Timer 5 Module.
 
@@ -206,8 +206,8 @@ static void prvTimerInit(void)
     TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock); // set to ~ 1Hz
 
-    // TimerConfigure(TIMER3_BASE, TIMER_CFG_PERIODIC);
-    // TimerLoadSet(TIMER3_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
+    TimerConfigure(TIMER3_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER3_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
 
     TimerConfigure(TIMER4_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER4_BASE, TIMER_A, g_ui32SysClock / 150); // set to ~ 150Hz
@@ -228,9 +228,9 @@ static void prvTimerInit(void)
     TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER2_BASE, TIMER_A);
 
-    // TimerIntRegister(TIMER3_BASE, TIMER_A, xSpeedTimerHandler);
-    // TimerIntEnable(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
-    // TimerEnable(TIMER3_BASE, TIMER_A);
+    TimerIntRegister(TIMER3_BASE, TIMER_A, xSpeedTimerHandler);
+    TimerIntEnable(TIMER3_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER3_BASE, TIMER_A);
 
     TimerIntRegister(TIMER4_BASE, TIMER_A, xPowerTimerHandler);
     TimerIntEnable(TIMER4_BASE, TIMER_TIMA_TIMEOUT);

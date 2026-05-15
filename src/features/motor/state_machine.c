@@ -80,202 +80,202 @@ static void motorTask(void *pvParameters)
             // xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
             motorStart();
             break;
-        case MOTOR_STATE_STARTING:
-        {
-            if (motorEStopRequested)
-            {
-                motorEStopRequested = false;
+        // case MOTOR_STATE_STARTING:
+        // {
+        //     if (motorEStopRequested)
+        //     {
+        //         motorEStopRequested = false;
 
-                UARTprintf("STARTING EXIT: e-stop requested\n");
+        //         UARTprintf("STARTING EXIT: e-stop requested\n");
 
-                setDuty(0);
-                motorPIReset();
-                hallSensorIntDisable();  // remove?
-                motorEStop();
-                break;
-            }
+        //         setDuty(0);
+        //         motorPIReset();
+        //         hallSensorIntDisable();  // remove?
+        //         motorEStop();
+        //         break;
+        //     }
 
-            static uint8_t validSpeedCount = 0;
-            uint16_t actualSpeed = Sensor_GetSpeed();
+        //     static uint8_t validSpeedCount = 0;
+        //     uint16_t actualSpeed = Sensor_GetSpeed();
 
-            if (actualSpeed >= 800)
-            {
-                validSpeedCount++;
-            }
-            else
-            {
-                validSpeedCount = 0;
-            }
+        //     if (actualSpeed >= 800)
+        //     {
+        //         validSpeedCount++;
+        //     }
+        //     else
+        //     {
+        //         validSpeedCount = 0;
+        //     }
 
-            if (validSpeedCount >= 5)
-            {
-                validSpeedCount = 0;
-                motorRunning();
-            }
+        //     if (validSpeedCount >= 5)
+        //     {
+        //         validSpeedCount = 0;
+        //         motorRunning();
+        //     }
 
-            else if (xSemaphoreTake(motorUpToSpeedSemaphore, pdMS_TO_TICKS(100)) != pdTRUE)
-            {
-                kickStartMotor();
-            }
+        //     else if (xSemaphoreTake(motorUpToSpeedSemaphore, pdMS_TO_TICKS(100)) != pdTRUE)
+        //     {
+        //         kickStartMotor();
+        //     }
 
-            vTaskDelay(pdMS_TO_TICKS(50));
+        //     vTaskDelay(pdMS_TO_TICKS(50));
 
-            break;
-        }
-        case MOTOR_STATE_RUNNING:
-        {
-            uint16_t desiredSpeed = motorGetSpeed();
-            uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
+        //     break;
+        // }
+        // case MOTOR_STATE_RUNNING:
+        // {
+        //     uint16_t desiredSpeed = motorGetSpeed();
+        //     uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
-            uint16_t actualSpeed = Sensor_GetSpeed();
+        //     uint16_t actualSpeed = Sensor_GetSpeed();
 
-            if (motorEStopRequested)
-            {
-                motorEStopRequested = false;
+        //     if (motorEStopRequested)
+        //     {
+        //         motorEStopRequested = false;
 
-                UARTprintf("RUNNING EXIT: e-stop requested\n");
+        //         UARTprintf("RUNNING EXIT: e-stop requested\n");
 
-                setDuty(0);
-                motorPIReset();
-                hallSensorIntDisable();  // remove?
+        //         setDuty(0);
+        //         motorPIReset();
+        //         hallSensorIntDisable();  // remove?
 
-                motorEStop();
-                break;
-            }
+        //         motorEStop();
+        //         break;
+        //     }
 
-            // // test deacelleration!!
-            // static uint16_t speedChangeTestCount = 0;
-            // speedChangeTestCount++;
+        //     // // test deacelleration!!
+        //     // static uint16_t speedChangeTestCount = 0;
+        //     // speedChangeTestCount++;
 
-            // if (speedChangeTestCount == 300)   // about 3 seconds at 10 ms
-            // {
-            //     motorSetSpeed(1000);
-            // }
+        //     // if (speedChangeTestCount == 300)   // about 3 seconds at 10 ms
+        //     // {
+        //     //     motorSetSpeed(1000);
+        //     // }
 
-            static uint16_t prevActualSpeed = 0;
-            static uint16_t frozenSpeedCount = 0;
+        //     static uint16_t prevActualSpeed = 0;
+        //     static uint16_t frozenSpeedCount = 0;
 
-            if (actualSpeed == prevActualSpeed && referenceSpeed > 100)
-            {
-                frozenSpeedCount++;
-            }
-            else
-            {
-                frozenSpeedCount = 0;
-                prevActualSpeed = actualSpeed;
-            }
+        //     if (actualSpeed == prevActualSpeed && referenceSpeed > 100)
+        //     {
+        //         frozenSpeedCount++;
+        //     }
+        //     else
+        //     {
+        //         frozenSpeedCount = 0;
+        //         prevActualSpeed = actualSpeed;
+        //     }
 
-            if (frozenSpeedCount > 300)  // 300ms of identical readings
-            {
-                UARTprintf("RUNNING EXIT: sensor freeze\n");
-                setDuty(0);
-                motorPIReset();
-                motorEStop();
-                break;
-            }
+        //     if (frozenSpeedCount > 300)  // 300ms of identical readings
+        //     {
+        //         UARTprintf("RUNNING EXIT: sensor freeze\n");
+        //         setDuty(0);
+        //         motorPIReset();
+        //         motorEStop();
+        //         break;
+        //     }
 
-            if (referenceSpeed > 100 && actualSpeed == 0)
-            {
-                zeroSpeedCount++;
-            }
-            else
-            {
-                zeroSpeedCount = 0;
-            }
+        //     if (referenceSpeed > 100 && actualSpeed == 0)
+        //     {
+        //         zeroSpeedCount++;
+        //     }
+        //     else
+        //     {
+        //         zeroSpeedCount = 0;
+        //     }
 
-            if (zeroSpeedCount > 5)
-            {
-                UARTprintf("RUNNING EXIT: sustained zero speed\n");
-                setDuty(0);
-                motorPIReset();
-                motorEStop();
-                break;
-            }
+        //     if (zeroSpeedCount > 5)
+        //     {
+        //         UARTprintf("RUNNING EXIT: sustained zero speed\n");
+        //         setDuty(0);
+        //         motorPIReset();
+        //         motorEStop();
+        //         break;
+        //     }
 
-            // ;ow-speed recovery only applies when speed is low but not zero. /////
-            if (referenceSpeed > 100 && actualSpeed < 200)
-            {
-                lowSpeedCount++;
-            }
-            else
-            {
-                lowSpeedCount = 0;
-            }
-            // one recovery kick if the motor is slowing but still moving
-            if (lowSpeedCount == 5)
-            {
-                motorPIInit(MOTOR_DUTY_START);
-                kickStartMotor();
-            }
+        //     // ;ow-speed recovery only applies when speed is low but not zero. /////
+        //     if (referenceSpeed > 100 && actualSpeed < 200)
+        //     {
+        //         lowSpeedCount++;
+        //     }
+        //     else
+        //     {
+        //         lowSpeedCount = 0;
+        //     }
+        //     // one recovery kick if the motor is slowing but still moving
+        //     if (lowSpeedCount == 5)
+        //     {
+        //         motorPIInit(MOTOR_DUTY_START);
+        //         kickStartMotor();
+        //     }
 
-            // if recovery fails enter e-stop
-            if (lowSpeedCount > 50)
-            {
-                UARTprintf("RUNNING EXIT: lowSpeed timeout\n");
-                setDuty(0);
-                motorPIReset();
-                motorEStop();
-                break;
-            }
+        //     // if recovery fails enter e-stop
+        //     if (lowSpeedCount > 50)
+        //     {
+        //         UARTprintf("RUNNING EXIT: lowSpeed timeout\n");
+        //         setDuty(0);
+        //         motorPIReset();
+        //         motorEStop();
+        //         break;
+        //     }
 
-            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
+        //     uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
 
-            if (lowSpeedCount > 0 && duty < MOTOR_DUTY_START)
-            {
-                duty = MOTOR_DUTY_START;
-            }
+        //     if (lowSpeedCount > 0 && duty < MOTOR_DUTY_START)
+        //     {
+        //         duty = MOTOR_DUTY_START;
+        //     }
 
-            setDuty(duty);
+        //     setDuty(duty);
 
-            #if MOTOR_SERIALPLOT_ENABLE
-                static uint8_t plotCount = 0;
-                plotCount++;
+        //     #if MOTOR_SERIALPLOT_ENABLE
+        //         static uint8_t plotCount = 0;
+        //         plotCount++;
 
-                if (plotCount >= 5)
-                {
-                    motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed, duty);
-                    plotCount = 0;
-                }
-            #endif
+        //         if (plotCount >= 5)
+        //         {
+        //             motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed, duty);
+        //             plotCount = 0;
+        //         }
+        //     #endif
 
-            vTaskDelay(controlPeriodTicks);
+        //     vTaskDelay(controlPeriodTicks);
 
-            break;
-        }
-        case MOTOR_STATE_BRAKING:
-        {
+        //     break;
+        // }
+        // case MOTOR_STATE_BRAKING:
+        // {
 
-            static uint8_t stoppedCount = 0;
+        //     static uint8_t stoppedCount = 0;
 
-            uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
-            uint16_t actualSpeed = Sensor_GetSpeed();
-            setDuty(0);
+        //     uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
+        //     uint16_t actualSpeed = Sensor_GetSpeed();
+        //     setDuty(0);
 
-            #if MOTOR_SERIALPLOT_ENABLE
-                motorSerialPlotOutput(0, referenceSpeed, actualSpeed, 0);
-            #endif
+        //     #if MOTOR_SERIALPLOT_ENABLE
+        //         motorSerialPlotOutput(0, referenceSpeed, actualSpeed, 0);
+        //     #endif
 
-            if (actualSpeed <= 50)
-            {
-                stoppedCount++;
-            }
-            else
-            {
-                stoppedCount = 0;
-            }
+        //     if (actualSpeed <= 50)
+        //     {
+        //         stoppedCount++;
+        //     }
+        //     else
+        //     {
+        //         stoppedCount = 0;
+        //     }
 
-            if (stoppedCount >= 5 && referenceSpeed == 0)
-            {
-                stoppedCount = 0;
-                setDuty(0);
-                motorPIReset();
-                motorControlResetReferenceSpeed();
-                motorFaultLatched();
-            }
+        //     if (stoppedCount >= 5 && referenceSpeed == 0)
+        //     {
+        //         stoppedCount = 0;
+        //         setDuty(0);
+        //         motorPIReset();
+        //         motorControlResetReferenceSpeed();
+        //         motorFaultLatched();
+        //     }
 
-            vTaskDelay(controlPeriodTicks);
-            break;
-        }
+        //     vTaskDelay(controlPeriodTicks);
+        //     break;
+        // }
         case MOTOR_STATE_FAULT:
             UARTprintf("STATE: FAULT\n");
 

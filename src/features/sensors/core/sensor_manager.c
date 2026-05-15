@@ -77,11 +77,14 @@ void vSensorManagerTask(void *pvParameters)
     moving_avg_t tempFilter = {{0}, 0, 0};
     moving_avg_t humidityFilter = {{0}, 0, 0};
     exp_filter_t accelFilter = {0.25, 0};
-    // exp_filter_t speedFilter = {0.3, 0};
+    exp_filter_t speedFilter = {0.3, 0};
     exp_filter_t powerFilter = {0.25, 0};
     exp_filter_t distFilter = {0.25, 0};
 
     uint32_t events;
+
+    float lastValidSpeed = 0.0f;
+    uint8_t invalidSpeedCount = 0;
 
     // Loop Forever
     while (1)
@@ -92,6 +95,44 @@ void vSensorManagerTask(void *pvParameters)
         local_uart_mode = uart_mode;
         taskEXIT_CRITICAL();
 
+        if (events & SPEED_SENSOR_EVENT)
+        {
+            float rawSpeed = getRPM();
+            float filteredSpeed = filterExponential(&speedFilter, rawSpeed);
+
+            if (filteredSpeed < 0.0f)
+            {
+                filteredSpeed = 0.0f;
+            }
+
+            if (filteredSpeed > MAX_VALID_RPM)
+            {
+                invalidSpeedCount++;
+
+                if (invalidSpeedCount <= MAX_INVALID_SPEED_COUNT)
+                {
+                    filteredSpeed = lastValidSpeed;
+                }
+                else
+                {
+                    filteredSpeed = lastValidSpeed;
+                    motorRequestEStop();
+                }
+            }
+            else
+            {
+                invalidSpeedCount = 0;
+                lastValidSpeed = filteredSpeed;
+            }
+
+            Sensor_UpdateSpeed((uint16_t)filteredSpeed);
+
+            if (local_uart_mode == SPEED)
+            {
+                UARTprintf("%d,%d\n", (int)rawSpeed, (int)filteredSpeed);
+            }
+        }
+
         if (events & LIGHT_SENSOR_EVENT)
         {
             float lux;
@@ -99,16 +140,19 @@ void vSensorManagerTask(void *pvParameters)
             if (getLux(&lux))
             {
                 float filteredLux = filterMovingAverage(&lightFilter, lux);
-                MUARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
+                // MUARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
                 Sensor_UpdateLux(filteredLux);
                 if (local_uart_mode == LIGHT)
                 {
                     UARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
                 }
-            } else {
+            }
+            else
+            {
                 MUARTprintf("Failed\n");
             }
         }
+
         if (events & ACCEL_SENSOR_EVENT)
         {
             uint16_t absoluteAccel;
@@ -177,8 +221,6 @@ void vSensorManagerTask(void *pvParameters)
     }
 }
 
-
-
 void vSpeedSensorTask(void *pvParameters)
 {
     exp_filter_t speedFilter = {0.3f, 0};
@@ -194,6 +236,7 @@ void vSpeedSensorTask(void *pvParameters)
 
         float rawSpeed = getRPM();
         float filteredSpeed = filterExponential(&speedFilter, rawSpeed);
+        UARTprintf("%d,%d\n", (int)rawSpeed, (int)filteredSpeed);
 
         if (filteredSpeed < 0.0f)
         {
