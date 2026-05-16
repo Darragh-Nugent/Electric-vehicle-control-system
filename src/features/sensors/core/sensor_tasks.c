@@ -104,13 +104,13 @@ void vCreateSensorTasks(void)
         LIGHT_SENSOR_PRIORITY,
         NULL);
 
-    // xTaskCreate(
-    //     vSpeedSensorTask,
-    //     "SpeedSensorTask",
-    //     configMINIMAL_STACK_SIZE * 2,
-    //     NULL,
-    //     SPEED_SENSOR_PRIORITY,
-    //     NULL);
+    xTaskCreate(
+        vSpeedSensorTask,
+        "SpeedSensorTask",
+        configMINIMAL_STACK_SIZE * 2,
+        NULL,
+        SPEED_SENSOR_PRIORITY,
+        NULL);
 }
 
 /*-----------------------------------------------------------*/

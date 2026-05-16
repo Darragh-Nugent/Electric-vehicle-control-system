@@ -41,9 +41,9 @@ void xhallSensorHandler(void)
 
     updateMotor(hall_a, hall_b, hall_c);
 
-    addRotation();
 
     // speed measuring code here
+    addRotation();
 
     if (!speed_semaphore_given) // TODO: also check if the speed threshold has been met.
     {

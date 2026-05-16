@@ -26,7 +26,7 @@
 #include "features/sensors/api/sensors_api.h"
 #include "utils/muart.h"
 
-#define CONTROL_PERIOD_MS 10
+#define CONTROL_PERIOD_MS 50
 #define MOTOR_SERIALPLOT_ENABLE 0
 
 motor_state_t motor_state = MOTOR_STATE_IDLE;
@@ -79,6 +79,7 @@ static void motorTask(void *pvParameters)
             // UARTprintf("IDLE done, starting motor\n");
             // motorSetSpeed(1500);
             // xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
+            UARTprintf("speed: %d\n", Sensor_GetSpeed().value);
             motorStart();
             break;
         case MOTOR_STATE_STARTING:
@@ -98,6 +99,7 @@ static void motorTask(void *pvParameters)
 
             static uint8_t validSpeedCount = 0;
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
+            UARTprintf("speed: %d", actualSpeed.value);
 
             if (actualSpeed.seq > prev_speed_seq)
             {
@@ -109,11 +111,11 @@ static void motorTask(void *pvParameters)
                 {
                     validSpeedCount = 0;
                 }
-                
+
                 prev_speed_seq = actualSpeed.seq;
             }
 
-            if (validSpeedCount >= 5)
+            if (validSpeedCount >= 5 || actualSpeed.value > 2000)
             {
                 validSpeedCount = 0;
                 motorRunning();
@@ -121,10 +123,11 @@ static void motorTask(void *pvParameters)
 
             else if (xSemaphoreTake(motorUpToSpeedSemaphore, pdMS_TO_TICKS(100)) != pdTRUE)
             {
+                speed_semaphore_given = false;
                 kickStartMotor();
             }
 
-            vTaskDelay(pdMS_TO_TICKS(50));
+            vTaskDelay(controlPeriodTicks);
 
             break;
         }
@@ -290,6 +293,8 @@ static void motorTask(void *pvParameters)
 
             hallSensorIntDisable(); // need to decide later where the best state is to call this.
             speed_semaphore_given = false;
+            // Reset speed semaphore
+            xSemaphoreTake(motorUpToSpeedSemaphore, 0); 
             xSemaphoreTake(faultAcknowledgedSemaphore, portMAX_DELAY); // give from UI
             // xSemaphoreTake(faultAcknowledgedSemaphore, pdMS_TO_TICKS(5000)); // for testing
             lowSpeedCount = 0;

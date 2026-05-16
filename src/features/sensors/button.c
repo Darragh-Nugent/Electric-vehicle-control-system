@@ -34,7 +34,7 @@ extern uart_mode_t uart_mode;
 
 extern volatile bool motorEStopRequested;
 extern SemaphoreHandle_t faultAcknowledgedSemaphore;
-extern motor_state_t motor_state;
+extern volatile motor_state_t motor_state;
 
 void xButtonsHandler(void)
 {
@@ -55,7 +55,7 @@ void xButtonsHandler(void)
     GPIOIntClear(BUTTONS_GPIO_BASE, ui32Status);
 
     /* Debounce the input with 200ms filter */
-    if ((xTaskGetTickCount() - g_ui32TimeStamp) > 100)
+    if ((xTaskGetTickCount() - g_ui32TimeStamp) > pdMS_TO_TICKS(100))
     {
         /* Log which button was pressed to trigger the ISR. */
         if ((ui32Status & USR_SW1) == USR_SW1)

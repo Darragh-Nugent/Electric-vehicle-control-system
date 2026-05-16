@@ -127,5 +127,6 @@ void motorRequestEStop(void)
 
 void motorAcknowledgeFault(void)
 {
-    xSemaphoreGive(faultAcknowledgedSemaphore);
+    BaseType_t xTaskWoken = pdFALSE;
+    xSemaphoreGiveFromISR(faultAcknowledgedSemaphore, &xTaskWoken);
 }
