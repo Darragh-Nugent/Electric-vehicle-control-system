@@ -99,7 +99,7 @@ static void motorTask(void *pvParameters)
             static uint8_t validSpeedCount = 0;
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
 
-            if (actualSpeed.seq != prev_speed_seq)
+            if (actualSpeed.seq > prev_speed_seq)
             {
                 if (actualSpeed.value >= 800)
                 {
