@@ -90,64 +90,108 @@ static void on_state_changed(const char *state)
 }
 
 // Obtained from https://lvgl.io/docs/open/9.2/examples
-static void set_needle_line_value(lv_timer_t *t)
+#include <math.h>
+
+#define SCALE_RADIUS 70
+#define NEEDLE_LENGTH 60
+
+static lv_point_precise_t needle_points[2];
+
+// Convert a value (0–100) into an angle in degrees
+static int32_t value_to_angle(int32_t value)
 {
-    int32_t value = lv_rand(-1, 2);
-    speed += value;
-    if (speed < 0)
-        speed = 0;
-    if (speed > 50)
-        speed += value -1;
-    // if(xQueueReceive(tempQueue, &temp, 0) == pdPASS)
-    // {
-    //     lv_bar_set_value(bar, temp, LV_ANIM_ON);
-    // }
-    // OR a api call that handles queues internally
-    // lv_obj_invalidate(scale_line);
-    lv_scale_set_line_needle_value(scale_line, needle_line, 50, speed);
-    lv_obj_invalidate(scale_line);
+    return 135 + (270 * value) / 100; // start 135°, range 270°
 }
 
-lv_obj_t * lv_speedometer(lv_obj_t *s_screen)
+// Update the needle points based on a value
+static void update_needle_points(int32_t value)
 {
-    scale_line = lv_scale_create(s_screen);
+    int32_t angle = value_to_angle(value);
+    float rad = angle * (M_PI / 180.0f);
 
-    lv_obj_set_size(scale_line, 140, 140);
+    // Unsure why the inital x,y needle coords rely on scale when the parent of the needle is the screen, so position should be relative to the screen
+    needle_points[0].x = SCALE_RADIUS;
+    needle_points[0].y = SCALE_RADIUS;
+    needle_points[1].x = SCALE_RADIUS + cos(rad)*NEEDLE_LENGTH;
+    needle_points[1].y = SCALE_RADIUS + sin(rad)*NEEDLE_LENGTH;
+
+    lv_line_set_points(needle_line, needle_points, 2);
+}
+
+// Animation callback for LVGL
+static void needle_anim_cb(void * obj, int32_t value)
+{
+    update_needle_points(value);
+    lv_obj_invalidate((lv_obj_t *)obj); // only redraw the needle
+}
+
+static void needle_update_timer_cb(lv_timer_t *timer)
+{
+    (void)timer;
+
+    int8_t value = speed + lv_rand(-1,2);
+    int32_t sensor_value = value;
+    if (sensor_value < 0) sensor_value = 0;
+    else if (sensor_value > 50) sensor_value -= lv_rand(-1,2);
+    else if (sensor_value > 100) sensor_value = 100;
+
+    // Animate needle from last value to sensor_value over 100 ms
+    lv_anim_t a;
+    lv_anim_init(&a);
+    lv_anim_set_var(&a, needle_line);
+    lv_anim_set_values(&a, speed, sensor_value);
+    lv_anim_set_time(&a, 100);
+    lv_anim_set_exec_cb(&a, needle_anim_cb);
+    lv_anim_start(&a);
+
+    speed = sensor_value;
+}
+
+// Modified and obtained from https://lvgl.io/docs/open/widgets/scale
+lv_obj_t * lv_speedometer(lv_obj_t *parent)
+{
+    s_screen = parent;
+
+    // Create scale background
+    scale_line = lv_scale_create(s_screen);
+    lv_obj_set_size(scale_line, SCALE_RADIUS*2, SCALE_RADIUS*2);
     lv_scale_set_mode(scale_line, LV_SCALE_MODE_ROUND_INNER);
     lv_obj_set_style_bg_opa(scale_line, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(scale_line, lv_palette_lighten(LV_PALETTE_GREY, 5), 0);
     lv_obj_set_style_radius(scale_line, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_clip_corner(scale_line, true, 0);
-    lv_obj_align(scale_line, LV_ALIGN_CENTER, LV_PCT(2), 0);
+    lv_obj_center(scale_line);
 
     lv_scale_set_label_show(scale_line, true);
-
-    lv_scale_set_total_tick_count(scale_line, 21);
-    lv_scale_set_major_tick_every(scale_line, 2);
-
-    lv_obj_set_style_length(scale_line, 5, LV_PART_ITEMS);
+    lv_scale_set_total_tick_count(scale_line, 21);   
+    lv_scale_set_major_tick_every(scale_line, 2);   
+    lv_obj_set_style_length(scale_line, 5, LV_PART_ITEMS);    
     lv_obj_set_style_length(scale_line, 10, LV_PART_INDICATOR);
     lv_scale_set_range(scale_line, 0, 100);
-
     lv_scale_set_angle_range(scale_line, 270);
     lv_scale_set_rotation(scale_line, 135);
 
-    needle_line = lv_line_create(scale_line);
-    lv_obj_set_style_line_width(needle_line, 6, LV_PART_MAIN);
+    needle_line = lv_line_create(s_screen);
+    lv_obj_set_size(needle_line, SCALE_RADIUS*2, SCALE_RADIUS*2);
+    lv_obj_center(needle_line);
+
+
+    lv_obj_set_style_line_width(needle_line, 4, LV_PART_MAIN);
+    lv_obj_set_style_line_color(needle_line, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
     lv_obj_set_style_line_rounded(needle_line, true, LV_PART_MAIN);
 
-    lv_timer_create(set_needle_line_value, 50, scale_line);
+    // Initialize needle at 0
+    update_needle_points(speed);
 
     return scale_line;
-
 }
-
 void scr_motor_init(void)
 {
     s_screen = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
 
     lv_speedometer(s_screen);
+    if (scale_line) lv_timer_create(needle_update_timer_cb, 50, scale_line);
     // To DO:
     // Add relevant buttons and diagnostics for motor
 
@@ -181,7 +225,9 @@ void scr_motor_init(void)
     lv_obj_t *btn = lv_button_create(nav_bar);
     lv_obj_add_event_cb(btn, submit_rpm_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_size(btn, 40, 15);
-    // lv_label_set_text(btn, "SET");        --> Bon: DO NOT SET A LABEL FOR THIS DAM BUTTON OTHERWISE DISPLAY WILL CRASH, My guess is maybe the text is too large for button?
+   lv_obj_t *btn_label = lv_label_create(btn);
+    lv_label_set_text(btn_label, "SET");
+    lv_obj_center(btn_label);     
 
     UARTprintf("scr_motor Drop down\n");
     // Drop Down
