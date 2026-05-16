@@ -7,5 +7,5 @@
 #include "semphr.h"
 
 
-uint32_t getPower(void);
+float getPower(void);
 void PowerInit(void);

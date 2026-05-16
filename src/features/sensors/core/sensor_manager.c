@@ -95,6 +95,18 @@ void vSensorManagerTask(void *pvParameters)
         local_uart_mode = uart_mode;
         taskEXIT_CRITICAL();
 
+        if (events & POWER_SENSOR_EVENT)
+        {
+            float power = getPower();
+            float filteredPower = filterExponential(&powerFilter, power);
+            Sensor_UpdatePower(filteredPower);
+            MUARTprintf("%d,%d\n", (int)power, (int)filteredPower);
+            if (local_uart_mode == POWER)
+            {
+                UARTprintf("%d,%d\n", (int)(power * 1000), (int)(filteredPower * 1000));
+            }
+        }
+
         if (events & SPEED_SENSOR_EVENT)
         {
             float rawSpeed = getRPM();
@@ -192,19 +204,6 @@ void vSensorManagerTask(void *pvParameters)
         //     }
         // }
 
-        // if (events & POWER_SENSOR_EVENT)
-        // {
-        //     uint32_t power = getPower();
-        //     float filteredPower = filterExponential(&powerFilter, (float)power);
-
-        //     Sensor_UpdatePower(filteredPower);
-        //     // UARTprintf("%d,%d\n", power, (int)filteredPower);
-        //     if (local_uart_mode == POWER)
-        //     {
-        //         UARTprintf("%d,%d\n", power, (int)filteredPower);
-        //     }
-        // }
-
         // if (events & DIST_SENSOR_EVENT)
         // {
         //     uint16_t distance;
@@ -236,7 +235,7 @@ void vSpeedSensorTask(void *pvParameters)
 
         float rawSpeed = getRPM();
         float filteredSpeed = filterExponential(&speedFilter, rawSpeed);
-        UARTprintf("%d,%d\n", (int)rawSpeed, (int)filteredSpeed);
+        // UARTprintf("%d,%d\n", (int)rawSpeed, (int)filteredSpeed);
 
         if (filteredSpeed < 0.0f)
         {
