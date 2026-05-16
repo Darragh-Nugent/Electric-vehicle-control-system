@@ -9,7 +9,10 @@
 #include "../../data.h"
 #include "features/motor/states.h"
 #include "features/motor/motor_api.h"
+#include <math.h>
 
+#define SCALE_RADIUS 70
+#define NEEDLE_LENGTH 60
 // LV_IMAGE_DECLARE(img_hand);
 static lv_obj_t *s_screen;
 static lv_obj_t *rpm_input;
@@ -94,11 +97,6 @@ static void on_state_changed(const char *state)
     }
 }
 
-// Obtained from https://lvgl.io/docs/open/9.2/examples
-#include <math.h>
-
-#define SCALE_RADIUS 70
-#define NEEDLE_LENGTH 60
 
 static lv_point_precise_t needle_points[2];
 
@@ -165,7 +163,7 @@ lv_obj_t * lv_speedometer(lv_obj_t *parent)
     lv_obj_set_style_radius(scale_line, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_clip_corner(scale_line, true, 0);
     lv_obj_center(scale_line);
-    lv_obj_align(scale_line,LV_ALIGN_LEFT_MID,0,0);
+    lv_obj_align(scale_line,LV_ALIGN_LEFT_MID,25,0);
 
     lv_scale_set_label_show(scale_line, true);
     lv_scale_set_total_tick_count(scale_line, 21);   
@@ -179,7 +177,7 @@ lv_obj_t * lv_speedometer(lv_obj_t *parent)
     needle_line = lv_line_create(s_screen);
     lv_obj_set_size(needle_line, SCALE_RADIUS*2, SCALE_RADIUS*2);
     lv_obj_center(needle_line);
-    lv_obj_align(needle_line,LV_ALIGN_LEFT_MID,0,0);
+    lv_obj_align(needle_line,LV_ALIGN_LEFT_MID,25,0);
 
     lv_obj_set_style_line_width(needle_line, 4, LV_PART_MAIN);
     lv_obj_set_style_line_color(needle_line, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
@@ -292,7 +290,7 @@ void scr_motor_init(void)
     lv_obj_align(mode_dd, LV_ALIGN_RIGHT_MID, -10, 0);    
     motor_state_label = lv_label_create(s_screen);
     lv_label_set_text(motor_state_label, "IDLE");
-    lv_obj_align(motor_state_label,LV_ALIGN_RIGHT_MID,0,0);    
+    lv_obj_align(motor_state_label,LV_ALIGN_RIGHT_MID,-25,0);    
     lv_timer_create(motor_state_update_cb, 200, scale_line);
 
     led  = lv_led_create(s_screen);

@@ -31,6 +31,31 @@ static void btn_alert_cb(lv_event_t *e)
     screen_manager_goto(SCREEN_ALERT);
 }
 
+// Obtained from https://lvgl.io/docs/open/9.5/widgets/label.html
+void lv_moving_title(lv_obj_t *s_screen)
+{
+    static lv_anim_t animation_template;
+    static lv_style_t label_style;
+
+    lv_anim_init(&animation_template);
+    lv_anim_set_delay(&animation_template, 1000);           /*Wait 1 second to start the first scroll*/
+    lv_anim_set_repeat_delay(&animation_template,
+                             2000);    /*Repeat the scroll 3 seconds after the label scrolls back to the initial position*/
+    lv_anim_set_repeat_count(&animation_template, LV_ANIM_REPEAT_INFINITE);
+
+    /*Initialize the label style with the animation template*/
+    lv_style_init(&label_style);
+    lv_style_set_anim(&label_style, &animation_template);
+
+    lv_obj_t * label = lv_label_create(s_screen);
+    lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
+    lv_label_set_long_mode(label, LV_LABEL_LONG_MODE_SCROLL_CIRCULAR);      /*Circular scroll*/
+    lv_obj_set_width(label, 300);
+    lv_label_set_text(label, "Zackariya Taylor, Isobel Jones, Darragh Nugent, Bon Nguyen,");
+    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 60);
+    lv_obj_add_style(label, &label_style, LV_STATE_DEFAULT);           /*Add the style to the label*/
+}
+
 
 void scr_dashboard_init(void)
 {
@@ -41,6 +66,7 @@ void scr_dashboard_init(void)
     // Label
     lv_obj_t *label = create_label(s_screen,"Group #30");
     (void) label; // ignore label for now, return value is kept for possible future use
+    lv_moving_title(s_screen);
 
     // Create a container for the navigation bar at the bottom
     lv_obj_t *nav_bar = lv_obj_create(s_screen);
