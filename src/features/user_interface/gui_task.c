@@ -81,31 +81,34 @@ static void prvLvglTickCb(TimerHandle_t xTimer)
 // - side note - relevant getters and setters for motor/sensors are called via api functions depending on which screen is currently displayed (not implemented yet)
 static void prvDispatchMsg(const UiMsg_t *msg)
 {
-    UARTprintf("Dispatching MSGS");
+    UARTprintf("Dispatching MSGS\n");
     switch (msg->type)
     {
 
     // Motor data — update motor screen; dashboard shows summary
     case UI_MSG_MOTOR_RPM:
         motorSetSpeed(msg->payload.f);
-        UARTprintf("MOTOR: SETTING RPM");
+        UARTprintf("MOTOR: SETTING RPM\n");
         break;
 
     case UI_MSG_MOTOR_CURRENT:
         scr_motor_set_current(msg->payload.f); // is this needed?
         break;
-
     case UI_MSG_MOTOR_IDLE:
-        motorInit();
+        motorSetState(msg->payload.u);
         UARTprintf("MOTOR: SETTING STATE TO IDLE\n");
         break;
+    case UI_MSG_MOTOR_STARTING:
+        motorSetState(msg->payload.u);
+        UARTprintf("MOTOR: SETTING STATE TO STARTING\n");
+        break;
     case UI_MSG_MOTOR_RUNNING:
-        motorRunning();
+        motorSetState(msg->payload.u);
         UARTprintf("MOTOR: SETTING STATE TO RUNNING\n");
         break;
     case UI_MSG_MOTOR_BREAKING:
-        motorEStop();
-        UARTprintf("MOTOR: SETTING STATE TO ESTOP\n");
+        motorSetState(msg->payload.u);
+        UARTprintf("MOTOR: SETTING STATE TO BREAKING\n");
         break;
     // Sensor data
     case UI_MSG_SENSOR_A:
