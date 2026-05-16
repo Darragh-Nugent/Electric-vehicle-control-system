@@ -63,6 +63,8 @@ static void motorTask(void *pvParameters)
     const TickType_t controlPeriodTicks = pdMS_TO_TICKS(CONTROL_PERIOD_MS);
     const float controlPeriodSeconds = CONTROL_PERIOD_MS / 1000.0f;
 
+    static uint32_t prev_speed_seq = 0;
+
     initMotorLib(period_value);
     setDuty(duty_value);
 
@@ -70,7 +72,6 @@ static void motorTask(void *pvParameters)
 
     for (;;)
     {
-        vTaskDelay(pdMS_TO_TICKS(100));
         switch (motor_state)
         {
         case MOTOR_STATE_IDLE:
@@ -90,21 +91,26 @@ static void motorTask(void *pvParameters)
 
                 setDuty(0);
                 motorPIReset();
-                hallSensorIntDisable();  // remove?
+                hallSensorIntDisable(); // remove?
                 motorEStop();
                 break;
             }
 
             static uint8_t validSpeedCount = 0;
-            uint16_t actualSpeed = Sensor_GetSpeed();
+            sensor_sample_t actualSpeed = Sensor_GetSpeed();
 
-            if (actualSpeed >= 800)
+            if (actualSpeed.seq > prev_speed_seq)
             {
-                validSpeedCount++;
-            }
-            else
-            {
-                validSpeedCount = 0;
+                if (actualSpeed.value >= 800)
+                {
+                    validSpeedCount++;
+                }
+                else
+                {
+                    validSpeedCount = 0;
+                }
+                
+                prev_speed_seq = actualSpeed.seq;
             }
 
             if (validSpeedCount >= 5)
@@ -127,7 +133,7 @@ static void motorTask(void *pvParameters)
             uint16_t desiredSpeed = motorGetSpeed();
             uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
-            uint16_t actualSpeed = Sensor_GetSpeed();
+            sensor_sample_t actualSpeed = Sensor_GetSpeed();
 
             if (motorEStopRequested)
             {
@@ -137,7 +143,7 @@ static void motorTask(void *pvParameters)
 
                 setDuty(0);
                 motorPIReset();
-                hallSensorIntDisable();  // remove?
+                hallSensorIntDisable(); // remove?
 
                 motorEStop();
                 break;
@@ -155,17 +161,19 @@ static void motorTask(void *pvParameters)
             static uint16_t prevActualSpeed = 0;
             static uint16_t frozenSpeedCount = 0;
 
-            if (actualSpeed == prevActualSpeed && referenceSpeed > 100)
+            if (actualSpeed.seq == prev_speed_seq && referenceSpeed > 100)
             {
                 frozenSpeedCount++;
             }
             else
             {
                 frozenSpeedCount = 0;
-                prevActualSpeed = actualSpeed;
+                // prevActualSpeed = actualSpeed;
+                prev_speed_seq = actualSpeed.seq;
             }
+            
 
-            if (frozenSpeedCount > 300)  // 300ms of identical readings
+            if (frozenSpeedCount > 300) // 300ms of identical readings
             {
                 UARTprintf("RUNNING EXIT: sensor freeze\n");
                 setDuty(0);
@@ -174,7 +182,7 @@ static void motorTask(void *pvParameters)
                 break;
             }
 
-            if (referenceSpeed > 100 && actualSpeed == 0)
+            if (referenceSpeed > 100 && actualSpeed.value == 0)
             {
                 zeroSpeedCount++;
             }
@@ -193,7 +201,7 @@ static void motorTask(void *pvParameters)
             }
 
             // ;ow-speed recovery only applies when speed is low but not zero. /////
-            if (referenceSpeed > 100 && actualSpeed < 200)
+            if (referenceSpeed > 100 && actualSpeed.value < 200)
             {
                 lowSpeedCount++;
             }
@@ -218,7 +226,7 @@ static void motorTask(void *pvParameters)
                 break;
             }
 
-            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed, controlPeriodSeconds);
+            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed.value, controlPeriodSeconds);
 
             if (lowSpeedCount > 0 && duty < MOTOR_DUTY_START)
             {
@@ -248,14 +256,15 @@ static void motorTask(void *pvParameters)
             static uint8_t stoppedCount = 0;
 
             uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
-            uint16_t actualSpeed = Sensor_GetSpeed();
+            sensor_sample_t actualSpeed = Sensor_GetSpeed();
+            prev_speed_seq = actualSpeed.seq;
             setDuty(0);
 
             #if MOTOR_SERIALPLOT_ENABLE
                 motorSerialPlotOutput(0, referenceSpeed, actualSpeed, 0);
             #endif
 
-            if (actualSpeed <= 50)
+            if (actualSpeed.value <= 50)
             {
                 stoppedCount++;
             }

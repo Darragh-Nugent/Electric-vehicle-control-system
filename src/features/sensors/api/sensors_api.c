@@ -10,151 +10,131 @@
 
 typedef struct
 {
-    uint16_t lux;
-    uint16_t abs_accel;
-    uint16_t temp;
-    uint16_t humidity;
-    uint16_t rmp;
-    uint16_t power;
-    uint16_t distance;
+    sensor_sample_t sample;
+    SemaphoreHandle_t mutex;
+} sensor_point_t;
+
+typedef struct
+{
+    sensor_point_t lux;
+    sensor_point_t abs_accel;
+    sensor_point_t temp;
+    sensor_point_t humidity;
+    sensor_point_t rpm;
+    sensor_point_t power;
+    sensor_point_t distance;
 } sensors_t;
 
 static sensors_t sensor;
 
-static SemaphoreHandle_t xLuxMutex;
-static SemaphoreHandle_t xAccelMutex;
-static SemaphoreHandle_t xTempMutex;
-static SemaphoreHandle_t xHumidityMutex;
-static SemaphoreHandle_t xSpeedMutex;
-static SemaphoreHandle_t xPowerMutex;
-static SemaphoreHandle_t xDistMutex;
-
 void Sensor_Init(void)
 {
-    xLuxMutex = xSemaphoreCreateMutex();
-    xAccelMutex = xSemaphoreCreateMutex();
-    xTempMutex = xSemaphoreCreateMutex();
-    xHumidityMutex = xSemaphoreCreateMutex();
-    xSpeedMutex = xSemaphoreCreateMutex();
-    xPowerMutex = xSemaphoreCreateMutex();
-    xDistMutex = xSemaphoreCreateMutex();
+    sensor.lux.sample = (sensor_sample_t){0};
+    sensor.abs_accel.sample = (sensor_sample_t){0};
+    sensor.temp.sample = (sensor_sample_t){0};
+    sensor.humidity.sample = (sensor_sample_t){0};
+    sensor.rpm.sample = (sensor_sample_t){0};
+    sensor.power.sample = (sensor_sample_t){0};
+    sensor.distance.sample = (sensor_sample_t){0};
+
+    sensor.lux.mutex = xSemaphoreCreateMutex();
+    sensor.abs_accel.mutex = xSemaphoreCreateMutex();
+    sensor.temp.mutex = xSemaphoreCreateMutex();
+    sensor.humidity.mutex = xSemaphoreCreateMutex();
+    sensor.rpm.mutex = xSemaphoreCreateMutex();
+    sensor.power.mutex = xSemaphoreCreateMutex();
+    sensor.distance.mutex = xSemaphoreCreateMutex();
 }
 
-uint16_t Sensor_GetLux(void)
+static void Sensor_Update(sensor_point_t* point, uint16_t value)
 {
-    uint16_t value;
-    xSemaphoreTake(xLuxMutex, portMAX_DELAY);
-    value = sensor.lux;
-    xSemaphoreGive(xLuxMutex);
+    xSemaphoreTake(point->mutex, portMAX_DELAY);
 
-    return value;
+    point->sample.value = value;
+    point->sample.seq++;
+
+    xSemaphoreGive(point->mutex);
 }
 
-void Sensor_UpdateLux(uint16_t lux)
+static sensor_sample_t Sensor_Get(sensor_point_t* point)
 {
-    xSemaphoreTake(xLuxMutex, portMAX_DELAY);
-    sensor.lux = lux;
-    xSemaphoreGive(xLuxMutex);
+    sensor_sample_t temp;
+
+    xSemaphoreTake(point->mutex, portMAX_DELAY);
+
+    temp = point->sample;
+
+    xSemaphoreGive(point->mutex);
+
+    return temp;
 }
 
-uint16_t Sensor_GetAccel(void)
+void Sensor_UpdateLux(uint16_t value)
 {
-    uint16_t value;
-    xSemaphoreTake(xAccelMutex, portMAX_DELAY);
-    value = sensor.abs_accel;
-    xSemaphoreGive(xAccelMutex);
-
-    return value;
+    Sensor_Update(&sensor.lux, value);
 }
 
-void Sensor_UpdateAccel(uint16_t accel)
+sensor_sample_t Sensor_GetLux(void)
 {
-    xSemaphoreTake(xAccelMutex, portMAX_DELAY);
-    sensor.abs_accel = accel;
-    xSemaphoreGive(xAccelMutex);
+    return Sensor_Get(&sensor.lux);
 }
 
-uint16_t Sensor_GetTemp(void)
+void Sensor_UpdateAccel(uint16_t value)
 {
-    uint16_t value;
-    xSemaphoreTake(xTempMutex, portMAX_DELAY);
-    value = sensor.temp;
-    xSemaphoreGive(xTempMutex);
-
-    return value;
+    Sensor_Update(&sensor.abs_accel, value);
 }
 
-void Sensor_UpdateTemp(uint16_t temp)
+sensor_sample_t Sensor_GetAccel(void)
 {
-    xSemaphoreTake(xTempMutex, portMAX_DELAY);
-    sensor.temp = temp;
-    xSemaphoreGive(xTempMutex);
+    return Sensor_Get(&sensor.abs_accel);
 }
 
-uint16_t Sensor_GetHumidity(void)
+void Sensor_UpdateTemp(uint16_t value)
 {
-    uint16_t value;
-    xSemaphoreTake(xHumidityMutex, portMAX_DELAY);
-    value = sensor.humidity;
-    xSemaphoreGive(xHumidityMutex);
-
-    return value;
+    Sensor_Update(&sensor.temp, value);
 }
 
-void Sensor_UpdateHumidity(uint16_t humidity)
+sensor_sample_t Sensor_GetTemp(void)
 {
-    xSemaphoreTake(xHumidityMutex, portMAX_DELAY);
-    sensor.humidity = humidity;
-    xSemaphoreGive(xHumidityMutex);
+    return Sensor_Get(&sensor.temp);
 }
 
-uint16_t Sensor_GetSpeed(void)
+void Sensor_UpdateHumidity(uint16_t value)
 {
-    uint16_t value;
-    xSemaphoreTake(xSpeedMutex, portMAX_DELAY);
-    value = sensor.rmp;
-    xSemaphoreGive(xSpeedMutex);
-
-    return value;
+    Sensor_Update(&sensor.humidity, value);
 }
 
-void Sensor_UpdateSpeed(uint16_t rpm)
+sensor_sample_t Sensor_GetHumidity(void)
 {
-    xSemaphoreTake(xSpeedMutex, portMAX_DELAY);
-    sensor.rmp = rpm;
-    xSemaphoreGive(xSpeedMutex);
+    return Sensor_Get(&sensor.humidity);
 }
 
-uint16_t Sensor_GetPower(void)
+void Sensor_UpdateSpeed(uint16_t value)
 {
-    uint16_t value;
-    xSemaphoreTake(xPowerMutex, portMAX_DELAY);
-    value = sensor.power;
-    xSemaphoreGive(xPowerMutex);
-
-    return value;
+    Sensor_Update(&sensor.rpm, value);
 }
 
-void Sensor_UpdatePower(uint16_t power)
+sensor_sample_t Sensor_GetSpeed(void)
 {
-    xSemaphoreTake(xPowerMutex, portMAX_DELAY);
-    sensor.power = power;
-    xSemaphoreGive(xPowerMutex);
+    return Sensor_Get(&sensor.rpm);
 }
 
-uint16_t Sensor_GetDistance(void)
+void Sensor_UpdatePower(uint16_t value)
 {
-    uint16_t value;
-    xSemaphoreTake(xDistMutex, portMAX_DELAY);
-    value = sensor.distance;
-    xSemaphoreGive(xDistMutex);
-
-    return value;
+    Sensor_Update(&sensor.power, value);
 }
 
-void Sensor_UpdateDistance(uint16_t dist)
+sensor_sample_t Sensor_GetPower(void)
 {
-    xSemaphoreTake(xDistMutex, portMAX_DELAY);
-    sensor.distance = dist;
-    xSemaphoreGive(xDistMutex);
+    return Sensor_Get(&sensor.power);
+}
+
+void Sensor_UpdateDistance(uint16_t value)
+{
+    Sensor_Update(&sensor.distance, value);
+}
+
+sensor_sample_t Sensor_GetDistance(void)
+{
+    return Sensor_Get(&sensor.distance);
 }
