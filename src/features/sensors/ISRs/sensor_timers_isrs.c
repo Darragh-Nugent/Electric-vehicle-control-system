@@ -27,20 +27,6 @@
 
 extern EventGroupHandle_t xSensorEvents;
 
-void xOPT3001TimerHandler(void)
-{
-    // UARTprintf("Opt timer\n");
-    TimerIntClear(TIMER6_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
-    xEventGroupSetBits(xSensorEvents, LIGHT_SENSOR_EVENT);
-}
-
-void xBMI160TimerHandler(void)
-{
-    // UARTprintf("acceleration timer\n");
-    TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
-    xEventGroupSetBits(xSensorEvents, ACCEL_SENSOR_EVENT);
-}
-
 void xSHT31TimerHandler(void)
 {
     TimerIntClear(TIMER2_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
@@ -63,4 +49,18 @@ void xDistTimerHandler(void)
 {
     TimerIntClear(TIMER5_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, DIST_SENSOR_EVENT);
+}
+
+void xOPT3001TimerHandler(void)
+{
+    // UARTprintf("Opt timer\n");
+    TimerIntClear(TIMER6_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+    xEventGroupSetBits(xSensorEvents, LIGHT_SENSOR_EVENT);
+}
+
+void xBMI160TimerHandler(void)
+{
+    // UARTprintf("acceleration timer\n");
+    TimerIntClear(TIMER7_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+    xEventGroupSetBits(xSensorEvents, ACCEL_SENSOR_EVENT);
 }
