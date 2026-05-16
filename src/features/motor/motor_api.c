@@ -42,7 +42,7 @@ void motorRunning(void)
     // UARTprintf("STATE: RUNNING\n");
     vTaskDelay(pdMS_TO_TICKS(100));
 
-    uint16_t currentSpeed = Sensor_GetSpeed();
+    uint16_t currentSpeed = Sensor_GetSpeed().value;
     motorControlSetReferenceSpeed(currentSpeed);
     // motorControlSetReferenceSpeed(userSetSpeed);  // start ramp at desired speed, not actual
     motorPIInit(MOTOR_DUTY_START);
