@@ -26,9 +26,9 @@ uint32_t adc_values[2];
 void xPowerHandler(void)
 {
     BaseType_t xTaskWoken = pdFALSE;
-    ADCIntClear(ADC0_BASE, 0);
+    ADCIntClear(ADC1_BASE, 0);
 
-    ADCSequenceDataGet(ADC0_BASE, 0, adc_values);
+    ADCSequenceDataGet(ADC1_BASE, 0, adc_values);
 
     xSemaphoreGiveFromISR(xPowerSemaphore, &xTaskWoken);
     portYIELD_FROM_ISR(xTaskWoken);
@@ -41,7 +41,7 @@ void PowerInit(void)
 
 float getPower(void)
 {
-    ADCProcessorTrigger(ADC0_BASE, 0);
+    ADCProcessorTrigger(ADC1_BASE, 0);
     xSemaphoreTake(xPowerSemaphore, portMAX_DELAY);
     uint32_t local_adc_values[2];
     float converted_voltage[2];

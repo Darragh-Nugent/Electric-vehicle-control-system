@@ -246,13 +246,10 @@ static void prvTimerInit(void)
 
 static void prvADCInit(void)
 {
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC1);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
 
-    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_ADC0))
-        ;
     while (!SysCtlPeripheralReady(SYSCTL_PERIPH_ADC1))
         ;
     while (!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOE))
@@ -264,19 +261,19 @@ static void prvADCInit(void)
     GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_7);
 
     // Enable the proccessor to trigger the sample
-    ADCSequenceConfigure(ADC0_BASE, 0, ADC_TRIGGER_PROCESSOR, 0);
+    ADCSequenceConfigure(ADC1_BASE, 0, ADC_TRIGGER_PROCESSOR, 0);
 
     // Step 0: PE3 (AIN0)
-    ADCSequenceStepConfigure(ADC0_BASE, 0, 0, ADC_CTL_CH0);
+    ADCSequenceStepConfigure(ADC1_BASE, 0, 0, ADC_CTL_CH0);
 
     // Step 1: PD7 (AIN4), end + interrupt
-    ADCSequenceStepConfigure(ADC0_BASE, 0, 1,
+    ADCSequenceStepConfigure(ADC1_BASE, 0, 1,
                              ADC_CTL_CH4 | ADC_CTL_END | ADC_CTL_IE);
 
-    ADCSequenceEnable(ADC0_BASE, 0);
-    ADCIntEnable(ADC0_BASE, 0);
+    ADCSequenceEnable(ADC1_BASE, 0);
+    ADCIntEnable(ADC1_BASE, 0);
 
-    IntEnable(INT_ADC0SS0);
+    IntEnable(INT_ADC1SS0);
     /* Enable global interrupts in the NVIC. */
     IntMasterEnable();
 }

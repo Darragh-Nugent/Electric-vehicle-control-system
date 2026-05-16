@@ -100,10 +100,9 @@ void vSensorManagerTask(void *pvParameters)
             float power = getPower();
             float filteredPower = filterExponential(&powerFilter, power);
             Sensor_UpdatePower(filteredPower);
-            MUARTprintf("%d,%d\n", (int)power, (int)filteredPower);
             if (local_uart_mode == POWER)
             {
-                UARTprintf("%d,%d\n", (int)(power * 1000), (int)(filteredPower * 1000));
+                UARTprintf("%d,%d\n", (int)power, (int)filteredPower);
             }
         }
 
