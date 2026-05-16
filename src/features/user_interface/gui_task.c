@@ -97,11 +97,15 @@ static void prvDispatchMsg(const UiMsg_t *msg)
 
     case UI_MSG_MOTOR_IDLE:
         motorInit();
-        UARTprintf("MOTOR: SETTING STATE TO IDLE");
+        UARTprintf("MOTOR: SETTING STATE TO IDLE\n");
         break;
     case UI_MSG_MOTOR_RUNNING:
         motorRunning();
-        UARTprintf("MOTOR: SETTING STATE TO RUNNING");
+        UARTprintf("MOTOR: SETTING STATE TO RUNNING\n");
+        break;
+    case UI_MSG_MOTOR_BREAKING:
+        motorEStop();
+        UARTprintf("MOTOR: SETTING STATE TO ESTOP\n");
         break;
     // Sensor data
     case UI_MSG_SENSOR_A:

@@ -15,6 +15,7 @@ typedef enum
     UI_MSG_MOTOR_STARTING,
     UI_MSG_MOTOR_IDLE, // enabled/disabled/fault -> add more if needed
     UI_MSG_MOTOR_RUNNING,
+    UI_MSG_MOTOR_BREAKING,
     UI_MSG_SENSOR_A, // change later, potentially add more
     UI_MSG_SENSOR_B,
     UI_MSG_SENSOR_C,

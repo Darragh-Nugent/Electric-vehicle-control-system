@@ -63,7 +63,7 @@ static void ta_event_cb(lv_event_t *e)
     }
 }
 
-// Dropdown Button cb
+// Dropdown Button cb     "IDLE\nRUN\nBREAK\nEXPLODE",
 static void on_state_changed(const char *state)
 {
     LV_LOG_USER("Motor state: %s", state);
@@ -73,10 +73,14 @@ static void on_state_changed(const char *state)
         UARTprintf("IDLE\n");
         res = ui_push_u(UI_MSG_MOTOR_IDLE, MOTOR_STATE_IDLE);
     }
-    else if (lv_strcmp(state, "STARTING") == 0)
+    else if (lv_strcmp(state, "RUN") == 0)
     {
-        UARTprintf("STARTING\n");
-        res = ui_push_u(UI_MSG_MOTOR_STARTING, MOTOR_STATE_STARTING);
+        UARTprintf("RUNNING\n");
+        res = ui_push_u(UI_MSG_MOTOR_RUNNING, MOTOR_STATE_RUNNING);
+    }
+    else if (lv_strcmp(state, "BREAK")){
+        UARTprintf("ESTOP\n");
+        res = ui_push_u(UI_MSG_MOTOR_BREAKING, MOTOR_STATE_BRAKING);
     }
     else if (lv_strcmp(state, "EXPLODE") == 0)
     {
@@ -98,7 +102,7 @@ static void on_state_changed(const char *state)
 static lv_point_precise_t needle_points[2];
 
 // Convert a value (0–100) into an angle in degrees
-static int32_t value_to_angle(int32_t value)
+static float value_to_angle(int32_t value)
 {
     return 135 + (270 * value) / 100; // start 135°, range 270°
 }
@@ -106,7 +110,7 @@ static int32_t value_to_angle(int32_t value)
 // Update the needle points based on a value
 static void update_needle_points(int32_t value)
 {
-    int32_t angle = value_to_angle(value);
+    float angle = value_to_angle(value);
     float rad = angle * (M_PI / 180.0f);
 
     // Unsure why the inital x,y needle coords rely on scale when the parent of the needle is the screen, so position should be relative to the screen
@@ -134,7 +138,6 @@ static void needle_update_timer_cb(lv_timer_t *timer)
     if (sensor_value < 0) sensor_value = 0;
     else if (sensor_value > 50) sensor_value -= lv_rand(-1,2);
     else if (sensor_value > 100) sensor_value = 100;
-
     // Animate needle from last value to sensor_value over 100 ms
     lv_anim_t a;
     lv_anim_init(&a);
@@ -233,7 +236,7 @@ void scr_motor_init(void)
     // Drop Down
     lv_obj_t *mode_dd = create_dropdown(
         nav_bar,
-        "IDLE\nSTARTING\nEXPLODE",
+        "IDLE\nRUN\nESTOP\nEXPLODE",
         on_state_changed);
 
     lv_obj_set_size(mode_dd, 120, 30);
