@@ -32,11 +32,6 @@
 #include "features/user_interface/touch_driver.h"
 // Motor lib
 #include <motorlib.h>
-<<<<<<< HEAD
-
-/*-----------------------------------------------------------*/
-=======
->>>>>>> dea101bfe4cf2e1518ed6b54a2270bbda4cc7620
 tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
 /* The system clock frequency. */
 uint32_t g_ui32SysClock;

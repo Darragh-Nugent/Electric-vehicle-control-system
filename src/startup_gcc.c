@@ -44,13 +44,8 @@ static void IntDefaultHandler(void);
 extern void xPortPendSVHandler(void);
 extern void vPortSVCHandler(void);
 extern void xPortSysTickHandler(void);
-<<<<<<< HEAD
-extern void TouchScreenIntHandler(void);
-extern void hallSensorHandler(void);
-=======
 extern void hallSensorHandler(void);
 extern void TouchScreenIntHandler(void);
->>>>>>> dea101bfe4cf2e1518ed6b54a2270bbda4cc7620
 
 //*****************************************************************************
 //
