@@ -7,6 +7,7 @@
 #include "screens/scr_sensor1.h"
 #include "screens/scr_sensor2.h"
 #include "screens/scr_sensor3.h"
+#include "utils/uartstdio.h"
 
 static lv_obj_t *s_screens[SCREEN_COUNT];
 static ScreenId_t s_active = SCREEN_DASHBOARD;

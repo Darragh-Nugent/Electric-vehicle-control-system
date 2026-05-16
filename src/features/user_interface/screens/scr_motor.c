@@ -7,16 +7,15 @@
 #include "utils/uartstdio.h"
 #include "../gui_utils.h"
 #include "../../data.h"
-#include "features/motor/motor_api.h"
 #include "features/motor/states.h"
 
 // LV_IMAGE_DECLARE(img_hand);
 static lv_obj_t *s_screen;
 static lv_obj_t *rpm_input;
 
-lv_obj_t *needle_line;
-lv_obj_t *needle_img;
-int32_t speed = 0;
+static lv_obj_t *needle_line;
+static lv_obj_t *scale_line;
+static int32_t speed = 0;
 void scr_motor_set_rpm(float rpm) {};
 
 void scr_motor_set_current(float amps) {};
@@ -72,12 +71,12 @@ static void on_state_changed(const char *state)
     if (lv_strcmp(state, "IDLE") == 0)
     {
         UARTprintf("IDLE\n");
-        res = ui_push_u(UI_MSG_MOTOR_IDLE,MOTOR_STATE_IDLE);
+        res = ui_push_u(UI_MSG_MOTOR_IDLE, MOTOR_STATE_IDLE);
     }
     else if (lv_strcmp(state, "STARTING") == 0)
     {
         UARTprintf("STARTING\n");
-        res = ui_push_u(UI_MSG_MOTOR_STARTING,MOTOR_STATE_STARTING);
+        res = ui_push_u(UI_MSG_MOTOR_STARTING, MOTOR_STATE_STARTING);
     }
     else if (lv_strcmp(state, "EXPLODE") == 0)
     {
@@ -93,28 +92,27 @@ static void on_state_changed(const char *state)
 // Obtained from https://lvgl.io/docs/open/9.2/examples
 static void set_needle_line_value(lv_timer_t *t)
 {
-    lv_obj_t *scale = lv_timer_get_user_data(t);
-
     int32_t value = lv_rand(-1, 2);
     speed += value;
     if (speed < 0)
         speed = 0;
-    if (speed > 40)
-        speed = 40;
+    if (speed > 50)
+        speed += value -1;
     // if(xQueueReceive(tempQueue, &temp, 0) == pdPASS)
     // {
     //     lv_bar_set_value(bar, temp, LV_ANIM_ON);
     // }
     // OR a api call that handles queues internally
-
-    lv_scale_set_line_needle_value(scale, needle_line, 60, speed);
+    // lv_obj_invalidate(scale_line);
+    lv_scale_set_line_needle_value(scale_line, needle_line, 50, speed);
+    lv_obj_invalidate(scale_line);
 }
 
 lv_obj_t * lv_speedometer(lv_obj_t *s_screen)
 {
-    lv_obj_t *scale_line = lv_scale_create(s_screen);
+    scale_line = lv_scale_create(s_screen);
 
-    lv_obj_set_size(scale_line, 150, 150);
+    lv_obj_set_size(scale_line, 140, 140);
     lv_scale_set_mode(scale_line, LV_SCALE_MODE_ROUND_INNER);
     lv_obj_set_style_bg_opa(scale_line, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(scale_line, lv_palette_lighten(LV_PALETTE_GREY, 5), 0);
@@ -124,12 +122,12 @@ lv_obj_t * lv_speedometer(lv_obj_t *s_screen)
 
     lv_scale_set_label_show(scale_line, true);
 
-    lv_scale_set_total_tick_count(scale_line, 41);
-    lv_scale_set_major_tick_every(scale_line, 5);
+    lv_scale_set_total_tick_count(scale_line, 21);
+    lv_scale_set_major_tick_every(scale_line, 2);
 
     lv_obj_set_style_length(scale_line, 5, LV_PART_ITEMS);
     lv_obj_set_style_length(scale_line, 10, LV_PART_INDICATOR);
-    lv_scale_set_range(scale_line, 0, 40);
+    lv_scale_set_range(scale_line, 0, 100);
 
     lv_scale_set_angle_range(scale_line, 270);
     lv_scale_set_rotation(scale_line, 135);
@@ -149,7 +147,7 @@ void scr_motor_init(void)
     s_screen = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
 
-    lv_obj_t * scale_line = lv_speedometer(s_screen);
+    lv_speedometer(s_screen);
     // To DO:
     // Add relevant buttons and diagnostics for motor
 
@@ -183,8 +181,9 @@ void scr_motor_init(void)
     lv_obj_t *btn = lv_button_create(nav_bar);
     lv_obj_add_event_cb(btn, submit_rpm_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_size(btn, 40, 15);
-    lv_label_set_text(btn, "SET");
+    // lv_label_set_text(btn, "SET");        --> Bon: DO NOT SET A LABEL FOR THIS DAM BUTTON OTHERWISE DISPLAY WILL CRASH, My guess is maybe the text is too large for button?
 
+    UARTprintf("scr_motor Drop down\n");
     // Drop Down
     lv_obj_t *mode_dd = create_dropdown(
         nav_bar,
