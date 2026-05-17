@@ -87,12 +87,12 @@ static void prvDispatchMsg(const UiMsg_t *msg)
 
     // Motor data — update motor screen; dashboard shows summary
     case UI_MSG_MOTOR_RPM:
-        motorSetSpeed(msg->payload.f);
-        UARTprintf("MOTOR: SETTING RPM\n");
+        motorSetSpeed(msg->payload.u);
+        UARTprintf("MOTOR: SETTING RPM: %d\n",msg->payload.u);
         break;
 
     case UI_MSG_MOTOR_CURRENT:
-        scr_motor_set_current(msg->payload.f); // is this needed?
+        scr_motor_set_current(msg->payload.u); // is this needed?
         break;
     case UI_MSG_MOTOR_IDLE:
         motorSetState(msg->payload.u);
@@ -111,19 +111,30 @@ static void prvDispatchMsg(const UiMsg_t *msg)
         UARTprintf("MOTOR: SETTING STATE TO BREAKING\n");
         break;
     // Sensor data
-    case UI_MSG_SENSOR_A:
-        scr_sensors_set_value(0, msg->payload.f);
-        scr_dashboard_set_sensor(0, msg->payload.f);
+    case UI_MSG_SENSOR_UPDATE_POWER:
+        // Sensor_UpdatePower(msg->payload.u);
+        UARTprintf("SENSOR: UPDATING POWER: %d\n",msg->payload.u);
         break;
-    case UI_MSG_SENSOR_B:
-        scr_sensors_set_value(1, msg->payload.f);
-        scr_dashboard_set_sensor(1, msg->payload.f);
+    case UI_MSG_SENSOR_UPDATE_ACCELERATION:
+        // Sensor_UpdateAccel(msg->payload.u);
+        UARTprintf("SENSOR: UPDATING ACCELERATION: %d\n",msg->payload.u);
         break;
-    case UI_MSG_SENSOR_C:
-        scr_sensors_set_value(2, msg->payload.f);
-        scr_dashboard_set_sensor(2, msg->payload.f);
+    case UI_MSG_SENSOR_UPDATE_DISTANCE:
+        // Sensor_UpdateDistance(msg->payload.u);
+        UARTprintf("SENSOR: UPDATING DISTANCE: %d\n",msg->payload.u);
         break;
-
+    case UI_MSG_SENSOR_UPDATE_HUMIDITY:
+        // Sensor_UpdateHumidity(msg->payload.u);
+        UARTprintf("SENSOR: UPDATING HUMIDITY: %d\n",msg->payload.u);
+    break;
+    case UI_MSG_SENSOR_UPDATE_TEMP:
+        // Sensor_UpdateTemp(msg->payload.u);
+        UARTprintf("SENSOR: UPDATING TEMP: %d\n",msg->payload.u);
+        break;
+    case UI_MSG_SENSOR_UPDATE_LUX:
+        // Sensor_UpdateLux(msg->payload.u);
+        UARTprintf("SENSOR: UPDATING LUX: %d\n",msg->payload.u);
+        break;
     // Faults — always visible regardless of active screen
     case UI_MSG_FAULT_RAISED:
         scr_alerts_raise(msg->payload.u);

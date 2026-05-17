@@ -38,11 +38,11 @@ static void submit_rpm_cb(lv_event_t *e)
 {
     const char *text = lv_textarea_get_text(rpm_input);
 
-    int rpm = atoi(text);
+    uint16_t rpm = atoi(text);
     UARTprintf("RPM: %i\n", rpm);
     LV_LOG_USER("RPM set: %d", rpm);
 
-    bool res = ui_push_f(UI_MSG_MOTOR_RPM, (float)rpm);
+    bool res = ui_push_u(UI_MSG_MOTOR_RPM, rpm);
     if (!res)
     {
         UARTprintf("Hmm, I'll see if i remember to fix this later");
