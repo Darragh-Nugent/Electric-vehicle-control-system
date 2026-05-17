@@ -16,9 +16,12 @@ typedef enum
     UI_MSG_MOTOR_IDLE, // enabled/disabled/fault -> add more if needed
     UI_MSG_MOTOR_RUNNING,
     UI_MSG_MOTOR_BREAKING,
-    UI_MSG_SENSOR_A, // change later, potentially add more
-    UI_MSG_SENSOR_B,
-    UI_MSG_SENSOR_C,
+    UI_MSG_SENSOR_UPDATE_POWER, // change later, potentially add more
+    UI_MSG_SENSOR_UPDATE_ACCELERATION,
+    UI_MSG_SENSOR_UPDATE_DISTANCE,
+    UI_MSG_SENSOR_UPDATE_HUMIDITY,
+    UI_MSG_SENSOR_UPDATE_TEMP,
+    UI_MSG_SENSOR_UPDATE_LUX,
     UI_MSG_FAULT_RAISED, // payload: fault code
     UI_MSG_FAULT_CLEARED,
 } UiMsgType_t;
@@ -55,7 +58,7 @@ inline bool ui_push_f(UiMsgType_t type, float value)
 }
 
 // Producer function when payload is a uint
-inline bool ui_push_u(UiMsgType_t type, float value)
+inline bool ui_push_u(UiMsgType_t type, uint16_t value)
 {
     // Create struct when payload is fault code
     UiMsg_t msg = {.type = type, .payload.u = value};

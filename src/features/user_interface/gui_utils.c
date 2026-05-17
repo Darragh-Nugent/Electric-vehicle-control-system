@@ -31,7 +31,7 @@ lv_obj_t *create_icon_button(lv_obj_t *parent, const char *icon, lv_event_cb_t c
 
     lv_obj_t *button = lv_button_create(parent);
     lv_obj_set_size(button, 80, 36);
-    lv_obj_align(button, LV_ALIGN_TOP_LEFT, 8, 8);
+    lv_obj_align(button, LV_ALIGN_TOP_LEFT, x, y);
     lv_obj_add_event_cb(button, cb, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *home = lv_label_create(button);
@@ -40,6 +40,7 @@ lv_obj_t *create_icon_button(lv_obj_t *parent, const char *icon, lv_event_cb_t c
 
     return button;
 }
+
 
 static void dropdown_event_cb(lv_event_t *e)
 {
