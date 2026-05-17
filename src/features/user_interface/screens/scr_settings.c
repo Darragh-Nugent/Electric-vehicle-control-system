@@ -123,7 +123,7 @@ static lv_obj_t *create_threshold_card(
 {
     lv_obj_t *card = lv_obj_create(parent);
 
-    lv_obj_set_size(card, 200, 120);
+    lv_obj_set_size(card, 200, 80);
 
     lv_obj_set_style_radius(card, 12, 0);
 
@@ -138,16 +138,16 @@ static lv_obj_t *create_threshold_card(
     lv_label_set_text(title_label, title);
 
     lv_obj_align(title_label,
-        LV_ALIGN_TOP_MID, 0, 0);
+        LV_ALIGN_TOP_MID, 0, -5);
 
-    lv_obj_t *current_label =
-        lv_label_create(card);
+    // lv_obj_t *current_label =
+    //     lv_label_create(card);
 
-    lv_label_set_text(current_label,
-        "Current: 0");
+    // lv_label_set_text(current_label,
+    //     "Current: 0");
 
-    lv_obj_align(current_label,
-        LV_ALIGN_TOP_LEFT, 0, 30);
+    // lv_obj_align(current_label,
+    //     LV_ALIGN_TOP_LEFT, 0, 30);
 
     lv_obj_t* spinbox = lv_spinbox_create(card);
 
@@ -156,9 +156,10 @@ static lv_obj_t *create_threshold_card(
     lv_spinbox_set_dec_point_pos(spinbox, 0);
     lv_spinbox_step_prev(spinbox);
     lv_obj_set_width(spinbox, 100);
+    lv_obj_set_height(spinbox,35);
     lv_obj_center(spinbox);
     int32_t h = lv_obj_get_height(spinbox);
-    lv_obj_align(spinbox,LV_ALIGN_BOTTOM_MID,0,-10); 
+    lv_obj_align(spinbox,LV_ALIGN_CENTER,0,0); 
 
 
     lv_obj_t * btn = lv_button_create(card);
