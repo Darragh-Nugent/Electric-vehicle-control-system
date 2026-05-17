@@ -5,11 +5,13 @@
 
 typedef enum {
     SCREEN_DASHBOARD = 0,
+    SCREEN_SETTINGS,
     SCREEN_MOTOR,
     SCREEN_SENSORS, // Need to add more if required or mayeb just display them all on a page?
     SCREEN_SENSOR1,
     SCREEN_SENSOR2,
     SCREEN_SENSOR3,
+    SCREEN_STATUS,
     SCREEN_ALERT,
     SCREEN_COUNT   // keep last
 } ScreenId_t;

@@ -25,10 +25,22 @@ static void btn_sensors_cb(lv_event_t *e)
     screen_manager_goto(SCREEN_SENSORS);
 }
 
+static void btn_status_cb(lv_event_t *e)
+{
+    (void)e;
+    screen_manager_goto(SCREEN_STATUS);
+}
+
+
 static void btn_alert_cb(lv_event_t *e)
 {
     (void)e;
-    screen_manager_goto(SCREEN_ALERT);
+    screen_manager_goto(SCREEN_STATUS);
+}
+
+static void btn_settings_cb(lv_event_t *e){
+    (void)e;
+    screen_manager_goto(SCREEN_SETTINGS);
 }
 
 // Obtained from https://lvgl.io/docs/open/9.5/widgets/label.html
@@ -76,18 +88,27 @@ void scr_dashboard_init(void)
     // Create the buttons within the navigation bar, spaced evenly
     lv_obj_t *motor_btn = nav_button_init(nav_bar, "Motor", btn_motor_cb, LV_ALIGN_LEFT_MID, 10, 0);
     lv_obj_t *sensors_btn = nav_button_init(nav_bar, "Sensors", btn_sensors_cb, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_t *alerts_btn = nav_button_init(nav_bar, "Alerts", btn_alert_cb, LV_ALIGN_RIGHT_MID, -10, 0);
-
+    lv_obj_t *status_btn = nav_button_init(nav_bar, "Status", btn_status_cb, LV_ALIGN_RIGHT_MID, -10, 0);
+    lv_obj_t *settings_btn = create_icon_button(s_screen, LV_SYMBOL_SETTINGS, btn_settings_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     // Align the buttons horizontally within the navigation bar
     lv_obj_set_width(motor_btn, 80);
     lv_obj_set_width(sensors_btn, 80);
-    lv_obj_set_width(alerts_btn, 80);
+    lv_obj_set_width(status_btn, 80);
+    lv_obj_set_width(settings_btn, 40);
 
     // Add some spacing between buttons
     lv_obj_align(motor_btn, LV_ALIGN_LEFT_MID, 10, 0);
     lv_obj_align(sensors_btn, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_align(alerts_btn, LV_ALIGN_RIGHT_MID, -10, 0);
+    lv_obj_align(status_btn, LV_ALIGN_RIGHT_MID, -10, 0);
 
+
+    // Remove background of settings button
+    static lv_style_t style_transp;
+    lv_style_init(&style_transp);
+    lv_style_set_bg_opa(&style_transp, LV_OPA_TRANSP);
+    lv_style_set_border_width(&style_transp, 0); // Optional: Removes borders
+
+    lv_obj_add_style(settings_btn, &style_transp, LV_STATE_DEFAULT);
     // To Do:
     // maybe remove nav for alerts, it should pop up instantly over everything
     // add in other sensors as their own seperate pages

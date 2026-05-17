@@ -1,6 +1,7 @@
 // ui/screen_manager.c
 #include "screen_manager.h"
 #include "screens/scr_dashboard.h"
+#include "screens/scr_settings.h"
 #include "screens/scr_motor.h"
 #include "screens/scr_sensors.h"
 #include "screens/scr_alerts.h"
@@ -22,6 +23,7 @@ static lv_scr_load_anim_t prv_anim_for(ScreenId_t from, ScreenId_t to)
 void screen_manager_init(void)
 {
     scr_dashboard_init();
+    scr_settings_init();
     scr_motor_init();
     scr_sensors_init();
     scr_sensor1_init();
@@ -29,6 +31,7 @@ void screen_manager_init(void)
     scr_sensor3_init();
 
     s_screens[SCREEN_DASHBOARD] = scr_dashboard_get();
+    s_screens[SCREEN_SETTINGS] = scr_settings_get();
     s_screens[SCREEN_MOTOR] = scr_motor_get();
     s_screens[SCREEN_SENSORS] = scr_sensors_get();
     s_screens[SCREEN_SENSOR1] = scr_sensor1_get();
