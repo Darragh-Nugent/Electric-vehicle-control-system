@@ -50,7 +50,7 @@ void screen_manager_goto(ScreenId_t id)
     lv_screen_load_anim(
         s_screens[id],
         anim,
-        200,  // animation duration ms
+        350,  // animation duration ms
         0,    // delay ms before starting
         false // do NOT delete the old screen after transition - BAD if done!!
     );
