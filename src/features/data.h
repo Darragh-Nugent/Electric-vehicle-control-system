@@ -1,6 +1,22 @@
+#ifndef DATA_H
+#define DATA_H
+
 #include <stdint.h>
 #include "FreeRTOS.h"
 #include "queue.h"
+#include "lvgl.h"
+
+typedef int32_t (*graph_data_cb_t)(void);
+
+typedef struct{
+    lv_obj_t *chart;
+    lv_obj_t *scale;
+    lv_timer_t *timer;
+    int32_t scaleYMin;
+    int32_t scaleYMax;
+    int16_t overheadGap;
+    graph_data_cb_t get_value_cb;
+}graph_t;
 
 //*****************************************************************************
 //
@@ -75,3 +91,5 @@ inline bool ui_push_from_isr(UiMsgType_t type, float value)
 
 // EXAMPLE MOTOR PRODUCER API USE IN ISR
 // ui_push_from_isr(UI_MSG_MOTOR_RPM, current_rpm)
+
+#endif

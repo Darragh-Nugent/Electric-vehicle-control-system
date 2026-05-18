@@ -8,9 +8,12 @@ typedef enum {
     SCREEN_SETTINGS,
     SCREEN_MOTOR,
     SCREEN_SENSORS, // Need to add more if required or mayeb just display them all on a page?
-    SCREEN_SENSOR1,
-    SCREEN_SENSOR2,
-    SCREEN_SENSOR3,
+    SCREEN_SPEED_SENSOR,
+    SCREEN_PWR_SENSOR,
+    SCREEN_LIGHT_SENSOR,
+    SCREEN_ACCEL_SENSOR,
+    SCREEN_DIST_SENSOR,
+    SCREEN_TEMP_SENSOR,
     SCREEN_STATUS,
     SCREEN_ALERT,
     SCREEN_COUNT   // keep last
