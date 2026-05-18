@@ -127,7 +127,7 @@ lv_obj_t * lv_temp_bar(lv_obj_t * s_screen)
 
     lv_obj_t * bar = lv_bar_create(s_screen);
     lv_obj_add_style(bar, &style_indic, LV_PART_INDICATOR);
-    lv_obj_set_size(bar, 20, 150);
+    lv_obj_set_size(bar, 10, 150);
     lv_obj_center(bar);
     lv_bar_set_range(bar, -20, 75);
     lv_bar_set_start_value(bar, -20, LV_ANIM_OFF);
@@ -149,7 +149,7 @@ lv_obj_t * lv_temp_bar(lv_obj_t * s_screen)
 
 
 
-void scr_sensor2_init(void)
+void scr_temp_sensor_init(void)
 {
     s_screen = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
@@ -157,16 +157,16 @@ void scr_sensor2_init(void)
     // To DO:
     // Add relevant buttons and diagnostics for motor
 
-    lv_obj_t *label = create_label(s_screen, "Sensor 2");
+    lv_obj_t *label = create_label(s_screen, "Temp");
     (void)label; // ignore label for now, return value is kept for possible future use
     lv_obj_t* scale = lv_scale_temp(s_screen);
     lv_obj_t* bar = lv_temp_bar(s_screen);
-    lv_obj_align_to(bar, scale, LV_ALIGN_LEFT_MID, -20, -10); //-20
+    lv_obj_align_to(bar, scale, LV_ALIGN_LEFT_MID, -15, -10); //-20
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     (void)prev_button;
 }
 
-lv_obj_t *scr_sensor2_get(void)
+lv_obj_t *scr_temp_sensor_get(void)
 {
     return s_screen;
 };
