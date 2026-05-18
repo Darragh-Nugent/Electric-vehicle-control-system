@@ -38,7 +38,7 @@ void scr_speed_sensor_init(void)
     // To DO:
     // Add relevant buttons and diagnostics for motor
 
-    lv_obj_t *label = create_label(s_screen, "Speed");
+    lv_obj_t *label = create_label(s_screen, "Speed (RPM)");
     (void)label; // ignore label for now, return value is kept for possible future use
 
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);

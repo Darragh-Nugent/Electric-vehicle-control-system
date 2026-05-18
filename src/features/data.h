@@ -7,6 +7,7 @@
 #include "lvgl.h"
 
 typedef int32_t (*graph_data_cb_t)(void);
+typedef int32_t (*scale_data_cb_t)(void);
 
 typedef struct{
     lv_obj_t *chart;
@@ -17,6 +18,17 @@ typedef struct{
     int16_t overheadGap;
     graph_data_cb_t get_value_cb;
 }graph_t;
+
+typedef struct{
+    lv_obj_t *scale;
+    lv_obj_t *needle;
+    lv_timer_t *timer;
+    int16_t radius;
+    int16_t needle_length;
+    int32_t cur_value; // this is a temporary value, can be removed once sensors are actually connected
+    lv_point_precise_t needle_points[2];
+    scale_data_cb_t get_value_cb;
+} roundScale_t;
 
 //*****************************************************************************
 //

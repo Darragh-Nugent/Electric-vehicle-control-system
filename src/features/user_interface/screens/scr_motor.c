@@ -13,14 +13,13 @@
 
 #define SCALE_RADIUS 70
 #define NEEDLE_LENGTH 60
+#define PERIOD 50
 // LV_IMAGE_DECLARE(img_hand);
 static lv_obj_t *s_screen;
 static lv_obj_t *rpm_input;
 static lv_obj_t *motor_state_label;
 static lv_obj_t *led;
-static lv_obj_t *needle_line;
-static lv_obj_t *scale_line;
-static int32_t speed = 0;
+static roundScale_t *speedometer;
 void scr_motor_set_rpm(float rpm) {};
 
 void scr_motor_set_current(float amps) {};
@@ -98,97 +97,6 @@ static void on_state_changed(const char *state)
 }
 
 
-static lv_point_precise_t needle_points[2];
-
-// Convert a value (0–100) into an angle in degrees
-static float value_to_angle(int32_t value)
-{
-    return 135 + (270 * value) / 100; // start 135°, range 270°
-}
-
-// Update the needle points based on a value
-static void update_needle_points(int32_t value)
-{
-    float angle = value_to_angle(value);
-    float rad = angle * (M_PI / 180.0f);
-
-    // Unsure why the inital x,y needle coords rely on scale when the parent of the needle is the screen, so position should be relative to the screen
-    needle_points[0].x = SCALE_RADIUS;
-    needle_points[0].y = SCALE_RADIUS;
-    needle_points[1].x = SCALE_RADIUS + cos(rad)*NEEDLE_LENGTH;
-    needle_points[1].y = SCALE_RADIUS + sin(rad)*NEEDLE_LENGTH;
-
-    lv_line_set_points(needle_line, needle_points, 2);
-}
-
-// Animation callback for LVGL
-static void needle_anim_cb(void * obj, int32_t value)
-{
-    update_needle_points(value);
-    lv_obj_invalidate((lv_obj_t *)obj); // only redraw the needle
-}
-
-static void needle_update_timer_cb(lv_timer_t *timer)
-{
-    (void)timer;
-
-    int8_t value = speed + lv_rand(-1,2);
-    int32_t sensor_value = value;
-    if (sensor_value < 0) sensor_value = 0;
-    else if (sensor_value > 50 && sensor_value < 100) sensor_value -= lv_rand(-1,2);
-    else if (sensor_value > 100) sensor_value = 100;
-    // Animate needle from last value to sensor_value over 100 ms
-    lv_anim_t a;
-    lv_anim_init(&a);
-    lv_anim_set_var(&a, needle_line);
-    lv_anim_set_values(&a, speed, sensor_value);
-    lv_anim_set_time(&a, 100);
-    lv_anim_set_exec_cb(&a, needle_anim_cb);
-    lv_anim_start(&a);
-
-    speed = sensor_value;
-}
-
-// Modified and obtained from https://lvgl.io/docs/open/widgets/scale
-lv_obj_t * lv_speedometer(lv_obj_t *parent)
-{
-    s_screen = parent;
-
-    // Create scale background
-    scale_line = lv_scale_create(s_screen);
-    lv_obj_set_size(scale_line, SCALE_RADIUS*2, SCALE_RADIUS*2);
-    lv_scale_set_mode(scale_line, LV_SCALE_MODE_ROUND_INNER);
-    lv_obj_set_style_bg_opa(scale_line, LV_OPA_COVER, 0);
-    lv_obj_set_style_bg_color(scale_line, lv_palette_lighten(LV_PALETTE_GREY, 5), 0);
-    lv_obj_set_style_radius(scale_line, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_clip_corner(scale_line, true, 0);
-    lv_obj_center(scale_line);
-    lv_obj_align(scale_line,LV_ALIGN_LEFT_MID,25,0);
-
-    lv_scale_set_label_show(scale_line, true);
-    lv_scale_set_total_tick_count(scale_line, 21);   
-    lv_scale_set_major_tick_every(scale_line, 2);   
-    lv_obj_set_style_length(scale_line, 5, LV_PART_ITEMS);    
-    lv_obj_set_style_length(scale_line, 10, LV_PART_INDICATOR);
-    lv_scale_set_range(scale_line, 0, 100);
-    lv_scale_set_angle_range(scale_line, 270);
-    lv_scale_set_rotation(scale_line, 135);
-
-    needle_line = lv_line_create(s_screen);
-    lv_obj_set_size(needle_line, SCALE_RADIUS*2, SCALE_RADIUS*2);
-    lv_obj_center(needle_line);
-    lv_obj_align(needle_line,LV_ALIGN_LEFT_MID,25,0);
-
-    lv_obj_set_style_line_width(needle_line, 4, LV_PART_MAIN);
-    lv_obj_set_style_line_color(needle_line, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
-    lv_obj_set_style_line_rounded(needle_line, true, LV_PART_MAIN);
-
-    // Initialize needle at 0
-    update_needle_points(speed);
-
-    return scale_line;
-}
-
 void motor_state_update_cb(lv_timer_t *timer){
     (void) timer;
      const char* motor_state_names[] = {
@@ -235,17 +143,22 @@ void motor_state_update_cb(lv_timer_t *timer){
     }
 }
 
+static int32_t get_speed(void){
+    // Sensor_GetSpeed or something
+    return (int32_t)lv_rand(-1,2);
+}
+
 void scr_motor_init(void)
 {
     s_screen = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
 
-    lv_speedometer(s_screen);
-    if (scale_line) lv_timer_create(needle_update_timer_cb, 50, scale_line);
+    speedometer = create_speedometer(s_screen, get_speed, SCALE_RADIUS, NEEDLE_LENGTH, 0, PERIOD);
     // To DO:
     // Add relevant buttons and diagnostics for motor
 
     lv_obj_t *home_button = create_icon_button(s_screen, LV_SYMBOL_HOME, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
+    lv_obj_t *label = create_label(s_screen, "Speedometer");
     lv_obj_set_width(home_button,40);
     lv_obj_t *label = create_label(s_screen, "Motor");
     (void)label; // ignore label for now, return value is kept for possible future use
@@ -291,7 +204,7 @@ void scr_motor_init(void)
     motor_state_label = lv_label_create(s_screen);
     lv_label_set_text(motor_state_label, "IDLE");
     lv_obj_align(motor_state_label,LV_ALIGN_RIGHT_MID,-25,0);    
-    lv_timer_create(motor_state_update_cb, 200, scale_line);
+    lv_timer_create(motor_state_update_cb, 200, NULL);
 
     led  = lv_led_create(s_screen);
     lv_obj_align_to(led,motor_state_label, LV_ALIGN_LEFT_MID, -30, 0);
