@@ -45,6 +45,10 @@ static void btn_dist_sensor_cb(lv_event_t *e)
     screen_manager_goto(SCREEN_DIST_SENSOR);
 }
 
+static void btn_humidity_sensor_cb(lv_event_t *e){
+    screen_manager_goto(SCREEN_HUMIDITY_SENSOR);
+}
+
 
 
 void scr_sensors_init(void)
@@ -64,7 +68,7 @@ void scr_sensors_init(void)
     // Nav for sensors
     // Create a container for the navigation bar at the bottom
     lv_obj_t *nav_bar = lv_obj_create(s_screen);
-    lv_obj_set_size(nav_bar, LV_HOR_RES, 120);         // Set the navigation bar's height
+    lv_obj_set_size(nav_bar, LV_HOR_RES, 180);         // Set the navigation bar's height
     lv_obj_align(nav_bar, LV_ALIGN_TOP_MID, 0, 50); // Align it to the bottom of the screen
 
     // Create the buttons within the navigation bar, spaced evenly
@@ -74,6 +78,7 @@ void scr_sensors_init(void)
     lv_obj_t *accel_btn = nav_button_init(nav_bar, "Accel", btn_accel_sensor_cb, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_t *distance_btn = nav_button_init(nav_bar, "Distance", btn_dist_sensor_cb, LV_ALIGN_RIGHT_MID, 0, 0);
     lv_obj_t *temp_btn = nav_button_init(nav_bar, "Temp", btn_temp_sensor_cb, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_t *humidity_btn = nav_button_init(nav_bar, "Humidty", btn_humidity_sensor_cb, LV_ALIGN_RIGHT_MID,0,0);
 
 
     // Align the buttons horizontally within the navigation bar
@@ -83,6 +88,7 @@ void scr_sensors_init(void)
     lv_obj_set_width(accel_btn, 80);
     lv_obj_set_width(distance_btn, 80);
     lv_obj_set_width(temp_btn,80);
+    lv_obj_set_width(humidity_btn,80);
 
     // Add some spacing between buttons
     lv_obj_set_flex_flow(nav_bar, LV_FLEX_FLOW_ROW_WRAP);
