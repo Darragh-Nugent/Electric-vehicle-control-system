@@ -163,7 +163,7 @@ void scr_temp_sensor_init(void)
     lv_obj_t* bar = lv_temp_bar(s_screen);
     lv_obj_align_to(bar, scale, LV_ALIGN_LEFT_MID, -15, -10); //-20
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
-    (void)prev_button;
+    lv_obj_set_width(prev_button,40);
 }
 
 lv_obj_t *scr_temp_sensor_get(void)

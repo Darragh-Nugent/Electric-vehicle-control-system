@@ -35,11 +35,11 @@ void scr_accel_sensor_init(void)
 
     // Label
 
-    lv_obj_t *label = create_label(s_screen, "ACCEL");
+    lv_obj_t *label = create_label(s_screen, "ACCEL (m/s/s)");
     (void)label; // ignore label for now, return value is kept for possible future use
 
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
-    (void)prev_button;
+    lv_obj_set_width(prev_button,40);
 
     accel_graph = create_graph(s_screen,scaleYMin,scaleYMax,OVERHEAD_GAP,PERIOD,get_acceleration);
     

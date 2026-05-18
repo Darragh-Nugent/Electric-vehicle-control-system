@@ -179,10 +179,10 @@ static lv_obj_t *create_chart(lv_obj_t *s_screen, int32_t yMin, int32_t yMax, in
     lv_chart_set_update_mode(chart, LV_CHART_UPDATE_MODE_CIRCULAR);
     lv_obj_set_style_size(chart, 0, 0, LV_PART_INDICATOR);
     lv_obj_set_size(chart, 220, 130);
-    lv_obj_center(chart);
+    lv_obj_align(chart,LV_ALIGN_BOTTOM_MID, 0, -50);
      lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, yMin, yMax);
     lv_chart_set_point_count(chart, 80);
-    // lv_chart_series_t *ser = lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
+    lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
     // /*Prefill with data*/
     // uint32_t i;
     // for (i = 0; i < 80; i++)
