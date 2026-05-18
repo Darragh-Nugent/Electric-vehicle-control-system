@@ -33,6 +33,7 @@
 extern void vI2CManagerTask(void *pvParameters);
 extern void vSensorManagerTask(void *pvParameters);
 extern void vSpeedSensorTask(void *pvParameters);
+extern void vPowerSensorTask(void *pvParameters);
 
 /*-----------------------------------------------------------*/
 
@@ -107,6 +108,14 @@ void vCreateSensorTasks(void)
     xTaskCreate(
         vSpeedSensorTask,
         "SpeedSensorTask",
+        configMINIMAL_STACK_SIZE * 2,
+        NULL,
+        SPEED_SENSOR_PRIORITY,
+        NULL);
+
+    xTaskCreate(
+        vPowerSensorTask,
+        "PowerSensorTask",
         configMINIMAL_STACK_SIZE * 2,
         NULL,
         SPEED_SENSOR_PRIORITY,

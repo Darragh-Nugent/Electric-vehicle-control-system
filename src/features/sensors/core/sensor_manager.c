@@ -46,7 +46,7 @@ extern void prvSensorOPT3001TimerInit(void);
  * Uart enum
  */
 uart_mode_t uart_mode = NONE;
-uart_mode_t local_uart_mode = NONE;
+volatile uart_mode_t local_uart_mode = NONE;
 
 /*-----------------------------------------------------------*/
 
@@ -62,8 +62,8 @@ void vSensorManagerTask(void *pvParameters)
     // Intialise env sensor
     SensorSHT31Init();
 
-    // Initialise the power sensor
-    PowerInit();
+    // // Initialise the power sensor
+    // PowerInit();
 
     // Initialise the distance sensor
     UARTprintf("Dist init start\n"); ///////////////
@@ -95,16 +95,16 @@ void vSensorManagerTask(void *pvParameters)
         local_uart_mode = uart_mode;
         taskEXIT_CRITICAL();
 
-        if (events & POWER_SENSOR_EVENT)
-        {
-            float power = getPower();
-            float filteredPower = filterExponential(&powerFilter, power);
-            Sensor_UpdatePower(filteredPower);
-            if (local_uart_mode == POWER)
-            {
-                UARTprintf("%d,%d\n", (int)power, (int)filteredPower);
-            }
-        }
+        // if (events & POWER_SENSOR_EVENT)
+        // {
+        //     float power = getPower();
+        //     float filteredPower = filterExponential(&powerFilter, power);
+        //     Sensor_UpdatePower(filteredPower);
+        //     if (local_uart_mode == POWER)
+        //     {
+        //         UARTprintf("%d,%d\n", (int)power, (int)filteredPower);
+        //     }
+        // }
 
         // if (events & SPEED_SENSOR_EVENT)
         // {
@@ -221,6 +221,8 @@ void vSensorManagerTask(void *pvParameters)
 
 void vSpeedSensorTask(void *pvParameters)
 {
+    volatile uart_mode_t local_uart_mode = NONE;
+
     exp_filter_t speedFilter = {0.3f, 0};
     float lastValidSpeed = 0.0f;
     uint8_t invalidSpeedCount = 0;
@@ -266,6 +268,35 @@ void vSpeedSensorTask(void *pvParameters)
         if (local_uart_mode == SPEED)
         {
             UARTprintf("%d,%d\n", (int)rawSpeed, (int)filteredSpeed);
+        }
+    }
+}
+
+void vPowerSensorTask(void *pvParameters)
+{
+    exp_filter_t powerFilter = {0.25, 0};
+
+    
+    // Initialise the power sensor
+    PowerInit();
+
+    const TickType_t period = pdMS_TO_TICKS(5);
+    TickType_t lastWakeTime = xTaskGetTickCount();
+
+    for (;;)
+    {
+        vTaskDelayUntil(&lastWakeTime, period);
+
+        taskENTER_CRITICAL();
+        local_uart_mode = uart_mode;
+        taskEXIT_CRITICAL();
+
+        float power = getPower();
+        float filteredPower = filterExponential(&powerFilter, power);
+        Sensor_UpdatePower(filteredPower);
+        if (local_uart_mode == POWER)
+        {
+            UARTprintf("%d,%d\n", (int)power, (int)filteredPower);
         }
     }
 }

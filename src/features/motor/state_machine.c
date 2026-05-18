@@ -99,7 +99,7 @@ static void motorTask(void *pvParameters)
 
             static uint8_t validSpeedCount = 0;
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
-            UARTprintf("speed: %d", actualSpeed.value);
+            // UARTprintf("speed: %d", actualSpeed.value);
 
             if (actualSpeed.seq > prev_speed_seq)
             {
