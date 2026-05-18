@@ -7,7 +7,10 @@
 #include "screens/scr_alerts.h"
 #include "screens/scr_speed_sensor.h"
 #include "screens/scr_temp_sensor.h"
-#include "screens/scr_sensor3.h"
+#include "screens/scr_power_sensor.h"
+#include "screens/scr_light_sensor.h"
+#include "screens/scr_accel_sensor.h"
+#include "screens/scr_dist_sensor.h"
 #include "utils/uartstdio.h"
 
 static lv_obj_t *s_screens[SCREEN_COUNT];
@@ -28,15 +31,21 @@ void screen_manager_init(void)
     scr_sensors_init();
     scr_speed_sensor_init();
     scr_temp_sensor_init();
-    scr_sensor3_init();
+    scr_pwr_sensor_init();
+    scr_light_sensor_init();
+    scr_accel_sensor_init();
+    scr_dist_sensor_init();
 
     s_screens[SCREEN_DASHBOARD] = scr_dashboard_get();
     s_screens[SCREEN_SETTINGS] = scr_settings_get();
     s_screens[SCREEN_MOTOR] = scr_motor_get();
     s_screens[SCREEN_SENSORS] = scr_sensors_get();
-    s_screens[SCREEN_SENSOR1] = scr_speed_sensor_get();
-    s_screens[SCREEN_SENSOR2] = scr_temp_sensor_get();
-    s_screens[SCREEN_SENSOR3] = scr_sensor3_get();
+    s_screens[SCREEN_SPEED_SENSOR] = scr_speed_sensor_get();
+    s_screens[SCREEN_TEMP_SENSOR] = scr_temp_sensor_get();
+    s_screens[SCREEN_PWR_SENSOR] = scr_pwr_sensor_get();
+    s_screens[SCREEN_LIGHT_SENSOR] = scr_light_sensor_get();
+    s_screens[SCREEN_ACCEL_SENSOR] = scr_accel_sensor_get();
+    s_screens[SCREEN_DIST_SENSOR] = scr_dist_sensor_get();
 
     // Load the default screen immediately (no animation on first load)
     lv_screen_load(s_screens[SCREEN_DASHBOARD]);

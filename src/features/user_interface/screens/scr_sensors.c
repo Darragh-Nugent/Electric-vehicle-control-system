@@ -15,20 +15,37 @@ static void btn_home_cb(lv_event_t *e)
     screen_manager_goto(SCREEN_DASHBOARD);
 }
 
-static void btn_sensor1_cb(lv_event_t *e)
+static void btn_speed_sensor_cb(lv_event_t *e)
 {
-    screen_manager_goto(SCREEN_SENSOR1);
+    screen_manager_goto(SCREEN_SPEED_SENSOR);
 }
 
-static void btn_sensor2_cb(lv_event_t *e)
+static void btn_temp_sensor_cb(lv_event_t *e)
 {
-    screen_manager_goto(SCREEN_SENSOR2);
+    screen_manager_goto(SCREEN_TEMP_SENSOR);
 }
 
-static void btn_sensor3_cb(lv_event_t *e)
+static void btn_light_sensor_cb(lv_event_t *e)
 {
-    screen_manager_goto(SCREEN_SENSOR3);
+    screen_manager_goto(SCREEN_LIGHT_SENSOR);
 }
+
+static void btn_pwr_sensor_cb(lv_event_t *e)
+{
+    screen_manager_goto(SCREEN_PWR_SENSOR);
+}
+
+static void btn_accel_sensor_cb(lv_event_t *e)
+{
+    screen_manager_goto(SCREEN_ACCEL_SENSOR);
+}
+
+static void btn_dist_sensor_cb(lv_event_t *e)
+{
+    screen_manager_goto(SCREEN_DIST_SENSOR);
+}
+
+
 
 void scr_sensors_init(void)
 {
@@ -51,14 +68,13 @@ void scr_sensors_init(void)
     lv_obj_align(nav_bar, LV_ALIGN_TOP_MID, 0, 50); // Align it to the bottom of the screen
 
     // Create the buttons within the navigation bar, spaced evenly
-    lv_obj_t *speed_btn = nav_button_init(nav_bar, "Speed", btn_sensor1_cb, LV_ALIGN_LEFT_MID, 0, 0);
-    lv_obj_t *power_btn = nav_button_init(nav_bar, "Power", btn_sensor3_cb, LV_ALIGN_CENTER, 0, 0);
-    lv_obj_t *lux_btn = nav_button_init(nav_bar, "Light", btn_sensor3_cb, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_t *accel_btn = nav_button_init(nav_bar, "Accel", btn_sensor3_cb, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_t *distance_btn = nav_button_init(nav_bar, "Distance", btn_sensor3_cb, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_t *temp_btn = nav_button_init(nav_bar, "Temp", btn_sensor2_cb, LV_ALIGN_RIGHT_MID, 0, 0);
-    // accel
-    // distance
+    lv_obj_t *speed_btn = nav_button_init(nav_bar, "Speed", btn_speed_sensor_cb, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_t *power_btn = nav_button_init(nav_bar, "Power", btn_pwr_sensor_cb, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_t *lux_btn = nav_button_init(nav_bar, "Light", btn_light_sensor_cb, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_t *accel_btn = nav_button_init(nav_bar, "Accel", btn_accel_sensor_cb, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_t *distance_btn = nav_button_init(nav_bar, "Distance", btn_dist_sensor_cb, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_t *temp_btn = nav_button_init(nav_bar, "Temp", btn_temp_sensor_cb, LV_ALIGN_RIGHT_MID, 0, 0);
+
 
     // Align the buttons horizontally within the navigation bar
     lv_obj_set_width(speed_btn, 80);
