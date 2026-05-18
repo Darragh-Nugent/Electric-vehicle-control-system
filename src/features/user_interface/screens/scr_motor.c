@@ -160,7 +160,6 @@ void scr_motor_init(void)
     lv_obj_t *home_button = create_icon_button(s_screen, LV_SYMBOL_HOME, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     lv_obj_t *label = create_label(s_screen, "Speedometer");
     lv_obj_set_width(home_button,40);
-    lv_obj_t *label = create_label(s_screen, "Motor");
     (void)label; // ignore label for now, return value is kept for possible future use
 
     // NAV bar
