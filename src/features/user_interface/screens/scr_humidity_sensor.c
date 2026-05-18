@@ -5,13 +5,12 @@
 #include <stdbool.h>
 #include "../gui_utils.h"
 
-#define OVERHEAD_GAP 5
 #define PERIOD 250
+#define SCALE_RADIUS 90
+#define NEEDLE_LENGTH 70
 
-static int32_t scaleYMin = 0;
-static int32_t scaleYMax = 100;
 static lv_obj_t *s_screen;
-static graph_t *humidity_graph;
+static roundScale_t *humidity_graph;
 
 
 static void btn_home_cb(lv_event_t *e)
@@ -22,7 +21,7 @@ static void btn_home_cb(lv_event_t *e)
 
 static int32_t get_humidity(void){
     // Sensor_GetHumidity();
-    return lv_rand(0,100);
+    return lv_rand(-1,2);
 }
 
 void scr_humidity_sensor_init(void)
@@ -35,14 +34,15 @@ void scr_humidity_sensor_init(void)
 
     // Label
 
-    lv_obj_t *label = create_label(s_screen, "HUMIDITY");
+    lv_obj_t *label = create_label(s_screen, "HUMIDITY (%)");
     (void)label; // ignore label for now, return value is kept for possible future use
 
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     lv_obj_set_width(prev_button,40);
 
-    humidity_graph = create_graph(s_screen,scaleYMin,scaleYMax,OVERHEAD_GAP,PERIOD,get_humidity);
-    
+    humidity_graph = create_speedometer(s_screen,get_humidity,SCALE_RADIUS,NEEDLE_LENGTH,0,PERIOD);
+    lv_obj_align(humidity_graph->scale, LV_ALIGN_BOTTOM_MID,0,0);
+    lv_obj_align(humidity_graph->needle, LV_ALIGN_BOTTOM_MID,0,0);
 }
 
 lv_obj_t *scr_humidity_sensor_get(void)
