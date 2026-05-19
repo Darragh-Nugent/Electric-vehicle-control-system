@@ -54,7 +54,7 @@ void vCreateMotorTask(void)
 
 static void motorTask(void *pvParameters)
 {
-    UARTprintf("Motor task started\n");
+    MUARTprintf("Motor task started\n");
     uint16_t duty_value = 10;
     uint16_t period_value = 50;
     uint16_t lowSpeedCount = 0;
@@ -76,10 +76,10 @@ static void motorTask(void *pvParameters)
         {
         case MOTOR_STATE_IDLE:
             vTaskDelay(pdMS_TO_TICKS(15000));
-            // UARTprintf("IDLE done, starting motor\n");
+            // MUARTprintf("IDLE done, starting motor\n");
             // motorSetSpeed(1500);
             // xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
-            UARTprintf("speed: %d\n", Sensor_GetSpeed().value);
+            MUARTprintf("speed: %d\n", Sensor_GetSpeed().value);
             motorStart();
             break;
         case MOTOR_STATE_STARTING:
@@ -88,7 +88,7 @@ static void motorTask(void *pvParameters)
             {
                 motorEStopRequested = false;
 
-                UARTprintf("STARTING EXIT: e-stop requested\n");
+                MUARTprintf("STARTING EXIT: e-stop requested\n");
 
                 setDuty(0);
                 motorPIReset();
@@ -99,7 +99,7 @@ static void motorTask(void *pvParameters)
 
             static uint8_t validSpeedCount = 0;
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
-            // UARTprintf("speed: %d", actualSpeed.value);
+            // MUARTprintf("speed: %d", actualSpeed.value);
 
             if (actualSpeed.seq > prev_speed_seq)
             {
@@ -142,7 +142,7 @@ static void motorTask(void *pvParameters)
             {
                 motorEStopRequested = false;
 
-                UARTprintf("RUNNING EXIT: e-stop requested\n");
+                MUARTprintf("RUNNING EXIT: e-stop requested\n");
 
                 setDuty(0);
                 motorPIReset();
@@ -178,7 +178,7 @@ static void motorTask(void *pvParameters)
 
             if (frozenSpeedCount > 300) // 300ms of identical readings
             {
-                UARTprintf("RUNNING EXIT: sensor freeze\n");
+                MUARTprintf("RUNNING EXIT: sensor freeze\n");
                 setDuty(0);
                 motorPIReset();
                 motorEStop();
@@ -196,7 +196,7 @@ static void motorTask(void *pvParameters)
 
             if (zeroSpeedCount > 5)
             {
-                UARTprintf("RUNNING EXIT: sustained zero speed\n");
+                MUARTprintf("RUNNING EXIT: sustained zero speed\n");
                 setDuty(0);
                 motorPIReset();
                 motorEStop();
@@ -222,7 +222,7 @@ static void motorTask(void *pvParameters)
             // if recovery fails enter e-stop
             if (lowSpeedCount > 50)
             {
-                UARTprintf("RUNNING EXIT: lowSpeed timeout\n");
+                MUARTprintf("RUNNING EXIT: lowSpeed timeout\n");
                 setDuty(0);
                 motorPIReset();
                 motorEStop();
@@ -289,7 +289,7 @@ static void motorTask(void *pvParameters)
             break;
         }
         case MOTOR_STATE_FAULT:
-            UARTprintf("STATE: FAULT\n");
+            MUARTprintf("STATE: FAULT\n");
 
             hallSensorIntDisable(); // need to decide later where the best state is to call this.
             speed_semaphore_given = false;

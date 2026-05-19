@@ -57,30 +57,30 @@ volatile bool errorFlag = false;
 /*
  * Handles interrupts from I2C0. Checks for timeout and gives xI2CSemaphore to unblock
  */
-void xI2C0Handler(void)
-{
-    BaseType_t xI2CTaskWoken;
-    uint32_t ui32I2CStatus;
+// void xI2C0Handler(void)
+// {
+//     BaseType_t xI2CTaskWoken;
+//     uint32_t ui32I2CStatus;
 
-    /* Read interrupt status */
-    ui32I2CStatus = I2CMasterIntStatusEx(I2C0_BASE, true);
-    /* Clear interrupt */
-    I2CMasterIntClearEx(I2C0_BASE, ui32I2CStatus);
+//     /* Read interrupt status */
+//     ui32I2CStatus = I2CMasterIntStatusEx(I2C0_BASE, true);
+//     /* Clear interrupt */
+//     I2CMasterIntClearEx(I2C0_BASE, ui32I2CStatus);
 
-    /* Initialize as pdFALSE for FreeRTOS ISR handling */
-    xI2CTaskWoken = pdFALSE;
+//     /* Initialize as pdFALSE for FreeRTOS ISR handling */
+//     xI2CTaskWoken = pdFALSE;
 
-    /* Check which interrupt was called */
-    if ((ui32I2CStatus & I2C_MASTER_INT_TIMEOUT) == I2C_MASTER_INT_TIMEOUT)
-    {
-        errorFlag = true;
-    }
+//     /* Check which interrupt was called */
+//     if ((ui32I2CStatus & I2C_MASTER_INT_TIMEOUT) == I2C_MASTER_INT_TIMEOUT)
+//     {
+//         errorFlag = true;
+//     }
 
-    xSemaphoreGiveFromISR(xI2CSemaphore, &xI2CTaskWoken);
+//     xSemaphoreGiveFromISR(xI2CSemaphore, &xI2CTaskWoken);
 
-    /* Yield if required */
-    portYIELD_FROM_ISR(xI2CTaskWoken);
-}
+//     /* Yield if required */
+//     portYIELD_FROM_ISR(xI2CTaskWoken);
+// }
 
 void xI2C2Handler(void)
 {
@@ -177,19 +177,41 @@ void vI2CManagerTask(void *pvParameters)
     }
 }
 
+static void I2C_Reset(uint32_t base)
+{
+    // Issue a stop condition to unstick the bus
+    I2CMasterControl(base, I2C_MASTER_CMD_BURST_SEND_ERROR_STOP);
+    vTaskDelay(pdMS_TO_TICKS(5));
+    errorFlag = false;
+    // Drain any pending semaphore
+    xSemaphoreTake(xI2CSemaphore, 0);
+}
+
 bool I2C_write_reg_internal(uint32_t base, uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
 {
+    // UARTprintf("write reg\n");
+
+    if (errorFlag)
+    {
+        I2C_Reset(base);
+    }
+
+    errorFlag = false;
+
     while (xSemaphoreTake(xI2CSemaphore, 0) == pdTRUE)
         ;
-    errorFlag = false;
 
     I2CMasterSlaveAddrSet(base, addr, false);
 
     // Send register address as the first byte with BURST_SEND_START
     I2CMasterDataPut(base, reg);
     I2CMasterControl(base, I2C_MASTER_CMD_BURST_SEND_START);
+
     if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
+    {
+        I2C_Reset(base);
         return false;
+    }
 
     // Send data bytes, finishing on the last one
     for (uint16_t i = 0; i < len; i++)
@@ -202,7 +224,10 @@ bool I2C_write_reg_internal(uint32_t base, uint8_t addr, uint8_t reg, uint8_t *d
             I2CMasterControl(base, I2C_MASTER_CMD_BURST_SEND_CONT);
 
         if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
+        {
+            I2C_Reset(base);
             return false;
+        }
     }
 
     return true;
@@ -210,7 +235,15 @@ bool I2C_write_reg_internal(uint32_t base, uint8_t addr, uint8_t reg, uint8_t *d
 
 bool I2C_write_bytes_internal(uint32_t base, uint8_t addr, uint8_t *data, uint16_t len)
 {
+    // UARTprintf("write bytes\n");
+
+    if (errorFlag)
+    {
+        I2C_Reset(base);
+    }
+
     errorFlag = false;
+
     while (xSemaphoreTake(xI2CSemaphore, 0) == pdTRUE)
         ;
 
@@ -234,7 +267,10 @@ bool I2C_write_bytes_internal(uint32_t base, uint8_t addr, uint8_t *data, uint16
         }
 
         if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
+        {
+            I2C_Reset(base);
             return false;
+        }
     }
 
     return true;
@@ -242,9 +278,18 @@ bool I2C_write_bytes_internal(uint32_t base, uint8_t addr, uint8_t *data, uint16
 
 bool I2C_read_reg_internal(uint32_t base, uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
 {
+    // UARTprintf("Read reg\n");
+
+    if (errorFlag)
+    {
+        I2C_Reset(base);
+    }
+
     // UARTprintf("len = %d\n", len);
-    xSemaphoreTake(xI2CSemaphore, 0);
     errorFlag = false;
+
+    while (xSemaphoreTake(xI2CSemaphore, 0) == pdTRUE)
+        ;
 
     // Set slave address (write mode)
     I2CMasterSlaveAddrSet(base, ui8Addr, false);
@@ -255,13 +300,20 @@ bool I2C_read_reg_internal(uint32_t base, uint8_t ui8Addr, uint8_t ui8Reg, uint8
     // UARTprintf("Sent reg\n");
     if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
     {
+        I2C_Reset(base);
         return false;
     }
+
     // Set slave address (read mode)
     I2CMasterSlaveAddrSet(base, ui8Addr, true);
 
     for (uint16_t i = 0; i < len; i++)
     {
+        if (errorFlag)
+        {
+            I2C_Reset(base);
+        }
+
         if (len == 1)
         {
             // Single byte read — use dedicated single receive command
@@ -285,6 +337,7 @@ bool I2C_read_reg_internal(uint32_t base, uint8_t ui8Addr, uint8_t ui8Reg, uint8
         // UARTprintf("%d sem start\n", i + 1);
         if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
         {
+            I2C_Reset(base);
             return false;
         }
         // UARTprintf("%d sem end\n", i + 1);
@@ -300,10 +353,18 @@ bool I2C_read_reg_internal(uint32_t base, uint8_t ui8Addr, uint8_t ui8Reg, uint8
  */
 bool I2C_read_bytes_internal(uint32_t base, uint8_t ui8Addr, uint8_t *data, uint16_t len)
 {
+    // UARTprintf("Read bytes\n");
+
+    if (errorFlag)
+    {
+        I2C_Reset(base);
+    }
+
     // UARTprintf("len = %d\n", len);
+    errorFlag = false;
+
     while (xSemaphoreTake(xI2CSemaphore, 0) == pdTRUE)
         ;
-    errorFlag = false;
 
     // Set slave address (read mode)
     I2CMasterSlaveAddrSet(base, ui8Addr, true);
@@ -332,6 +393,7 @@ bool I2C_read_bytes_internal(uint32_t base, uint8_t ui8Addr, uint8_t *data, uint
         // UARTprintf("%d sem start\n", i + 1);
         if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
         {
+            I2C_Reset(base);
             return false;
         }
         // UARTprintf("%d sem end\n", i + 1);
@@ -344,9 +406,15 @@ bool I2C_read_bytes_internal(uint32_t base, uint8_t ui8Addr, uint8_t *data, uint
 
 bool I2C_write_single_internal(uint32_t base, uint8_t ui8Addr, uint8_t data)
 {
+    if (errorFlag)
+    {
+        I2C_Reset(base);
+    }
+
+    errorFlag = false;
+
     while (xSemaphoreTake(xI2CSemaphore, 0) == pdTRUE)
         ;
-    errorFlag = false;
 
     // Set slave address (write mode)
     I2CMasterSlaveAddrSet(base, ui8Addr, false);
@@ -357,6 +425,7 @@ bool I2C_write_single_internal(uint32_t base, uint8_t ui8Addr, uint8_t data)
     UARTprintf("Sent reg\n");
     if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
     {
+        I2C_Reset(base);
         return false;
     }
 

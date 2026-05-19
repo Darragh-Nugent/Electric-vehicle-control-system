@@ -5,7 +5,7 @@
 #include "task.h"
 
 #define MOTOR_CONTROL_PRIORITY         (configMAX_PRIORITIES - 1)
-#define SPEED_SENSOR_PRIORITY          (configMAX_PRIORITIES - 2)
+#define SPEED_SENSOR_PRIORITY          (tskIDLE_PRIORITY + 1)
 #define I2C_PRIORITY                   (tskIDLE_PRIORITY + 1)
 #define ACCELERATION_SENSOR_PRIORITY   (tskIDLE_PRIORITY + 1)
 #define DISTANCE_SENSOR_PRIORITY       (tskIDLE_PRIORITY + 1)

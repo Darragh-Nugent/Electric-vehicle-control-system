@@ -37,7 +37,7 @@ extern void vPowerSensorTask(void *pvParameters);
 
 /*-----------------------------------------------------------*/
 
-extern void xI2C0Handler(void);
+// extern void xI2C0Handler(void);
 extern void xI2C2Handler(void);
 
 extern void xOPT3001TimerHandler(void);
@@ -78,8 +78,8 @@ void vCreateSensorTasks(void)
     xButtonSemaphore = xSemaphoreCreateBinary();
     xI2CSemaphore = xSemaphoreCreateBinary();
     xOPT3001Semaphore = xSemaphoreCreateBinary();
-    xI2CSendQueue = xQueueCreate(10, sizeof(i2c_send_message_t));
-    xI2CRecvQueue = xQueueCreate(10, sizeof(i2c_recv_message_t));
+    xI2CSendQueue = xQueueCreate(1, sizeof(i2c_send_message_t));
+    xI2CRecvQueue = xQueueCreate(1, sizeof(i2c_recv_message_t));
 
     xSensorEvents = xEventGroupCreate();
 
@@ -100,7 +100,7 @@ void vCreateSensorTasks(void)
     xTaskCreate(
         vSensorManagerTask,
         "LightSensorTask",
-        1026,
+        configMINIMAL_STACK_SIZE * 8 ,
         NULL,
         LIGHT_SENSOR_PRIORITY,
         NULL);
@@ -113,13 +113,13 @@ void vCreateSensorTasks(void)
         SPEED_SENSOR_PRIORITY,
         NULL);
 
-    xTaskCreate(
-        vPowerSensorTask,
-        "PowerSensorTask",
-        configMINIMAL_STACK_SIZE * 2,
-        NULL,
-        SPEED_SENSOR_PRIORITY,
-        NULL);
+    // xTaskCreate(
+    //     vPowerSensorTask,
+    //     "PowerSensorTask",
+    //     configMINIMAL_STACK_SIZE * 2,
+    //     NULL,
+    //     SPEED_SENSOR_PRIORITY,
+    //     NULL);
 }
 
 /*-----------------------------------------------------------*/
@@ -157,8 +157,8 @@ static void prvI2CInit(void)
     // Configure the pin muxing for I2C0 and I2C2 functions on port B2 and B3 and port N4 and N5.
     // This step is not necessary if your part does not support pin muxing.
     //
-    GPIOPinConfigure(GPIO_PB2_I2C0SCL);
-    GPIOPinConfigure(GPIO_PB3_I2C0SDA);
+    // GPIOPinConfigure(GPIO_PB2_I2C0SCL);
+    // GPIOPinConfigure(GPIO_PB3_I2C0SDA);
 
     GPIOPinConfigure(GPIO_PN5_I2C2SCL);
     GPIOPinConfigure(GPIO_PN4_I2C2SDA);
@@ -168,28 +168,28 @@ static void prvI2CInit(void)
     // configure the GPIO pins pins for I2C operation, setting them to
     // open-drain operation with weak pull-ups.  Consult the data sheet
     // to see which functions are allocated per pin.
-    //
-    GPIOPinTypeI2CSCL(GPIO_PORTB_BASE, GPIO_PIN_2);
-    GPIOPinTypeI2C(GPIO_PORTB_BASE, GPIO_PIN_3);
+    // //
+    // GPIOPinTypeI2CSCL(GPIO_PORTB_BASE, GPIO_PIN_2);
+    // GPIOPinTypeI2C(GPIO_PORTB_BASE, GPIO_PIN_3);
 
     GPIOPinTypeI2CSCL(GPIO_PORTN_BASE, GPIO_PIN_5);
     GPIOPinTypeI2C(GPIO_PORTN_BASE, GPIO_PIN_4);
 
     // Assign interrupt
-    I2CMasterInitExpClk(I2C0_BASE, g_ui32SysClock, false);
-    I2CIntRegister(I2C0_BASE, xI2C0Handler);
+    // I2CMasterInitExpClk(I2C0_BASE, g_ui32SysClock, false);
+    // I2CIntRegister(I2C0_BASE, xI2C0Handler);
 
     I2CMasterInitExpClk(I2C2_BASE, g_ui32SysClock, false);
     I2CIntRegister(I2C2_BASE, xI2C2Handler);
 
     // Enable i2c interrupt sources
-    I2CMasterIntEnableEx(I2C0_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
+    // I2CMasterIntEnableEx(I2C0_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
     I2CMasterIntEnableEx(I2C2_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
 
-    IntEnable(INT_I2C0); // should be in opt_task (thats what the semaphore example had)
+    // IntEnable(INT_I2C0); // should be in opt_task (thats what the semaphore example had)
     IntEnable(INT_I2C2);
 
-    I2CMasterTimeoutSet(I2C0_BASE, g_ui32SysClock / 100);
+    // I2CMasterTimeoutSet(I2C0_BASE, g_ui32SysClock / 100);
     I2CMasterTimeoutSet(I2C2_BASE, g_ui32SysClock / 100);
 
     IntMasterEnable();
