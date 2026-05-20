@@ -229,7 +229,7 @@ static void motorTask(void *pvParameters)
                 break;
             }
 
-            uint16_t duty = motorPIUpdate(referenceSpeed, actualSpeed.value, controlPeriodSeconds);
+            uint16_t duty = motorLQRUpdate(referenceSpeed, actualSpeed.value, controlPeriodSeconds);
 
             if (lowSpeedCount > 0 && duty < MOTOR_DUTY_START)
             {

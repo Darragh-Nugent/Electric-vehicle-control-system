@@ -6,6 +6,10 @@ static float referenceSpeedRPM = 0.0f;
 static float integralError = 0.0f;
 static float dutyCommand = 0.0f;
 
+#define K_w 9.9987
+#define K_i 8.9846
+#define K_int -22.3607
+
 void initMotorControl(void)
 {
     referenceSpeedRPM = 0.0f;
@@ -112,6 +116,27 @@ uint16_t motorPIUpdate(uint16_t referenceSpeedRPM, uint16_t actualSpeedRPM, floa
 
     // return (uint16_t)dutyCommand;
     return (uint16_t)(dutyCommand + 0.5f);
+}
+
+uint16_t motorLQRUpdate(uint16_t referenceSpeedRPM, uint16_t actualSpeedRPM, float dtSeconds)
+{
+    float error = (float)referenceSpeedRPM - (float)actualSpeedRPM;
+    integralError += error * dtSeconds;
+
+    float current = 0.0f; // TODO properly calculate current.
+
+    float u = -(K_w * actualSpeedRPM) -(K_i  * current) -(K_int * integralError);
+
+    if(u > MOTOR_DUTY_MAX)
+    {
+        u = MOTOR_DUTY_MAX;
+    }
+    else if(u < MOTOR_DUTY_MIN)
+    {
+        u = MOTOR_DUTY_MIN;
+    }
+
+    return (uint16_t)u;
 }
 
 void motorPIReset(void)
