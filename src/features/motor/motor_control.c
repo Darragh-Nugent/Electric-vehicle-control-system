@@ -1,14 +1,17 @@
 #include "motor_control.h"
-
+#include "features/sensors/devices/power_sensor.h"
 #include "utils/uartstdio.h"
 
 static float referenceSpeedRPM = 0.0f;
 static float integralError = 0.0f;
 static float dutyCommand = 0.0f;
 
-#define K_w 9.9987
-#define K_i 8.9846
-#define K_int -22.3607
+#define K_w   0.0506f
+#define K_i   0.4033f
+#define K_int -1.0081f
+
+#define INTEGRAL_MAX    800.0f
+#define INTEGRAL_MIN   -800.0f
 
 void initMotorControl(void)
 {
@@ -80,63 +83,34 @@ void motorControlResetReferenceSpeed(void)
 }
 
 
-uint16_t motorPIUpdate(uint16_t referenceSpeedRPM, uint16_t actualSpeedRPM, float dtSeconds)
+uint16_t motorLQRUpdate(uint16_t referenceSpeedRPM_in, uint16_t actualSpeedRPM, float dtSeconds)
 {
-    float error = (float)referenceSpeedRPM - (float)actualSpeedRPM;
+    float omega = actualSpeedRPM * (2.0f * 3.1415926535f / 60.0f);
+    float omegaRef = referenceSpeedRPM_in * (2.0f * 3.1415926535f / 60.0f);
 
-    if (error < 50.0f && error > -50.0f)
-    {
-        return (uint16_t)(dutyCommand + 0.5f);
-    }
+    float error = omegaRef - omega;
 
     integralError += error * dtSeconds;
-    if (integralError > 400.0f) integralError = 400.0f;
-    if (integralError < -400.0f) integralError = -400.0f;
 
-    float controlOutput = MOTOR_KP * error + MOTOR_KI * integralError;
+    if (integralError > INTEGRAL_MAX) integralError = INTEGRAL_MAX;
+    if (integralError < INTEGRAL_MIN) integralError = INTEGRAL_MIN;
 
-    // if (controlOutput > 2.0f) controlOutput = 2.0f;
-    // if (controlOutput < -2.0f) controlOutput = -2.0f;
-    if (controlOutput > 0.5f) controlOutput = 0.5f;
-    if (controlOutput < -0.5f) controlOutput = -0.5f;
+    float current = getCurrent();
 
-    dutyCommand += controlOutput;
+    float u = - (K_w * omega) - (K_i * current) - (K_int * integralError);
 
-
-    if(dutyCommand > MOTOR_DUTY_MAX)
+    if (u > MOTOR_DUTY_MAX) 
     {
-        dutyCommand = MOTOR_DUTY_MAX;
-        integralError -= error * dtSeconds; 
-    }
-    else if(dutyCommand < MOTOR_DUTY_MIN)
+        u = MOTOR_DUTY_MAX;
+        integralError -= error * dtSeconds;
+    } 
+    else if (u < MOTOR_DUTY_MIN) 
     {
-        dutyCommand = MOTOR_DUTY_MIN;
+        u = MOTOR_DUTY_MIN;
         integralError -= error * dtSeconds;
     }
 
-    // return (uint16_t)dutyCommand;
-    return (uint16_t)(dutyCommand + 0.5f);
-}
-
-uint16_t motorLQRUpdate(uint16_t referenceSpeedRPM, uint16_t actualSpeedRPM, float dtSeconds)
-{
-    float error = (float)referenceSpeedRPM - (float)actualSpeedRPM;
-    integralError += error * dtSeconds;
-
-    float current = 0.0f; // TODO properly calculate current.
-
-    float u = -(K_w * actualSpeedRPM) -(K_i  * current) -(K_int * integralError);
-
-    if(u > MOTOR_DUTY_MAX)
-    {
-        u = MOTOR_DUTY_MAX;
-    }
-    else if(u < MOTOR_DUTY_MIN)
-    {
-        u = MOTOR_DUTY_MIN;
-    }
-
-    return (uint16_t)u;
+    return (uint16_t)(u + 0.5f);
 }
 
 void motorPIReset(void)

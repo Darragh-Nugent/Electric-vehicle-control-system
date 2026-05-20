@@ -24,6 +24,7 @@
 #include "utils/uartstdio.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
+#include "driverlib/fpu.h"
 
 // Motor lib
 #include <motorlib.h>
@@ -59,6 +60,8 @@ int main( void )
 {
     prvSetupHardware();
     IntMasterEnable();
+    FPUEnable();
+    FPULazyStackingEnable();
 
     motorStateMutex = xSemaphoreCreateMutex();
     motorSetSpeedMutex = xSemaphoreCreateMutex();

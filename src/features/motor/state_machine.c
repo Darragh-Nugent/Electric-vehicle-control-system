@@ -26,7 +26,7 @@
 #include "features/sensors/api/sensors_api.h"
 #include "utils/muart.h"
 
-#define CONTROL_PERIOD_MS 50
+#define CONTROL_PERIOD_MS 25
 #define MOTOR_SERIALPLOT_ENABLE 0
 
 motor_state_t motor_state = MOTOR_STATE_IDLE;
@@ -244,7 +244,7 @@ static void motorTask(void *pvParameters)
 
                 if (plotCount >= 5)
                 {
-                    motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed, duty);
+                    motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed.value, duty);
                     plotCount = 0;
                 }
             #endif
@@ -264,7 +264,7 @@ static void motorTask(void *pvParameters)
             setDuty(0);
 
             #if MOTOR_SERIALPLOT_ENABLE
-                motorSerialPlotOutput(0, referenceSpeed, actualSpeed, 0);
+                motorSerialPlotOutput(0, referenceSpeed, actualSpeed.value, 0);
             #endif
 
             if (actualSpeed.value <= 50)
