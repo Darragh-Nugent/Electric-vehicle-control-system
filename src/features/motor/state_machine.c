@@ -129,8 +129,6 @@ static void motorTask(void *pvParameters)
         }
         case MOTOR_STATE_RUNNING:
         {
-            uint16_t desiredSpeed = motorGetSpeed();
-            uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
 
@@ -139,10 +137,14 @@ static void motorTask(void *pvParameters)
                 motorEStopRequested = false;
 
                 UARTprintf("RUNNING EXIT: e-stop requested\n");
+                motorControllerReset();
 
                 motorEStop();
                 break;
             }
+
+            uint16_t desiredSpeed = motorGetSpeed();
+            uint16_t referenceSpeed = motorRampUpdate(desiredSpeed, false, controlPeriodSeconds);
 
             // // test deacelleration!!
             // static uint16_t speedChangeTestCount = 0;
