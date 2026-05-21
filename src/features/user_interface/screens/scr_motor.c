@@ -151,7 +151,7 @@ static int32_t get_speed(void){
 void scr_motor_init(void)
 {
     s_screen = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
+    setBackgroundColour(s_screen);
 
     speedometer = create_speedometer(s_screen, get_speed, SCALE_RADIUS, NEEDLE_LENGTH, 0, PERIOD);
     // To DO:

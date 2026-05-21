@@ -1,6 +1,6 @@
 #include "lvgl.h"
 #include "../screen_manager.h"
-#include "scr_motor.h"
+#include "scr_temp_sensor.h"
 #include <stdint.h>
 #include <stdbool.h>
 #include "../gui_utils.h"
@@ -152,7 +152,7 @@ lv_obj_t * lv_temp_bar(lv_obj_t * s_screen)
 void scr_temp_sensor_init(void)
 {
     s_screen = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
+    setBackgroundColour(s_screen);
 
     // To DO:
     // Add relevant buttons and diagnostics for motor

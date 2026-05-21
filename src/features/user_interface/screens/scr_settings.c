@@ -234,7 +234,7 @@ void lv_tab(lv_obj_t *s_screen)
 void scr_settings_init(void)
 {
     s_screen = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
+    setBackgroundColour(s_screen);
     lv_tab(s_screen);
     lv_obj_clear_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
 

@@ -55,7 +55,7 @@ void scr_sensors_init(void)
 {
     s_screen = lv_obj_create(NULL);
     lv_obj_clear_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
+    setBackgroundColour(s_screen);
 
     // To DO:
     // Add similar but for other sensors

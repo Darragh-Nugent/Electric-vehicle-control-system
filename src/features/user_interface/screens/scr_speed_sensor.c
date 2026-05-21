@@ -34,7 +34,7 @@ static int32_t get_speed(void){
 void scr_speed_sensor_init(void)
 {
     s_screen = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
+    setBackgroundColour(s_screen);
     // To DO:
     // Add relevant buttons and diagnostics for motor
 

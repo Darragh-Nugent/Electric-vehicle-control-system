@@ -73,7 +73,8 @@ void scr_dashboard_init(void)
 {
     // To Do: Modularise colour
     s_screen = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
+    setBackgroundColour(s_screen);
+    //lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
 
     // Label
     lv_obj_t *label = create_label(s_screen,"Group #30");
