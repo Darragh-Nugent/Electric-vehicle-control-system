@@ -77,13 +77,13 @@ void scr_status_init(void)
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 12);
 
     /* Cards */
-    create_card(s_screen, "Temperature", 10, 40,
+    create_card(s_screen, "Temperature", 10, 50,
                 lv_palette_main(LV_PALETTE_RED), &lbl_temp);
 
-    create_card(s_screen, "Humidity", 170, 40,
+    create_card(s_screen, "Humidity", 170, 50,
                 lv_palette_main(LV_PALETTE_BLUE), &lbl_humidity);
 
-    create_card(s_screen, "Light", 90, 145,
+    create_card(s_screen, "Light", 90, 155,
                 lv_palette_main(LV_PALETTE_YELLOW), &lbl_lux);
 
     /* Home Button */

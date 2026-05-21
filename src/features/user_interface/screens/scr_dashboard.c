@@ -85,7 +85,7 @@ void scr_dashboard_init(void)
     lv_obj_t *nav_bar = lv_obj_create(s_screen);
     lv_obj_set_size(nav_bar, LV_HOR_RES, 50);         // Set the navigation bar's height
     lv_obj_align(nav_bar, LV_ALIGN_BOTTOM_MID, 0, 0); // Align it to the bottom of the screen
-
+    lv_obj_remove_flag(nav_bar, LV_OBJ_FLAG_SCROLLABLE);
     // Create the buttons within the navigation bar, spaced evenly
     lv_obj_t *motor_btn = nav_button_init(nav_bar, "Motor", btn_motor_cb, LV_ALIGN_LEFT_MID, 10, 0);
     lv_obj_t *sensors_btn = nav_button_init(nav_bar, "Sensors", btn_sensors_cb, LV_ALIGN_CENTER, 0, 0);
@@ -110,6 +110,7 @@ void scr_dashboard_init(void)
     lv_style_set_border_width(&style_transp, 0); // Optional: Removes borders
 
     lv_obj_add_style(settings_btn, &style_transp, LV_STATE_DEFAULT);
+    lv_obj_remove_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
     // To Do:
     // maybe remove nav for alerts, it should pop up instantly over everything
     // add in other sensors as their own seperate pages
