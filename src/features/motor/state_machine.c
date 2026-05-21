@@ -198,7 +198,7 @@ static void motorTask(void *pvParameters)
             }
 
             // ;ow-speed recovery only applies when speed is low but not zero. /////
-            if (referenceSpeed > 100 && actualSpeed.value < 200)
+            if (referenceSpeed > 250 && actualSpeed.value < ( referenceSpeed - ((referenceSpeed * LOW_SPEED_ERROR_PERCENT) / 100)))// if (referenceSpeed > 100 && actualSpeed.value < 200)
             {
                 lowSpeedCount++;
             }
