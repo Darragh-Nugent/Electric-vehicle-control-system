@@ -12,6 +12,7 @@
 #include "screens/scr_accel_sensor.h"
 #include "screens/scr_dist_sensor.h"
 #include "screens/scr_humidity_sensor.h"
+#include "screens/scr_status.h"
 #include "utils/uartstdio.h"
 
 static lv_obj_t *s_screens[SCREEN_COUNT];
@@ -37,6 +38,7 @@ void screen_manager_init(void)
     scr_accel_sensor_init();
     scr_dist_sensor_init();
     scr_humidity_sensor_init();
+    scr_status_init();
 
     s_screens[SCREEN_DASHBOARD] = scr_dashboard_get();
     s_screens[SCREEN_SETTINGS] = scr_settings_get();
@@ -49,6 +51,7 @@ void screen_manager_init(void)
     s_screens[SCREEN_ACCEL_SENSOR] = scr_accel_sensor_get();
     s_screens[SCREEN_DIST_SENSOR] = scr_dist_sensor_get();
     s_screens[SCREEN_HUMIDITY_SENSOR] = scr_humidity_sensor_get();
+    s_screens[SCREEN_STATUS] = scr_status_get();
 
     // Load the default screen immediately (no animation on first load)
     lv_screen_load(s_screens[SCREEN_DASHBOARD]);

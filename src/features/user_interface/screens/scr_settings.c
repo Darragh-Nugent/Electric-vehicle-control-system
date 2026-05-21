@@ -13,14 +13,14 @@ static lv_obj_t *info_tab;
 static lv_obj_t *power_tab;
 static lv_obj_t *accel_tab;
 static lv_obj_t *dist_tab;
-static lv_obj_t *lux_tab;
+// static lv_obj_t *lux_tab;
 static lv_obj_t *temp_tab;
 static lv_obj_t *humidity_tab;
 
 static lv_obj_t *power_spinbox;
 static lv_obj_t *accel_spinbox;
 static lv_obj_t *dist_spinbox;
-static lv_obj_t *lux_spinbox;
+// static lv_obj_t *lux_spinbox;
 static lv_obj_t *temp_spinbox;
 static lv_obj_t *humidity_spinbox;
 
@@ -200,7 +200,7 @@ void lv_tab(lv_obj_t *s_screen)
     power_tab = lv_tabview_add_tab(tabview, "Power");
     accel_tab = lv_tabview_add_tab(tabview, "Accel");
     dist_tab = lv_tabview_add_tab(tabview, "Distance");
-    lux_tab = lv_tabview_add_tab(tabview, "Lux");
+    // lux_tab = lv_tabview_add_tab(tabview, "Lux");
     temp_tab = lv_tabview_add_tab(tabview, "Temp");
     humidity_tab = lv_tabview_add_tab(tabview, "Humidity");
 
@@ -219,8 +219,8 @@ void lv_tab(lv_obj_t *s_screen)
     lv_obj_set_style_bg_color(power_tab, lv_palette_lighten(LV_PALETTE_AMBER, 3), 0);
     lv_obj_set_style_bg_opa(power_tab, LV_OPA_COVER, 0);
 
-    lv_obj_set_style_bg_color(lux_tab, lv_palette_lighten(LV_PALETTE_YELLOW, 3), 0);
-    lv_obj_set_style_bg_opa(lux_tab, LV_OPA_COVER, 0);
+    // lv_obj_set_style_bg_color(lux_tab, lv_palette_lighten(LV_PALETTE_YELLOW, 3), 0);
+    // lv_obj_set_style_bg_opa(lux_tab, LV_OPA_COVER, 0);
 
     lv_obj_set_style_bg_color(temp_tab, lv_palette_lighten(LV_PALETTE_CYAN, 3), 0);
     lv_obj_set_style_bg_opa(temp_tab, LV_OPA_COVER, 0);
@@ -242,7 +242,7 @@ void scr_settings_init(void)
     power_spinbox = create_threshold_card(power_tab, "Power", "P");
     accel_spinbox = create_threshold_card(accel_tab, "Acceleration", "m/s/s");
     dist_spinbox = create_threshold_card(dist_tab, "Distance", "m");
-    lux_spinbox = create_threshold_card(lux_tab, "Lux", "lx");
+    // lux_spinbox = create_threshold_card(lux_tab, "Lux", "lx");
     temp_spinbox = create_threshold_card(temp_tab, "Temperature", "Celcius");
     humidity_spinbox = create_threshold_card(humidity_tab, "Humidity", "%%");
 
@@ -250,7 +250,7 @@ void scr_settings_init(void)
     static submit_t power_submit_t = {.spinbox = NULL, .type = TH_POWER};
     static submit_t accel_submit_t =  {.spinbox = NULL, .type = TH_ACCEL};
     static submit_t dist_submit_t =  {.spinbox = NULL, .type = TH_DISTANCE};
-    static submit_t lux_submit_t =  {.spinbox = NULL, .type = TH_LUX};
+    // static submit_t lux_submit_t =  {.spinbox = NULL, .type = TH_LUX};
     static submit_t temp_submit_t =  {.spinbox = NULL, .type = TH_TEMP};
     static submit_t humidity_submit_t =  {.spinbox = NULL, .type = TH_HUMIDITY};
 
@@ -258,7 +258,7 @@ void scr_settings_init(void)
     power_submit_t.spinbox = power_spinbox;
     accel_submit_t.spinbox = accel_spinbox;
     dist_submit_t.spinbox = dist_spinbox;
-    lux_submit_t.spinbox = lux_spinbox;
+    // lux_submit_t.spinbox = lux_spinbox;
     temp_submit_t.spinbox = temp_spinbox;
     humidity_submit_t.spinbox = humidity_spinbox;
 
@@ -266,7 +266,7 @@ void scr_settings_init(void)
     lv_obj_t *sub_pwr_btn = submit_threshold_btn(power_tab,"SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0,0,&power_submit_t);
     lv_obj_t *sub_accel_btn = submit_threshold_btn(accel_tab,"SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0,0,&accel_submit_t);
     lv_obj_t *sub_dist_btn = submit_threshold_btn(dist_tab,"SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0,0,&dist_submit_t);
-    lv_obj_t *sub_lux_btn = submit_threshold_btn(lux_tab,"SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0,0,&lux_submit_t);
+    // lv_obj_t *sub_lux_btn = submit_threshold_btn(lux_tab,"SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0,0,&lux_submit_t);
     lv_obj_t *sub_temp_btn = submit_threshold_btn(temp_tab,"SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0,0,&temp_submit_t);
     lv_obj_t *sub_humidity_btn = submit_threshold_btn(humidity_tab,"SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0,0,&humidity_submit_t);
 
@@ -274,7 +274,7 @@ void scr_settings_init(void)
     (void) sub_pwr_btn;
     (void) sub_accel_btn;
     (void) sub_dist_btn;
-    (void) sub_lux_btn;
+    // (void) sub_lux_btn;
     (void) sub_temp_btn;
     (void) sub_humidity_btn;
     // lv_obj_align_to(accel, power, LV_ALIGN_OUT_BOTTOM_MID, 0,8);
