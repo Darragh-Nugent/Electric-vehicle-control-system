@@ -4,7 +4,6 @@
 
 static float referenceSpeedRPM = 0.0f;
 static float integralError = 0.0f;
-static float dutyCommand = 0.0f;
 
 #define K_w   0.0506f
 #define K_i   0.4033f
@@ -17,7 +16,6 @@ void initMotorControl(void)
 {
     referenceSpeedRPM = 0.0f;
     integralError = 0.0f;
-    dutyCommand = 0.0f;
 }
 
 uint16_t motorRampUpdate(uint16_t desiredSpeedRPM, bool estopActive, float dtSeconds)
@@ -85,6 +83,13 @@ void motorControlResetReferenceSpeed(void)
 
 uint16_t motorLQRUpdate(uint16_t referenceSpeedRPM_in, uint16_t actualSpeedRPM, float dtSeconds)
 {
+    
+    if (referenceSpeedRPM_in ==0) // to byypass min duty if estopping
+    {
+        integralError = 0.0f;
+        return 0;
+    }
+    
     float omega = actualSpeedRPM * (2.0f * 3.1415926535f / 60.0f);
     float omegaRef = referenceSpeedRPM_in * (2.0f * 3.1415926535f / 60.0f);
 
@@ -113,16 +118,14 @@ uint16_t motorLQRUpdate(uint16_t referenceSpeedRPM_in, uint16_t actualSpeedRPM, 
     return (uint16_t)(u + 0.5f);
 }
 
-void motorPIReset(void)
+void motorControllerReset(void)
 {
     integralError = 0.0f;
-    dutyCommand = 0.0f;
 }
 
-void motorPIInit(uint16_t startDuty)
+void motorControllerInit(void)
 {
     integralError = 0.0f;
-    dutyCommand = (float)startDuty;
 }
 
 

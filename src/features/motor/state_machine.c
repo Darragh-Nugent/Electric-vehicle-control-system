@@ -89,10 +89,6 @@ static void motorTask(void *pvParameters)
                 motorEStopRequested = false;
 
                 UARTprintf("STARTING EXIT: e-stop requested\n");
-
-                setDuty(0);
-                motorPIReset();
-                hallSensorIntDisable(); // remove?
                 motorEStop();
                 break;
             }
@@ -144,10 +140,6 @@ static void motorTask(void *pvParameters)
 
                 UARTprintf("RUNNING EXIT: e-stop requested\n");
 
-                setDuty(0);
-                motorPIReset();
-                hallSensorIntDisable(); // remove?
-
                 motorEStop();
                 break;
             }
@@ -180,7 +172,7 @@ static void motorTask(void *pvParameters)
             {
                 UARTprintf("RUNNING EXIT: sensor freeze\n");
                 setDuty(0);
-                motorPIReset();
+                motorControllerReset();
                 motorEStop();
                 break;
             }
@@ -198,7 +190,7 @@ static void motorTask(void *pvParameters)
             {
                 UARTprintf("RUNNING EXIT: sustained zero speed\n");
                 setDuty(0);
-                motorPIReset();
+                motorControllerReset();
                 motorEStop();
                 break;
             }
@@ -215,7 +207,7 @@ static void motorTask(void *pvParameters)
             // one recovery kick if the motor is slowing but still moving
             if (lowSpeedCount == 5)
             {
-                motorPIInit(MOTOR_DUTY_START);
+                motorControllerInit();
                 kickStartMotor();
             }
 
@@ -224,7 +216,7 @@ static void motorTask(void *pvParameters)
             {
                 UARTprintf("RUNNING EXIT: lowSpeed timeout\n");
                 setDuty(0);
-                motorPIReset();
+                motorControllerReset();
                 motorEStop();
                 break;
             }
@@ -261,13 +253,14 @@ static void motorTask(void *pvParameters)
             uint16_t referenceSpeed = motorRampUpdate(0, true, controlPeriodSeconds);
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
             prev_speed_seq = actualSpeed.seq;
-            setDuty(0);
-
+            uint16_t duty = motorLQRUpdate(referenceSpeed, actualSpeed.value, controlPeriodSeconds);
+            setDuty(duty);
+           
             #if MOTOR_SERIALPLOT_ENABLE
-                motorSerialPlotOutput(0, referenceSpeed, actualSpeed.value, 0);
+                motorSerialPlotOutput(0, referenceSpeed, actualSpeed.value, duty);
             #endif
 
-            if (actualSpeed.value <= 50)
+            if (referenceSpeed ==0 && actualSpeed.value <= 50)
             {
                 stoppedCount++;
             }
@@ -276,12 +269,14 @@ static void motorTask(void *pvParameters)
                 stoppedCount = 0;
             }
 
-            if (stoppedCount >= 5 && referenceSpeed == 0)
+            if (stoppedCount >= 5)
             {
                 stoppedCount = 0;
                 setDuty(0);
-                motorPIReset();
+                motorControllerReset();
                 motorControlResetReferenceSpeed();
+
+                // hallSensorIntDisable(); // maybe enable this...
                 motorFaultLatched();
             }
 
