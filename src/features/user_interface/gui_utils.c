@@ -204,7 +204,8 @@ void add_graph_data_cb(lv_timer_t *t)
 }
 
 // Create the chart
-static lv_obj_t *create_chart(lv_obj_t *s_screen, int32_t yMin, int32_t yMax, int16_t overhead)
+static lv_obj_t *create_chart(lv_obj_t *s_screen, int32_t yMin, 
+    int32_t yMax, int16_t overhead, uint16_t pointCount)
 {
     /*Create a stacked_area_chart.obj*/
     lv_obj_t *chart = lv_chart_create(s_screen);
@@ -213,7 +214,7 @@ static lv_obj_t *create_chart(lv_obj_t *s_screen, int32_t yMin, int32_t yMax, in
     lv_obj_set_size(chart, CHART_WIDTH, CHART_HEIGHT);
     lv_obj_align(chart, LV_ALIGN_BOTTOM_MID, 20, -25);
     lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, yMin, yMax);
-    lv_chart_set_point_count(chart, 80);
+    lv_chart_set_point_count(chart, pointCount);
     lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
     // /*Prefill with data*/
     // uint32_t i;
@@ -242,10 +243,10 @@ static lv_obj_t *create_scale(lv_obj_t *s_screen, lv_obj_t *chart, int32_t yMax)
 
 // Create the graph
 graph_t *create_graph(lv_obj_t *s_screen, int32_t yMin, int32_t yMax,
-                      int16_t overhead, int16_t period, graph_data_cb_t cb)
+                      int16_t overhead, int16_t period, graph_data_cb_t cb, uint16_t pointCount)
 {
     graph_t *graph = lv_malloc(sizeof(graph_t));
-    graph->chart = create_chart(s_screen, yMin, yMax, overhead);
+    graph->chart = create_chart(s_screen, yMin, yMax, overhead, pointCount);
     graph->scale = create_scale(s_screen, graph->chart, yMax);
     graph->scaleYMax = yMax;
     graph->scaleYMin = yMin;

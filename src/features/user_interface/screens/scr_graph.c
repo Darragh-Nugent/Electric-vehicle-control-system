@@ -130,7 +130,7 @@ void scr_graph_init(void)
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     lv_obj_set_width(prev_button, 40);
 
-    default_graph = create_graph(s_screen, scaleYMin, scaleYMax, OVERHEAD_GAP, PERIOD, NULL);
+    default_graph = create_graph(s_screen, scaleYMin, scaleYMax, OVERHEAD_GAP, PERIOD, NULL,CHART_POINT_COUNT);
     default_graph->timer = lv_timer_create(shared_graph_timer_cb, PERIOD, default_graph);
 }
 
