@@ -51,7 +51,7 @@ extern SemaphoreHandle_t motorSetSpeedMutex;
 extern SemaphoreHandle_t motorStartSemaphore;
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
 extern SemaphoreHandle_t uartMutex;
-extern SemaphoreHandle_t motorEstopSemaphore;
+extern SemaphoreHandle_t motorEStopSemaphore;
 
 SemaphoreHandle_t faultAcknowledgedSemaphore = NULL;
 
@@ -69,7 +69,7 @@ int main( void )
     motorStartSemaphore = xSemaphoreCreateBinary();
     motorUpToSpeedSemaphore = xSemaphoreCreateBinary();
     faultAcknowledgedSemaphore = xSemaphoreCreateBinary();
-    motorEstopSemaphore = xSemaphoreCreateBinary();
+    motorEStopSemaphore = xSemaphoreCreateBinary();
 
     uartMutex = xSemaphoreCreateMutex();
 
@@ -79,7 +79,7 @@ int main( void )
         motorStartSemaphore == NULL ||
         motorUpToSpeedSemaphore == NULL ||
         faultAcknowledgedSemaphore == NULL ||
-        motorEstopSemaphore == NULL ||
+        motorEStopSemaphore == NULL ||
         uartMutex == NULL) {}
 
     vCreateMotorTask();
