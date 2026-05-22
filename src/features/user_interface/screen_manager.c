@@ -48,6 +48,7 @@ void screen_manager_init(void)
     // scr_accel_sensor_init();
     // scr_dist_sensor_init();
     scr_graph_init();
+    scr_alerts_init();
     scr_humidity_sensor_init();
     scr_status_init();
 
@@ -62,6 +63,7 @@ void screen_manager_init(void)
     s_screens[SCREEN_ACCEL_SENSOR] = scr_graph_sensor_get(); // scr_accel_sensor_get();
     s_screens[SCREEN_DIST_SENSOR] = scr_graph_sensor_get();  // scr_dist_sensor_get();
     // s_screens[SCREEN_DEFAULT_GRAPH] = scr_graph_sensor_get();
+    s_screens[SCREEN_ALERT] = scr_alerts_get();
     s_screens[SCREEN_HUMIDITY_SENSOR] = scr_humidity_sensor_get();
     s_screens[SCREEN_STATUS] = scr_status_get();
 

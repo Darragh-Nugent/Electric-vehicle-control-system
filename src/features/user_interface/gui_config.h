@@ -7,6 +7,9 @@
 #define DEFAULT_OVERHEAD_GAP 200
 #define DEFAULT_PERIOD 200
 
+// Alert
+#define SCARY_RED lv_color_hex(0xFF6666)
+
 // Screens
 #define SCREEN_ANIM_TIME 300
 
