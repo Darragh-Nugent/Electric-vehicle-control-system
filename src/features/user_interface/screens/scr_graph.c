@@ -5,13 +5,13 @@
 #include <stdbool.h>
 #include "../gui_utils.h"
 
-#define OVERHEAD_GAP 200
-#define PERIOD 200
-
 static int32_t scaleYMin = 0;
 static int32_t scaleYMax = 100;
 static lv_obj_t *s_screen;
 static lv_obj_t *label;
+static uint16_t period;
+static uint16_t prevPeriod;
+static lv_obj_t *scale;
 graph_t *default_graph;
 
 static void btn_home_cb(lv_event_t *e)
@@ -44,6 +44,7 @@ static int32_t get_acceleration(void)
     return lv_rand(0, 1000);
 }
 
+
 void shared_graph_timer_cb(lv_timer_t *t)
 {
     graph_t *graph = (graph_t *)lv_timer_get_user_data(t);
@@ -57,19 +58,27 @@ void shared_graph_timer_cb(lv_timer_t *t)
     {
     case SCREEN_DIST_SENSOR:
         value = get_distance();
-        lv_label_set_text(label, "Distance");
+        prevPeriod = period;
+        period = SENSOR_DISTANCE_PERIOD;
+        lv_label_set_text(label, "Distance (m)");
         break;
     case SCREEN_ACCEL_SENSOR:
         value = get_acceleration();
-        lv_label_set_text(label, "Accel");
+        prevPeriod = period;
+        period = SENSOR_ACCELERATION_PERIOD;
+        lv_label_set_text(label, "Accel (m/s/s)");
         break;
     case SCREEN_PWR_SENSOR:
         value = get_power();
-        lv_label_set_text(label, "Power");
+        prevPeriod = period;
+        period = SENSOR_POWER_PERIOD;
+        lv_label_set_text(label, "Power (W)");
         break;
     case SCREEN_LIGHT_SENSOR:
         value = get_lux();
-        lv_label_set_text(label, "Lux");
+        prevPeriod = period;
+        period = SENSOR_LIGHT_PERIOD;
+        lv_label_set_text(label, "Lux (lx)");
         break;
     default:
         return;
@@ -79,7 +88,7 @@ void shared_graph_timer_cb(lv_timer_t *t)
     lv_chart_series_t *ser = lv_chart_get_series_next(graph->chart, NULL);
     lv_chart_set_next_value(graph->chart, ser, value);
 
-    // Change scale axis if input is out of bounds
+    // Change Y scale axis if input is out of bounds
     if (graph->scale != NULL)
     {
         if (value > graph->scaleYMax)
@@ -116,7 +125,17 @@ void shared_graph_timer_cb(lv_timer_t *t)
     a[(s + 2) % p] = LV_CHART_POINT_NONE;
     a[(s + 3) % p] = LV_CHART_POINT_NONE;
 
+    // Rescale X
+    if (prevPeriod != period)
+    {
+        uint32_t total_time_s = (period * CHART_POINT_COUNT)/ 1000;
+        lv_scale_set_range(scale, 0, total_time_s); // total time covered by chart
+        lv_scale_set_total_tick_count(scale, total_time_s + 1);
+        lv_scale_set_major_tick_every(scale, 5);
+    }
+
     lv_chart_refresh(graph->chart);
+    lv_timer_set_period(graph->timer, period);
 }
 
 void scr_graph_init(void)
@@ -130,8 +149,9 @@ void scr_graph_init(void)
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     lv_obj_set_width(prev_button, 40);
 
-    default_graph = create_graph(s_screen, scaleYMin, scaleYMax, OVERHEAD_GAP, PERIOD, NULL,CHART_POINT_COUNT);
-    default_graph->timer = lv_timer_create(shared_graph_timer_cb, PERIOD, default_graph);
+    default_graph = create_graph(s_screen, scaleYMin, scaleYMax, DEFAULT_OVERHEAD_GAP, DEFAULT_PERIOD, NULL, CHART_POINT_COUNT);
+    default_graph->timer = lv_timer_create(shared_graph_timer_cb, DEFAULT_PERIOD, default_graph);
+    scale = create_time_scale(s_screen, default_graph->chart, period, CHART_POINT_COUNT);
 }
 
 lv_obj_t *scr_graph_sensor_get(void)

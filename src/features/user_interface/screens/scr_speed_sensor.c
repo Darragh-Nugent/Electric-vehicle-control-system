@@ -30,22 +30,6 @@ static int32_t get_speed(void)
     return lv_rand(0, 3000);
 }
 
-static lv_obj_t *create_time_scale(lv_obj_t *parent, lv_obj_t *chart, uint32_t period, uint16_t points)
-{
-    // Create the scale
-    lv_obj_t *scale = lv_scale_create(parent);
-    lv_obj_set_size(scale, CHART_WIDTH, 40); // width matches chart, height for labels
-    lv_obj_align_to(scale,chart, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
-    lv_scale_set_mode(scale, LV_SCALE_MODE_HORIZONTAL_BOTTOM);
-    uint32_t total_time_s = (period * points) / 1000;
-    lv_scale_set_range(scale, 0, total_time_s); // total time covered by chart
-    lv_scale_set_total_tick_count(scale, total_time_s + 1);
-    lv_scale_set_major_tick_every(scale, 1);
-
-
-    return scale;
-}
-
 void scr_speed_sensor_init(void)
 {
     s_screen = lv_obj_create(NULL);
@@ -53,7 +37,7 @@ void scr_speed_sensor_init(void)
     lv_obj_remove_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
 
 
-    lv_obj_t *label = create_label(s_screen, "Speed (RPM)");
+    lv_obj_t *label = create_label(s_screen, "Speed (m/s)");
     (void)label; // ignore label for now, return value is kept for possible future use
 
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);

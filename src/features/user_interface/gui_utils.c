@@ -241,6 +241,21 @@ static lv_obj_t *create_scale(lv_obj_t *s_screen, lv_obj_t *chart, int32_t yMax)
     return scale;
 }
 
+lv_obj_t *create_time_scale(lv_obj_t *parent, lv_obj_t *chart, uint32_t period, uint16_t points)
+{
+    // Create the scale
+    lv_obj_t *scale = lv_scale_create(parent);
+    lv_obj_set_size(scale, CHART_WIDTH, 40); // width matches chart, height for labels
+    lv_obj_align_to(scale, chart, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
+    lv_scale_set_mode(scale, LV_SCALE_MODE_HORIZONTAL_BOTTOM);
+    uint32_t total_time_s = (period * points) / 1000;
+    lv_scale_set_range(scale, 0, total_time_s); // total time covered by chart
+    lv_scale_set_total_tick_count(scale, total_time_s + 1);
+    lv_scale_set_major_tick_every(scale, 1);
+
+    return scale;
+}
+
 // Create the graph
 graph_t *create_graph(lv_obj_t *s_screen, int32_t yMin, int32_t yMax,
                       int16_t overhead, int16_t period, graph_data_cb_t cb, uint16_t pointCount)
