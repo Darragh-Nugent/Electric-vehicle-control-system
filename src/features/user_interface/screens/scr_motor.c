@@ -11,9 +11,8 @@
 #include "features/motor/motor_api.h"
 #include <math.h>
 
-#define SCALE_RADIUS 70
-#define NEEDLE_LENGTH 60
-#define PERIOD 50
+extern UiMsg_t g_ui_state;
+
 // LV_IMAGE_DECLARE(img_hand);
 static lv_obj_t *s_screen;
 static lv_obj_t *rpm_input;
@@ -40,12 +39,7 @@ static void submit_rpm_cb(lv_event_t *e)
     uint16_t rpm = atoi(text);
     UARTprintf("RPM: %i\n", rpm);
     LV_LOG_USER("RPM set: %d", rpm);
-
-    bool res = ui_push_u(UI_MSG_MOTOR_RPM, rpm);
-    if (!res)
-    {
-        UARTprintf("Hmm, I'll see if i remember to fix this later");
-    }
+    updateGUIState(UI_MSG_MOTOR_RPM, rpm);
 }
 
 // Text Area cb
@@ -70,44 +64,32 @@ static void ta_event_cb(lv_event_t *e)
 // Dropdown Button cb     "IDLE\nRUN\nBREAK\nEXPLODE",
 static void on_state_changed(const char *state)
 {
-    bool res = false;
     if (lv_strcmp(state, "IDLE") == 0)
     {
         UARTprintf("IDLE\n");
-        res = ui_push_u(UI_MSG_MOTOR_IDLE, MOTOR_STATE_IDLE);
+        updateGUIState(UI_MSG_MOTOR_IDLE, MOTOR_STATE_IDLE);
     }
     else if (lv_strcmp(state, "RUN") == 0)
     {
         UARTprintf("RUNNING\n");
-        res = ui_push_u(UI_MSG_MOTOR_RUNNING, MOTOR_STATE_RUNNING);
+        updateGUIState(UI_MSG_MOTOR_RUNNING, MOTOR_STATE_RUNNING);
     }
-    else if (lv_strcmp(state, "BREAK") == 0){
+    else if (lv_strcmp(state, "BREAK") == 0)
+    {
         UARTprintf("BREAK\n");
-        res = ui_push_u(UI_MSG_MOTOR_BREAKING, MOTOR_STATE_BRAKING);
+        updateGUIState(UI_MSG_MOTOR_BREAKING, MOTOR_STATE_BRAKING);
     }
     else if (lv_strcmp(state, "EXPLODE") == 0)
     {
         UARTprintf("KABOOOM\n");
     }
-
-    if (!res)
-    {
-        UARTprintf("Let's hope this is never printed");
-    }
 }
 
-
-void motor_state_update_cb(lv_timer_t *timer){
-    (void) timer;
-     const char* motor_state_names[] = {
-        "Idle",
-        "Starting",
-        "Running",
-        "Breaking",
-        "Fault"
-    };    
+void motor_state_update_cb(lv_timer_t *timer)
+{
+    (void)timer;
     static motor_state_t prev = MOTOR_STATE_IDLE;
-    motor_state_t cur =  motorGetState(); //MOTOR_STATE_RUNNING;//
+    motor_state_t cur = motorGetState(); // MOTOR_STATE_RUNNING;//
     if (prev != cur)
     {
         // Update state label
@@ -116,63 +98,67 @@ void motor_state_update_cb(lv_timer_t *timer){
         prev = cur;
 
         // Update LED
-        switch(cur){
-            case MOTOR_STATE_IDLE:
-              lv_led_set_color(led, lv_palette_main(LV_PALETTE_ORANGE));
-              UARTprintf("MOTOR_STATE_IDLE\n");
+        switch (cur)
+        {
+        case MOTOR_STATE_IDLE:
+            lv_led_set_color(led, lv_palette_main(LV_PALETTE_ORANGE));
+            UARTprintf("MOTOR_STATE_IDLE\n");
             break;
-            case MOTOR_STATE_STARTING:
-              lv_led_set_color(led, lv_palette_main(LV_PALETTE_ORANGE));
-              UARTprintf("MOTOR_STATE_STARTING\n");
+        case MOTOR_STATE_STARTING:
+            lv_led_set_color(led, lv_palette_main(LV_PALETTE_ORANGE));
+            UARTprintf("MOTOR_STATE_STARTING\n");
             break;
-            case MOTOR_STATE_RUNNING:
-              lv_led_set_color(led, lv_palette_main(LV_PALETTE_LIGHT_GREEN));
-              UARTprintf("MOTOR_STATE_RUNNING\n");
+        case MOTOR_STATE_RUNNING:
+            lv_led_set_color(led, lv_palette_main(LV_PALETTE_LIGHT_GREEN));
+            UARTprintf("MOTOR_STATE_RUNNING\n");
             break;
-            case MOTOR_STATE_BRAKING: // doesnt mention in slides
-                lv_led_set_color(led, lv_palette_main(LV_PALETTE_ORANGE));
-                UARTprintf("MOTOR_STATE_BRAKING\n");
+        case MOTOR_STATE_BRAKING: // doesnt mention in slides
+            lv_led_set_color(led, lv_palette_main(LV_PALETTE_ORANGE));
+            UARTprintf("MOTOR_STATE_BRAKING\n");
             break;
-            case MOTOR_STATE_FAULT: // does this also include estop
-                lv_led_set_color(led, lv_palette_main(LV_PALETTE_RED));
-                UARTprintf("MOTOR_STATE_FAULT\n");
+        case MOTOR_STATE_FAULT: // does this also include estop
+            lv_led_set_color(led, lv_palette_main(LV_PALETTE_RED));
+            UARTprintf("MOTOR_STATE_FAULT\n");
             break;
         }
-        lv_obj_align_to(led,motor_state_label, LV_ALIGN_LEFT_MID, -30, 0);
-        
+        lv_obj_align_to(led, motor_state_label, LV_ALIGN_LEFT_MID, -30, 0);
     }
 }
 
-static int32_t get_speed(void){
+static int32_t get_speed(void)
+{
     // Sensor_GetSpeed or something
-    return (int32_t)lv_rand(-1,2);
+    return (int32_t)lv_rand(-1, 2);
 }
 
 void scr_motor_init(void)
 {
     s_screen = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
-
-    speedometer = create_speedometer(s_screen, get_speed, SCALE_RADIUS, NEEDLE_LENGTH, 0, PERIOD);
+    setBackgroundColour(s_screen);
+    lv_obj_remove_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
+    speedometer = create_speedometer(s_screen, get_speed, SPEEDO_SCALE_RADIUS, SPEEDO_NEEDLE_LENGTH, 0, SPEEDO_PERIOD);
     // To DO:
     // Add relevant buttons and diagnostics for motor
 
     lv_obj_t *home_button = create_icon_button(s_screen, LV_SYMBOL_HOME, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     lv_obj_t *label = create_label(s_screen, "Speedometer");
-    lv_obj_set_width(home_button,40);
+    lv_obj_set_width(home_button, 40);
     (void)label; // ignore label for now, return value is kept for possible future use
 
     // NAV bar
     lv_obj_t *nav_bar = lv_obj_create(s_screen);
     lv_obj_set_size(nav_bar, LV_HOR_RES, 50);         // Set the navigation bar's height
     lv_obj_align(nav_bar, LV_ALIGN_BOTTOM_MID, 0, 0); // Align it to the bottom of the screen
-
+    lv_obj_set_style_border_width(nav_bar, 2, 0);
+    lv_obj_set_style_border_color(nav_bar, COLOR_WHITE_LV, 0);
+    lv_obj_set_style_bg_color(nav_bar, COLOR_STATUS_CARD_BG_LV, 0);
     lv_obj_set_flex_flow(nav_bar, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(nav_bar,
                           LV_FLEX_ALIGN_SPACE_BETWEEN,
                           LV_FLEX_ALIGN_CENTER,
                           LV_FLEX_ALIGN_CENTER);
 
+    lv_obj_remove_flag(nav_bar, LV_OBJ_FLAG_SCROLLABLE);
     // Keyboard
     lv_obj_t *kb = ui_create_numeric_keyboard(s_screen);
 
@@ -189,7 +175,7 @@ void scr_motor_init(void)
     lv_obj_set_size(btn, 40, 15);
     lv_obj_t *btn_label = lv_label_create(btn);
     lv_label_set_text(btn_label, "SET");
-    lv_obj_center(btn_label);     
+    lv_obj_center(btn_label);
 
     UARTprintf("scr_motor Drop down\n");
     // Drop Down
@@ -199,18 +185,16 @@ void scr_motor_init(void)
         on_state_changed);
 
     lv_obj_set_size(mode_dd, 120, 30);
-    lv_obj_align(mode_dd, LV_ALIGN_RIGHT_MID, -10, 0);    
+    lv_obj_align(mode_dd, LV_ALIGN_RIGHT_MID, -10, 0);
     motor_state_label = lv_label_create(s_screen);
     lv_label_set_text(motor_state_label, "IDLE");
-    lv_obj_align(motor_state_label,LV_ALIGN_RIGHT_MID,-25,0);    
+    lv_obj_align(motor_state_label, LV_ALIGN_RIGHT_MID, -25, 0);
     lv_timer_create(motor_state_update_cb, 200, NULL);
 
-    led  = lv_led_create(s_screen);
-    lv_obj_align_to(led,motor_state_label, LV_ALIGN_LEFT_MID, -30, 0);
+    led = lv_led_create(s_screen);
+    lv_obj_align_to(led, motor_state_label, LV_ALIGN_LEFT_MID, -30, 0);
     lv_led_set_color(led, lv_palette_main(LV_PALETTE_ORANGE));
     lv_led_on(led);
-
-
 }
 
 lv_obj_t *scr_motor_get(void)

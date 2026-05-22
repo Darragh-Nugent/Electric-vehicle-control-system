@@ -3,5 +3,4 @@
 
 
 void scr_alerts_init(void);
-void scr_alerts_raise(uint32_t);
-void scr_alerts_clear(uint32_t);
+lv_obj_t *scr_alerts_get(void);

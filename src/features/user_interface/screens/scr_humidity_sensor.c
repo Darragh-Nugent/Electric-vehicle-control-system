@@ -5,12 +5,9 @@
 #include <stdbool.h>
 #include "../gui_utils.h"
 
-#define PERIOD 250
-#define SCALE_RADIUS 90
-#define NEEDLE_LENGTH 70
 
 static lv_obj_t *s_screen;
-static roundScale_t *humidity_graph;
+roundScale_t *humidity_graph;
 
 
 static void btn_home_cb(lv_event_t *e)
@@ -40,7 +37,7 @@ void scr_humidity_sensor_init(void)
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     lv_obj_set_width(prev_button,40);
 
-    humidity_graph = create_speedometer(s_screen,get_humidity,SCALE_RADIUS,NEEDLE_LENGTH,0,PERIOD);
+    humidity_graph = create_speedometer(s_screen,get_humidity,SENSOR_HUMIDITY_SCALE_RADIUS,SENSOR_HUMIDITY_NEEDLE_LENGTH,0,SENSOR_HUMIDITY_PERIOD);
     lv_obj_align(humidity_graph->scale, LV_ALIGN_BOTTOM_MID,0,0);
     lv_obj_align(humidity_graph->needle, LV_ALIGN_BOTTOM_MID,0,0);
 }

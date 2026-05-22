@@ -7,15 +7,26 @@
 #include "screens/scr_alerts.h"
 #include "screens/scr_speed_sensor.h"
 #include "screens/scr_temp_sensor.h"
-#include "screens/scr_power_sensor.h"
-#include "screens/scr_light_sensor.h"
-#include "screens/scr_accel_sensor.h"
-#include "screens/scr_dist_sensor.h"
+// #include "screens/scr_power_sensor.h"
+// #include "screens/scr_light_sensor.h"
+// #include "screens/scr_accel_sensor.h"
+// #include "screens/scr_dist_sensor.h"
+#include "screens/scr_graph.h"
 #include "screens/scr_humidity_sensor.h"
+#include "screens/scr_status.h"
 #include "utils/uartstdio.h"
+#include "../data.h"
+#include "gui_config.h"
 
 static lv_obj_t *s_screens[SCREEN_COUNT];
 static ScreenId_t s_active = SCREEN_DASHBOARD;
+extern graph_t *speed_graph;
+// extern graph_t *pwr_graph;
+// extern graph_t *lux_graph;
+// extern graph_t *accel_graph;
+// extern graph_t *dist_graph;
+extern graph_t *humidity_graph;
+extern graph_t *default_graph;
 
 // Animation direction — slide left when going "forward", right when going "back"
 static lv_scr_load_anim_t prv_anim_for(ScreenId_t from, ScreenId_t to)
@@ -32,11 +43,14 @@ void screen_manager_init(void)
     scr_sensors_init();
     scr_speed_sensor_init();
     scr_temp_sensor_init();
-    scr_pwr_sensor_init();
-    scr_light_sensor_init();
-    scr_accel_sensor_init();
-    scr_dist_sensor_init();
+    // scr_pwr_sensor_init();
+    // scr_light_sensor_init();
+    // scr_accel_sensor_init();
+    // scr_dist_sensor_init();
+    scr_graph_init();
+    scr_alerts_init();
     scr_humidity_sensor_init();
+    scr_status_init();
 
     s_screens[SCREEN_DASHBOARD] = scr_dashboard_get();
     s_screens[SCREEN_SETTINGS] = scr_settings_get();
@@ -44,15 +58,102 @@ void screen_manager_init(void)
     s_screens[SCREEN_SENSORS] = scr_sensors_get();
     s_screens[SCREEN_SPEED_SENSOR] = scr_speed_sensor_get();
     s_screens[SCREEN_TEMP_SENSOR] = scr_temp_sensor_get();
-    s_screens[SCREEN_PWR_SENSOR] = scr_pwr_sensor_get();
-    s_screens[SCREEN_LIGHT_SENSOR] = scr_light_sensor_get();
-    s_screens[SCREEN_ACCEL_SENSOR] = scr_accel_sensor_get();
-    s_screens[SCREEN_DIST_SENSOR] = scr_dist_sensor_get();
+    s_screens[SCREEN_PWR_SENSOR] = scr_graph_sensor_get();   // scr_pwr_sensor_get();
+    s_screens[SCREEN_LIGHT_SENSOR] = scr_graph_sensor_get(); // scr_light_sensor_get();
+    s_screens[SCREEN_ACCEL_SENSOR] = scr_graph_sensor_get(); // scr_accel_sensor_get();
+    s_screens[SCREEN_DIST_SENSOR] = scr_graph_sensor_get();  // scr_dist_sensor_get();
+    // s_screens[SCREEN_DEFAULT_GRAPH] = scr_graph_sensor_get();
+    s_screens[SCREEN_ALERT] = scr_alerts_get();
     s_screens[SCREEN_HUMIDITY_SENSOR] = scr_humidity_sensor_get();
+    s_screens[SCREEN_STATUS] = scr_status_get();
 
     // Load the default screen immediately (no animation on first load)
     lv_screen_load(s_screens[SCREEN_DASHBOARD]);
     s_active = SCREEN_DASHBOARD;
+}
+
+void disableGraphCB(void)
+{
+    lv_timer_pause(speed_graph->timer);
+    // lv_timer_pause(lux_graph->timer);
+    // lv_timer_pause(accel_graph->timer);
+    // lv_timer_pause(pwr_graph->timer);
+    // lv_timer_pause(dist_graph->timer);
+    lv_timer_pause(default_graph->timer);
+    lv_timer_pause(humidity_graph->timer);
+    //     lv_timer_pause(speed_graph->timer);
+}
+
+void clearGraph(graph_t *graph)
+{
+    lv_chart_series_t *ser = lv_chart_get_series_next(graph->chart, NULL);
+    lv_chart_set_all_value(graph->chart, ser, LV_CHART_POINT_NONE);
+    lv_chart_refresh(graph->chart);
+}
+
+void initGraph(graph_t *graph)
+{
+    // clearGraph(graph);
+    lv_timer_resume(graph->timer);
+}
+
+void graphScaleReset(graph_t *graph, int32_t yMin, int32_t yMax, int16_t overheadGap)
+{
+    graph->scaleYMin = yMin;
+    graph->scaleYMax = yMax;
+    graph->overheadGap = overheadGap;
+    if (graph->chart != NULL)
+    {
+        lv_chart_set_range(graph->chart, LV_CHART_AXIS_PRIMARY_Y, yMin, yMax);
+        lv_chart_refresh(graph->chart);
+    }
+
+    if (graph->scale != NULL)
+    {
+        lv_scale_set_range(graph->scale, yMin, yMax);
+    }
+    clearGraph(graph);
+    // lv_timer_set_period
+}
+
+void handleTimerCB(ScreenId_t id)
+{
+    disableGraphCB();
+    switch (id)
+    {
+    case SCREEN_SPEED_SENSOR:
+        initGraph(speed_graph);
+        break;
+
+    case SCREEN_ACCEL_SENSOR:
+        initGraph(default_graph);
+        graphScaleReset(default_graph, SENSOR_ACCELERATION_YMIN, SENSOR_ACCELERATION_YMAX, SENSOR_ACCELERATION_OVERHEADGAP); // DEFINES
+        break;
+    case SCREEN_PWR_SENSOR:
+        initGraph(default_graph);
+        graphScaleReset(default_graph, SENSOR_POWER_YMIN, SENSOR_POWER_YMAX, SENSOR_POWER_OVERHEADGAP);
+        break;
+    case SCREEN_LIGHT_SENSOR:
+        initGraph(default_graph);
+        graphScaleReset(default_graph, SENSOR_LIGHT_YMIN, SENSOR_LIGHT_YMAX, SENSOR_LIGHT_OVERHEADGAP);
+        break;
+    case SCREEN_DIST_SENSOR:
+        initGraph(default_graph);
+        graphScaleReset(default_graph, SENSOR_DISTANCE_YMIN, SENSOR_DISTANCE_YMAX, SENSOR_DISTANCE_OVERHEADGAP);
+        break;
+        // case SCREEN_DEFAULT_GRAPH:
+        //     initGraph(default_graph);
+        //     break;
+
+    case SCREEN_HUMIDITY_SENSOR:
+        lv_timer_resume(humidity_graph->timer);
+        break;
+    case SCREEN_TEMP_SENSOR:
+           lv_timer_resume(speed_graph->timer);
+        break;
+    default:
+        break;
+    }
 }
 
 void screen_manager_goto(ScreenId_t id)
@@ -62,10 +163,12 @@ void screen_manager_goto(ScreenId_t id)
 
     lv_scr_load_anim_t anim = prv_anim_for(s_active, id);
 
+    handleTimerCB(id);
+
     lv_screen_load_anim(
         s_screens[id],
         anim,
-        350,  // animation duration ms
+        SCREEN_ANIM_TIME,  // animation duration ms
         0,    // delay ms before starting
         false // do NOT delete the old screen after transition - BAD if done!!
     );

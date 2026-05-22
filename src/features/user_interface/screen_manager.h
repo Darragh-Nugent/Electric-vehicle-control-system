@@ -1,7 +1,6 @@
 #pragma once
 #include "lvgl.h"
-
-#define COLOR_BACKGROUND_GREEN lv_color_make(124, 218, 124)
+#include "gui_config.h"
 
 typedef enum {
     SCREEN_DASHBOARD = 0,
@@ -13,6 +12,7 @@ typedef enum {
     SCREEN_LIGHT_SENSOR,
     SCREEN_ACCEL_SENSOR,
     SCREEN_DIST_SENSOR,
+    SCREEN_DEFAULT_GRAPH,
     SCREEN_TEMP_SENSOR,
     SCREEN_HUMIDITY_SENSOR,
     SCREEN_STATUS,

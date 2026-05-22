@@ -52,13 +52,13 @@
 //*****************************************************************************
 extern volatile uint32_t g_ui32SysClock;
 
-// Queue handle (producers include data.h and use this queue)
-QueueHandle_t g_ui_queue;
+UiMsg_t g_ui_state;
 
 tContext g_sContext;
 static lv_display_t *my_display;
 static lv_color_t draw_buf1[DISP_BUF_PIXELS]; // 20 line buffer
 static lv_color_t draw_buf2[DISP_BUF_PIXELS]; // 20 line buffer
+sensorThresholds_t g_thresholds;
 
 void vCreateGuiTask(void);
 static void prvGuiTask(void *pvParameters);
@@ -81,14 +81,13 @@ static void prvLvglTickCb(TimerHandle_t xTimer)
 // - side note - relevant getters and setters for motor/sensors are called via api functions depending on which screen is currently displayed (not implemented yet)
 static void prvDispatchMsg(const UiMsg_t *msg)
 {
-    UARTprintf("Dispatching MSGS\n");
     switch (msg->type)
     {
 
     // Motor data — update motor screen; dashboard shows summary
     case UI_MSG_MOTOR_RPM:
         motorSetSpeed(msg->payload.u);
-        UARTprintf("MOTOR: SETTING RPM: %d\n",msg->payload.u);
+        UARTprintf("MOTOR: SETTING RPM: %d\n", msg->payload.u);
         break;
 
     case UI_MSG_MOTOR_CURRENT:
@@ -113,53 +112,47 @@ static void prvDispatchMsg(const UiMsg_t *msg)
     // Sensor data
     case UI_MSG_SENSOR_UPDATE_POWER:
         // Sensor_UpdatePower(msg->payload.u);
-        UARTprintf("SENSOR: UPDATING POWER: %d\n",msg->payload.u);
+        g_thresholds.TH_POWER = msg->payload.u;
+        UARTprintf("SENSOR: UPDATING POWER: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_ACCELERATION:
         // Sensor_UpdateAccel(msg->payload.u);
-        UARTprintf("SENSOR: UPDATING ACCELERATION: %d\n",msg->payload.u);
+        g_thresholds.TH_ACCEL = msg->payload.u;
+        UARTprintf("SENSOR: UPDATING ACCELERATION: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_DISTANCE:
         // Sensor_UpdateDistance(msg->payload.u);
-        UARTprintf("SENSOR: UPDATING DISTANCE: %d\n",msg->payload.u);
+        g_thresholds.TH_DIST = msg->payload.u;
+        UARTprintf("SENSOR: UPDATING DISTANCE: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_HUMIDITY:
         // Sensor_UpdateHumidity(msg->payload.u);
-        UARTprintf("SENSOR: UPDATING HUMIDITY: %d\n",msg->payload.u);
-    break;
+        UARTprintf("SENSOR: UPDATING HUMIDITY: %d\n", msg->payload.u);
+        break;
     case UI_MSG_SENSOR_UPDATE_TEMP:
+        g_thresholds.TH_TEMP = msg->payload.u;
         // Sensor_UpdateTemp(msg->payload.u);
-        UARTprintf("SENSOR: UPDATING TEMP: %d\n",msg->payload.u);
+        UARTprintf("SENSOR: UPDATING TEMP: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_LUX:
         // Sensor_UpdateLux(msg->payload.u);
-        UARTprintf("SENSOR: UPDATING LUX: %d\n",msg->payload.u);
+        UARTprintf("SENSOR: UPDATING LUX: %d\n", msg->payload.u);
         break;
     // Faults — always visible regardless of active screen
     case UI_MSG_FAULT_RAISED:
-        scr_alerts_raise(msg->payload.u);
-        scr_dashboard_show_fault_banner(true);
+        screen_manager_goto(SCREEN_ALERT);
         break;
     case UI_MSG_FAULT_CLEARED:
-        scr_alerts_clear(msg->payload.u);
-        scr_dashboard_show_fault_banner(false);
+        g_ui_state.type = UI_MSG_STATE_NONE;
+        motorAcknowledgeFault();
         break;
 
     default:
         break;
     }
-}
-
-// Drain the Queue and prevents sensors to flood the queue to prevent
-// old values
-static void prvDrainQueue(void)
-{
-    UiMsg_t msg;
-    uint8_t safeguard = 16; // may change if it seems like its skipping alot
-    while (safeguard-- && xQueueReceive(g_ui_queue, &msg, 0) == pdTRUE)
-    {
-        prvDispatchMsg(&msg);
-    }
+    // Reset state, avoid processing stale data
+    if (g_ui_state.type != UI_MSG_FAULT_RAISED)
+        g_ui_state.type = UI_MSG_STATE_NONE;
 }
 
 void display_init(void)
@@ -177,8 +170,7 @@ void display_init(void)
 
 void vCreateGuiTask(void)
 {
-    g_ui_queue = xQueueCreate(UI_QUEUE_DEPTH, sizeof(UiMsg_t));
-    UARTprintf("Inside create gui, after queue\n");
+    UARTprintf("Inside create gui\n");
     prvGuiHardwareInit();
     BaseType_t ret = xTaskCreate(
         prvGuiTask,
@@ -217,7 +209,10 @@ void prvGuiTask(void *pvParameters)
     for (;;)
     {
         // Consume all pending data updates
-        prvDrainQueue();
+        motor_state_t state = motorGetState();//MOTOR_STATE_FAULT; // portmax delay, be careful this doesnt delay the UI
+        if (state == MOTOR_STATE_FAULT)
+            g_ui_state.type = UI_MSG_FAULT_RAISED;
+        prvDispatchMsg(&g_ui_state);
 
         // Lvgl rendering/timers
         uint32_t delay_ms = lv_timer_handler();

@@ -1,8 +1,42 @@
 #include "lvgl.h"
 #include "math.h"
 #include "../data.h"
+#include "./screen_manager.h"
 #include "utils/uartstdio.h"
+#include "gui_utils.h"
+#include "gui_config.h"
+
+extern UiMsg_t g_ui_state;
+
 typedef void (*dropdown_cb_t)(const char *text);
+
+void updateGUIState(UiMsgType_t msg, uint32_t value){
+    g_ui_state.type = msg;
+    g_ui_state.payload.u = value;
+}
+
+void setBackgroundColour(lv_obj_t *parent)
+{
+    lv_obj_set_style_bg_color(
+        parent,
+        COLOR_BACKGROUND_GREEN,
+        LV_PART_MAIN);
+
+    lv_obj_set_style_bg_grad_color(
+        parent,
+        lv_palette_main(LV_PALETTE_LIME),
+        LV_PART_MAIN);
+
+    lv_obj_set_style_bg_grad_dir(
+        parent,
+        LV_GRAD_DIR_VER,
+        LV_PART_MAIN);
+
+    lv_obj_set_style_bg_opa(
+        parent,
+        LV_OPA_COVER,
+        LV_PART_MAIN);
+}
 
 // Nav Button
 lv_obj_t *nav_button_init(lv_obj_t *parent, const char *label, lv_event_cb_t cb,
@@ -35,8 +69,9 @@ lv_obj_t *create_icon_button(lv_obj_t *parent, const char *icon, lv_event_cb_t c
 
     lv_obj_t *button = lv_button_create(parent);
     lv_obj_set_size(button, 80, 36);
-    lv_obj_align(button, LV_ALIGN_TOP_LEFT, x, y);
+    lv_obj_align(button, align, x, y);
     lv_obj_add_event_cb(button, cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_style_bg_color(button,COLOR_STATUS_CARD_BG_LV,0);
 
     lv_obj_t *home = lv_label_create(button);
     lv_label_set_text(home, icon); // LVGL built-in icon
@@ -44,7 +79,6 @@ lv_obj_t *create_icon_button(lv_obj_t *parent, const char *icon, lv_event_cb_t c
 
     return button;
 }
-
 
 static void dropdown_event_cb(lv_event_t *e)
 {
@@ -124,11 +158,9 @@ void ui_attach_keyboard(lv_obj_t *text_area, lv_obj_t *keyboard)
     lv_obj_add_event_cb(keyboard, kb_event_cb, LV_EVENT_FOCUSED, keyboard);
 }
 
-
 /**
  * This Section covers the graph creation for the speed, power, light, acceleration and distance sensors
  */
-
 
 // Callback function to add the graph
 void add_graph_data_cb(lv_timer_t *t)
@@ -180,16 +212,17 @@ void add_graph_data_cb(lv_timer_t *t)
 }
 
 // Create the chart
-static lv_obj_t *create_chart(lv_obj_t *s_screen, int32_t yMin, int32_t yMax, int16_t overhead)
+static lv_obj_t *create_chart(lv_obj_t *s_screen, int32_t yMin, 
+    int32_t yMax, int16_t overhead, uint16_t pointCount)
 {
     /*Create a stacked_area_chart.obj*/
     lv_obj_t *chart = lv_chart_create(s_screen);
     lv_chart_set_update_mode(chart, LV_CHART_UPDATE_MODE_CIRCULAR);
     lv_obj_set_style_size(chart, 0, 0, LV_PART_INDICATOR);
-    lv_obj_set_size(chart, 220, 130);
-    lv_obj_align(chart,LV_ALIGN_BOTTOM_MID, 0, -50);
-     lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, yMin, yMax);
-    lv_chart_set_point_count(chart, 80);
+    lv_obj_set_size(chart, CHART_WIDTH, CHART_HEIGHT);
+    lv_obj_align(chart, LV_ALIGN_BOTTOM_MID, 20, -25);
+    lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, yMin, yMax);
+    lv_chart_set_point_count(chart, pointCount);
     lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
     // /*Prefill with data*/
     // uint32_t i;
@@ -207,7 +240,7 @@ static lv_obj_t *create_scale(lv_obj_t *s_screen, lv_obj_t *chart, int32_t yMax)
     lv_obj_t *scale = lv_scale_create(s_screen);
 
     lv_scale_set_mode(scale, LV_SCALE_MODE_VERTICAL_LEFT);
-    lv_obj_set_size(scale, 40, 130);
+    lv_obj_set_size(scale, 40, CHART_HEIGHT);
     lv_scale_set_range(scale, 0, yMax);
     lv_scale_set_total_tick_count(scale, 6);
     lv_scale_set_major_tick_every(scale, 1);
@@ -216,27 +249,45 @@ static lv_obj_t *create_scale(lv_obj_t *s_screen, lv_obj_t *chart, int32_t yMax)
     return scale;
 }
 
+lv_obj_t *create_time_scale(lv_obj_t *parent, lv_obj_t *chart, uint32_t period, uint16_t points)
+{
+    // Create the scale
+    lv_obj_t *scale = lv_scale_create(parent);
+    lv_obj_set_size(scale, CHART_WIDTH, 40); // width matches chart, height for labels
+    lv_obj_align_to(scale, chart, LV_ALIGN_OUT_BOTTOM_MID, 0, 5);
+    lv_scale_set_mode(scale, LV_SCALE_MODE_HORIZONTAL_BOTTOM);
+    uint32_t total_time_s = (period * points) / 1000;
+    lv_scale_set_range(scale, 0, total_time_s); // total time covered by chart
+    lv_scale_set_total_tick_count(scale, total_time_s + 1);
+    lv_scale_set_major_tick_every(scale, 1);
+
+    return scale;
+}
+
 // Create the graph
-graph_t *create_graph(lv_obj_t * s_screen, int32_t yMin, int32_t yMax, 
-    int16_t overhead, int16_t period, graph_data_cb_t cb){
-    graph_t * graph = lv_malloc(sizeof(graph_t));
-    graph->chart = create_chart(s_screen, yMin, yMax, overhead);
+graph_t *create_graph(lv_obj_t *s_screen, int32_t yMin, int32_t yMax,
+                      int16_t overhead, int16_t period, graph_data_cb_t cb, uint16_t pointCount)
+{
+    graph_t *graph = lv_malloc(sizeof(graph_t));
+    graph->chart = create_chart(s_screen, yMin, yMax, overhead, pointCount);
     graph->scale = create_scale(s_screen, graph->chart, yMax);
     graph->scaleYMax = yMax;
     graph->scaleYMin = yMin;
     graph->overheadGap = overhead;
     graph->get_value_cb = cb; // Function cb reference to get value for specific sensor
-    graph->timer = lv_timer_create(add_graph_data_cb, period, graph);
+    // If user specifies a callback function
+    if (cb) graph->timer = lv_timer_create(add_graph_data_cb, period, graph);
+    else graph->timer = NULL;
 
     return graph;
 }
 
 /**
  * This section covers the rounded scale used for the motor and humidity sensors
- * 
+ *
  */
 
- // Convert a value (0–100) into an angle in degrees
+// Convert a value (0–100) into an angle in degrees
 static float value_to_angle(int32_t value)
 {
     return 135 + (270 * value) / 100; // start 135°, range 270°
@@ -251,14 +302,14 @@ static void update_needle_points(roundScale_t *scale, int32_t value)
     // Unsure why the inital x,y needle coords rely on scale when the parent of the needle is the screen, so position should be relative to the screen
     scale->needle_points[0].x = scale->radius;
     scale->needle_points[0].y = scale->radius;
-    scale->needle_points[1].x = scale->radius + cos(rad)*scale->needle_length;
-    scale->needle_points[1].y = scale->radius + sin(rad)*scale->needle_length;
+    scale->needle_points[1].x = scale->radius + cos(rad) * scale->needle_length;
+    scale->needle_points[1].y = scale->radius + sin(rad) * scale->needle_length;
 
     lv_line_set_points(scale->needle, scale->needle_points, 2);
 }
 
 // Animation callback for LVGL
-static void needle_anim_cb(void * obj, int32_t value)
+static void needle_anim_cb(void *obj, int32_t value)
 {
     roundScale_t *scale = (roundScale_t *)obj;
     update_needle_points(scale, value);
@@ -267,19 +318,22 @@ static void needle_anim_cb(void * obj, int32_t value)
 
 static void needle_update_timer_cb(lv_timer_t *t)
 {
-    roundScale_t *scale = (roundScale_t  *)lv_timer_get_user_data(t);
+    roundScale_t *scale = (roundScale_t *)lv_timer_get_user_data(t);
     int32_t sensor_value = scale->get_value_cb();
     int16_t value = scale->cur_value + sensor_value;
     int32_t tot_sensor_value = value;
-    if (tot_sensor_value < 0) tot_sensor_value = 0;
-    else if (tot_sensor_value > 50 && tot_sensor_value < 100) tot_sensor_value -= lv_rand(-1,2);
-    else if (tot_sensor_value > 100) tot_sensor_value = 100;
+    if (tot_sensor_value < 0)
+        tot_sensor_value = 0;
+    else if (tot_sensor_value > 50 && tot_sensor_value < 100)
+        tot_sensor_value -= lv_rand(-1, 2);
+    else if (tot_sensor_value > 100)
+        tot_sensor_value = 100;
     // Animate needle from last value to sensor_value over 100 ms
     lv_anim_t a;
     lv_anim_init(&a);
     lv_anim_set_var(&a, scale);
     lv_anim_set_values(&a, scale->cur_value, tot_sensor_value);
-    lv_anim_set_time(&a, 100);
+    lv_anim_set_time(&a, NEEDLE_ANIM_TIME);
     lv_anim_set_exec_cb(&a, needle_anim_cb);
     lv_anim_start(&a);
 
@@ -287,7 +341,7 @@ static void needle_update_timer_cb(lv_timer_t *t)
 }
 
 // Modified and obtained from https://lvgl.io/docs/open/widgets/scale
-roundScale_t * create_speedometer(lv_obj_t *parent, scale_data_cb_t cb,int16_t radius, int16_t needle_length, int32_t cur_value, int16_t period)
+roundScale_t *create_speedometer(lv_obj_t *parent, scale_data_cb_t cb, int16_t radius, int16_t needle_length, int32_t cur_value, int16_t period)
 {
     roundScale_t *round_scale = lv_malloc(sizeof(roundScale_t));
 
@@ -298,36 +352,93 @@ roundScale_t * create_speedometer(lv_obj_t *parent, scale_data_cb_t cb,int16_t r
 
     // Create scale background
     round_scale->scale = lv_scale_create(parent);
-    lv_obj_set_size(round_scale->scale, radius*2, radius*2);
+    lv_obj_set_size(round_scale->scale, radius * 2, radius * 2);
     lv_scale_set_mode(round_scale->scale, LV_SCALE_MODE_ROUND_INNER);
     lv_obj_set_style_bg_opa(round_scale->scale, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(round_scale->scale, lv_palette_lighten(LV_PALETTE_GREY, 5), 0);
     lv_obj_set_style_radius(round_scale->scale, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_clip_corner(round_scale->scale, true, 0);
     lv_obj_center(round_scale->scale);
-    lv_obj_align(round_scale->scale,LV_ALIGN_LEFT_MID,25,0);
+    lv_obj_align(round_scale->scale, LV_ALIGN_LEFT_MID, 25, 0);
 
     lv_scale_set_label_show(round_scale->scale, true);
-    lv_scale_set_total_tick_count(round_scale->scale, 21);   
-    lv_scale_set_major_tick_every(round_scale->scale, 2);   
-    lv_obj_set_style_length(round_scale->scale, 5, LV_PART_ITEMS);    
+    lv_scale_set_total_tick_count(round_scale->scale, 21);
+    lv_scale_set_major_tick_every(round_scale->scale, 2);
+    lv_obj_set_style_length(round_scale->scale, 5, LV_PART_ITEMS);
     lv_obj_set_style_length(round_scale->scale, 10, LV_PART_INDICATOR);
     lv_scale_set_range(round_scale->scale, 0, 100);
     lv_scale_set_angle_range(round_scale->scale, 270);
     lv_scale_set_rotation(round_scale->scale, 135);
 
     round_scale->needle = lv_line_create(parent);
-    lv_obj_set_size(round_scale->needle, radius*2, radius*2);
+    lv_obj_set_size(round_scale->needle, radius * 2, radius * 2);
     lv_obj_center(round_scale->needle);
-    lv_obj_align(round_scale->needle,LV_ALIGN_LEFT_MID,25,0);
+    lv_obj_align(round_scale->needle, LV_ALIGN_LEFT_MID, 25, 0);
 
     lv_obj_set_style_line_width(round_scale->needle, 4, LV_PART_MAIN);
     lv_obj_set_style_line_color(round_scale->needle, lv_palette_main(LV_PALETTE_RED), LV_PART_MAIN);
     lv_obj_set_style_line_rounded(round_scale->needle, true, LV_PART_MAIN);
-    
+
     // Initialize needle at 0
-    update_needle_points(round_scale,cur_value);
+    update_needle_points(round_scale, cur_value);
 
     round_scale->timer = lv_timer_create(needle_update_timer_cb, period, round_scale);
     return round_scale;
+}
+
+lv_obj_t *create_card(lv_obj_t *parent,
+                      const char *title,
+                      lv_coord_t x,
+                      lv_coord_t y,
+                      lv_color_t color,
+                      lv_obj_t **value_label,
+                        lv_align_t alignValue)
+{
+    lv_obj_t *card = lv_obj_create(parent);
+
+    lv_obj_set_size(card, STATUS_CARD_WIDTH, STATUS_CARD_HEIGHT);
+    lv_obj_set_pos(card, x, y);
+
+    lv_obj_set_style_radius(card, 18, 0);
+
+    lv_obj_set_style_bg_color(card, lv_color_hex(STATUS_CARD_BG), 0);
+    lv_obj_set_style_bg_opa(card, LV_OPA_90, 0);
+
+    lv_obj_set_style_border_width(card, 2, 0);
+    lv_obj_set_style_border_color(card, color, 0);
+
+    lv_obj_set_scrollbar_mode(card, LV_SCROLLBAR_MODE_OFF);
+
+    /* Title */
+    lv_obj_t *lbl_title = lv_label_create(card);
+    lv_label_set_text(lbl_title, title);
+
+    lv_obj_set_style_text_color(lbl_title,
+                                lv_color_hex(0xCBD5E1),
+                                0);
+
+    lv_obj_align(lbl_title, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    /* Value */
+    if (value_label != NULL)
+    {
+        *value_label = lv_label_create(card);
+
+        lv_obj_set_style_text_font(*value_label,
+                                   &lv_font_montserrat_22,
+                                   0);
+
+        lv_obj_set_style_text_color(*value_label,
+                                    lv_color_white(),
+                                    0);
+
+        lv_label_set_text(*value_label, "--");
+
+        lv_obj_align(*value_label,
+                     alignValue,
+                     0,
+                     10);
+    }
+
+    return card;
 }

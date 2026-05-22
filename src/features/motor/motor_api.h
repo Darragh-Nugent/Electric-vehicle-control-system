@@ -30,5 +30,5 @@ bool motorSetState(motor_state_t state);
 
 void motorSetSpeed(uint16_t rpm);
 uint16_t motorGetSpeed(void);
-
+void motorAcknowledgeFault(void);
 #endif
