@@ -31,4 +31,3 @@ lv_obj_t *create_card(lv_obj_t *parent,
                       lv_color_t color,
                       lv_obj_t **value_label);
 
-graph_t *reset_graph(graph_t *graph, int32_t yMin, int32_t yMax, graph_data_cb_t cb);

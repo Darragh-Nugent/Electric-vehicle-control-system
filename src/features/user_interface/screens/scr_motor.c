@@ -11,9 +11,7 @@
 #include "features/motor/motor_api.h"
 #include <math.h>
 
-#define SCALE_RADIUS 70
-#define NEEDLE_LENGTH 60
-#define PERIOD 50
+
 // LV_IMAGE_DECLARE(img_hand);
 static lv_obj_t *s_screen;
 static lv_obj_t *rpm_input;
@@ -148,7 +146,7 @@ void scr_motor_init(void)
     s_screen = lv_obj_create(NULL);
     setBackgroundColour(s_screen);
     lv_obj_remove_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
-    speedometer = create_speedometer(s_screen, get_speed, SCALE_RADIUS, NEEDLE_LENGTH, 0, PERIOD);
+    speedometer = create_speedometer(s_screen, get_speed, SPEEDO_SCALE_RADIUS, SPEEDO_NEEDLE_LENGTH, 0, SPEEDO_PERIOD);
     // To DO:
     // Add relevant buttons and diagnostics for motor
 

@@ -4,6 +4,7 @@
 #include "./screen_manager.h"
 #include "utils/uartstdio.h"
 #include "gui_utils.h"
+#include "gui_config.h"
 
 typedef void (*dropdown_cb_t)(const char *text);
 
@@ -209,8 +210,8 @@ static lv_obj_t *create_chart(lv_obj_t *s_screen, int32_t yMin, int32_t yMax, in
     lv_obj_t *chart = lv_chart_create(s_screen);
     lv_chart_set_update_mode(chart, LV_CHART_UPDATE_MODE_CIRCULAR);
     lv_obj_set_style_size(chart, 0, 0, LV_PART_INDICATOR);
-    lv_obj_set_size(chart, 220, 130);
-    lv_obj_align(chart, LV_ALIGN_BOTTOM_MID, 0, -50);
+    lv_obj_set_size(chart, CHART_WIDTH, CHART_HEIGHT);
+    lv_obj_align(chart, LV_ALIGN_BOTTOM_MID, 20, -25);
     lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, yMin, yMax);
     lv_chart_set_point_count(chart, 80);
     lv_chart_add_series(chart, lv_palette_main(LV_PALETTE_RED), LV_CHART_AXIS_PRIMARY_Y);
@@ -230,7 +231,7 @@ static lv_obj_t *create_scale(lv_obj_t *s_screen, lv_obj_t *chart, int32_t yMax)
     lv_obj_t *scale = lv_scale_create(s_screen);
 
     lv_scale_set_mode(scale, LV_SCALE_MODE_VERTICAL_LEFT);
-    lv_obj_set_size(scale, 40, 130);
+    lv_obj_set_size(scale, 40, CHART_HEIGHT);
     lv_scale_set_range(scale, 0, yMax);
     lv_scale_set_total_tick_count(scale, 6);
     lv_scale_set_major_tick_every(scale, 1);
@@ -257,20 +258,6 @@ graph_t *create_graph(lv_obj_t *s_screen, int32_t yMin, int32_t yMax,
     return graph;
 }
 
-graph_t *reset_graph(graph_t *graph, int32_t yMin, int32_t yMax, graph_data_cb_t cb)
-{
-
-    lv_chart_set_range(graph->chart, LV_CHART_AXIS_PRIMARY_Y, yMin, yMax);
-    lv_chart_series_t *ser = lv_chart_get_series_next(graph->chart, NULL);
-    if (ser)
-    {
-        lv_chart_set_all_value(graph->chart, ser, LV_CHART_POINT_NONE);
-        lv_chart_refresh(graph->chart);
-    }
-
-    graph->get_value_cb = cb;
-    return graph;
-}
 /**
  * This section covers the rounded scale used for the motor and humidity sensors
  *
@@ -322,7 +309,7 @@ static void needle_update_timer_cb(lv_timer_t *t)
     lv_anim_init(&a);
     lv_anim_set_var(&a, scale);
     lv_anim_set_values(&a, scale->cur_value, tot_sensor_value);
-    lv_anim_set_time(&a, 100);
+    lv_anim_set_time(&a, NEEDLE_ANIM_TIME);
     lv_anim_set_exec_cb(&a, needle_anim_cb);
     lv_anim_start(&a);
 
@@ -384,12 +371,12 @@ lv_obj_t *create_card(lv_obj_t *parent,
 {
     lv_obj_t *card = lv_obj_create(parent);
 
-    lv_obj_set_size(card, 140, 75);
+    lv_obj_set_size(card, STATUS_CARD_WIDTH, STATUS_CARD_HEIGHT);
     lv_obj_set_pos(card, x, y);
 
     lv_obj_set_style_radius(card, 18, 0);
 
-    lv_obj_set_style_bg_color(card, lv_color_hex(0x1E293B), 0);
+    lv_obj_set_style_bg_color(card, lv_color_hex(STATUS_CARD_BG), 0);
     lv_obj_set_style_bg_opa(card, LV_OPA_90, 0);
 
     lv_obj_set_style_border_width(card, 2, 0);

@@ -7,15 +7,16 @@
 #include "screens/scr_alerts.h"
 #include "screens/scr_speed_sensor.h"
 #include "screens/scr_temp_sensor.h"
-#include "screens/scr_power_sensor.h"
-#include "screens/scr_light_sensor.h"
-#include "screens/scr_accel_sensor.h"
-#include "screens/scr_dist_sensor.h"
+// #include "screens/scr_power_sensor.h"
+// #include "screens/scr_light_sensor.h"
+// #include "screens/scr_accel_sensor.h"
+// #include "screens/scr_dist_sensor.h"
 #include "screens/scr_graph.h"
 #include "screens/scr_humidity_sensor.h"
 #include "screens/scr_status.h"
 #include "utils/uartstdio.h"
 #include "../data.h"
+#include "gui_config.h"
 
 static lv_obj_t *s_screens[SCREEN_COUNT];
 static ScreenId_t s_active = SCREEN_DASHBOARD;
@@ -124,19 +125,19 @@ void handleTimerCB(ScreenId_t id)
 
     case SCREEN_ACCEL_SENSOR:
         initGraph(default_graph);
-        graphScaleReset(default_graph, 0, 4000, 250); // DEFINES
+        graphScaleReset(default_graph, SENSOR_ACCELERATION_YMIN, SENSOR_ACCELERATION_YMAX, SENSOR_ACCELERATION_OVERHEADGAP); // DEFINES
         break;
     case SCREEN_PWR_SENSOR:
         initGraph(default_graph);
-        graphScaleReset(default_graph, 0, 30, 5);
+        graphScaleReset(default_graph, SENSOR_POWER_YMIN, SENSOR_POWER_YMAX, SENSOR_POWER_OVERHEADGAP);
         break;
     case SCREEN_LIGHT_SENSOR:
         initGraph(default_graph);
-        graphScaleReset(default_graph, 0, 1000, 250);
+        graphScaleReset(default_graph, SENSOR_LIGHT_YMIN, SENSOR_LIGHT_YMAX, SENSOR_LIGHT_OVERHEADGAP);
         break;
     case SCREEN_DIST_SENSOR:
         initGraph(default_graph);
-        graphScaleReset(default_graph, 0, 20, 3);
+        graphScaleReset(default_graph, SENSOR_DISTANCE_YMIN, SENSOR_DISTANCE_YMAX, SENSOR_DISTANCE_OVERHEADGAP);
         break;
         // case SCREEN_DEFAULT_GRAPH:
         //     initGraph(default_graph);
@@ -146,7 +147,7 @@ void handleTimerCB(ScreenId_t id)
         lv_timer_resume(humidity_graph->timer);
         break;
     case SCREEN_TEMP_SENSOR:
-        //    lv_timer_resume(speed_graph->timer);
+           lv_timer_resume(speed_graph->timer);
         break;
     default:
         break;
@@ -165,7 +166,7 @@ void screen_manager_goto(ScreenId_t id)
     lv_screen_load_anim(
         s_screens[id],
         anim,
-        350,  // animation duration ms
+        SCREEN_ANIM_TIME,  // animation duration ms
         0,    // delay ms before starting
         false // do NOT delete the old screen after transition - BAD if done!!
     );

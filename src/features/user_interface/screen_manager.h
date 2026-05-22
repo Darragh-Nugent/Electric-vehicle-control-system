@@ -1,9 +1,6 @@
 #pragma once
 #include "lvgl.h"
-
-#define COLOR_BACKGROUND_GREEN lv_color_make(124, 218, 124)
-#define DEFAULT_OVERHEAD_GAP 20
-#define DEFAULT_PERIOD 200
+#include "gui_config.h"
 
 typedef enum {
     SCREEN_DASHBOARD = 0,
