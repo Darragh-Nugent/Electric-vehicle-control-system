@@ -9,7 +9,8 @@
 typedef int32_t (*graph_data_cb_t)(void);
 typedef int32_t (*scale_data_cb_t)(void);
 
-typedef struct{
+typedef struct
+{
     lv_obj_t *chart;
     lv_obj_t *scale;
     lv_timer_t *timer;
@@ -17,9 +18,10 @@ typedef struct{
     int32_t scaleYMax;
     int16_t overheadGap;
     graph_data_cb_t get_value_cb;
-}graph_t;
+} graph_t;
 
-typedef struct{
+typedef struct
+{
     lv_obj_t *scale;
     lv_obj_t *needle;
     lv_timer_t *timer;
@@ -30,6 +32,15 @@ typedef struct{
     scale_data_cb_t get_value_cb;
 } roundScale_t;
 
+
+typedef struct
+{
+    uint16_t TH_POWER;
+    uint16_t TH_ACCEL;
+    uint16_t TH_DIST;
+} sensorThresholds_t;
+
+extern const char *motor_state_names[];
 //*****************************************************************************
 //
 // Mesage Types

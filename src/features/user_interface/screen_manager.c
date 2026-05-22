@@ -51,7 +51,7 @@ void screen_manager_init(void)
     s_screens[SCREEN_ACCEL_SENSOR] = scr_accel_sensor_get();
     s_screens[SCREEN_DIST_SENSOR] = scr_dist_sensor_get();
     s_screens[SCREEN_HUMIDITY_SENSOR] = scr_humidity_sensor_get();
-    s_screens[SCREEN_STATUS] = scr_status_get();
+   s_screens[SCREEN_STATUS] = scr_status_get();
 
     // Load the default screen immediately (no animation on first load)
     lv_screen_load(s_screens[SCREEN_DASHBOARD]);

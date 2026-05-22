@@ -100,12 +100,6 @@ static void on_state_changed(const char *state)
 void motor_state_update_cb(lv_timer_t *timer)
 {
     (void)timer;
-    const char *motor_state_names[] = {
-        "Idle",
-        "Starting",
-        "Running",
-        "Breaking",
-        "Fault"};
     static motor_state_t prev = MOTOR_STATE_IDLE;
     motor_state_t cur = motorGetState(); // MOTOR_STATE_RUNNING;//
     if (prev != cur)

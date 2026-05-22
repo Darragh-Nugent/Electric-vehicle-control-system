@@ -358,15 +358,15 @@ roundScale_t *create_speedometer(lv_obj_t *parent, scale_data_cb_t cb, int16_t r
 }
 
 lv_obj_t *create_card(lv_obj_t *parent,
-                             const char *title,
-                             lv_coord_t x,
-                             lv_coord_t y,
-                             lv_color_t color,
-                             lv_obj_t **value_label)
+                      const char *title,
+                      lv_coord_t x,
+                      lv_coord_t y,
+                      lv_color_t color,
+                      lv_obj_t **value_label)
 {
     lv_obj_t *card = lv_obj_create(parent);
 
-    lv_obj_set_size(card, 140, 90);
+    lv_obj_set_size(card, 140, 75);
     lv_obj_set_pos(card, x, y);
 
     lv_obj_set_style_radius(card, 18, 0);
@@ -390,22 +390,25 @@ lv_obj_t *create_card(lv_obj_t *parent,
     lv_obj_align(lbl_title, LV_ALIGN_TOP_LEFT, 0, 0);
 
     /* Value */
-    *value_label = lv_label_create(card);
+    if (value_label != NULL)
+    {
+        *value_label = lv_label_create(card);
 
-    lv_obj_set_style_text_font(*value_label,
-                               &lv_font_montserrat_22,
-                               0);
+        lv_obj_set_style_text_font(*value_label,
+                                   &lv_font_montserrat_22,
+                                   0);
 
-    lv_obj_set_style_text_color(*value_label,
-                                lv_color_white(),
-                                0);
+        lv_obj_set_style_text_color(*value_label,
+                                    lv_color_white(),
+                                    0);
 
-    lv_label_set_text(*value_label, "--");
+        lv_label_set_text(*value_label, "--");
 
-    lv_obj_align(*value_label,
-                 LV_ALIGN_CENTER,
-                 0,
-                 10);
+        lv_obj_align(*value_label,
+                     LV_ALIGN_CENTER,
+                     0,
+                     10);
+    }
 
     return card;
 }
