@@ -17,6 +17,7 @@ SemaphoreHandle_t motorStateMutex = NULL;
 SemaphoreHandle_t motorSetSpeedMutex = NULL;
 SemaphoreHandle_t motorStartSemaphore = NULL;
 SemaphoreHandle_t motorUpToSpeedSemaphore = NULL;
+SemaphoreHandle_t motorEStopSemaphore = NULL;
 
 extern SemaphoreHandle_t faultAcknowledgedSemaphore;
 
@@ -24,7 +25,7 @@ extern motor_state_t motor_state;
 extern void hallSensorIntEnable(void);
 extern void kickStartMotor(void);
 
-volatile bool motorEStopRequested = false;
+// volatile bool motorEStopRequested = false;
 
 
 // Transition state to idle
@@ -122,7 +123,7 @@ bool motorSetState(motor_state_t state)
 
 void motorRequestEStop(void)
 {
-    motorEStopRequested = true;
+    xSemaphoreGive(motorEStopSemaphore);
 }
 
 void motorAcknowledgeFault(void)

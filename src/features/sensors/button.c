@@ -71,7 +71,7 @@ void xButtonsHandler(void)
                 }
                 else
                 {
-                    motorRequestEStop();
+                    if (xSemaphoreTake(motorEStopSemaphore, 0) == pdTRUE);
                 }
         }
 
