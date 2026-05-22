@@ -10,7 +10,7 @@
 #define PERIOD 50
 
 static lv_obj_t *s_screen;
-static graph_t *speed_graph;
+graph_t *speed_graph;
 static int32_t scaleYMin = 0;
 static int32_t scaleYMax = 1500;
 void scr_sensor1_get_x(float x) {};

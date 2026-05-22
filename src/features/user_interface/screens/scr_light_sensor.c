@@ -11,7 +11,7 @@
 static int32_t scaleYMin = 0;
 static int32_t scaleYMax = 100;
 static lv_obj_t *s_screen;
-static graph_t *lux_graph;
+graph_t *lux_graph;
 
 
 static void btn_home_cb(lv_event_t *e)

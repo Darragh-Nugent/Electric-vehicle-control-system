@@ -10,7 +10,7 @@
 #define NEEDLE_LENGTH 70
 
 static lv_obj_t *s_screen;
-static roundScale_t *humidity_graph;
+roundScale_t *humidity_graph;
 
 
 static void btn_home_cb(lv_event_t *e)
