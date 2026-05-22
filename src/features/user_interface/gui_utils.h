@@ -40,6 +40,7 @@ lv_obj_t *create_card(lv_obj_t *parent,
                       lv_coord_t x,
                       lv_coord_t y,
                       lv_color_t color,
-                      lv_obj_t **value_label);
+                      lv_obj_t **value_label,
+                    lv_align_t alignValue);
 
 

@@ -4,6 +4,7 @@
 #include "../screen_manager.h"
 #include "lvgl.h"
 #include "../gui_utils.h"
+// #include "../sensors.h"
 
 void scr_dashboard_set_rpm(float f) {};
 void scr_dashboard_set_sensor(uint32_t idx, float f) {};
@@ -15,6 +16,12 @@ static uint8_t seconds = 0;
 static uint8_t minutes = 20;
 static uint8_t hours = 9;
 static uint8_t days = 0;
+
+static lv_obj_t *lbl_temp;
+static lv_obj_t *lbl_humidity;
+static lv_obj_t *lbl_temp_info;
+
+extern sensorThresholds_t g_thresholds;
 
 static void btn_motor_cb(lv_event_t *e)
 {
@@ -47,28 +54,40 @@ static void btn_settings_cb(lv_event_t *e)
     screen_manager_goto(SCREEN_SETTINGS);
 }
 
-void handleDateCB(lv_timer_t *e)
+void handleCB(lv_timer_t *e)
 {
     seconds += 1;
-    if (seconds % 60 == 0)
+    if (seconds >= 60)
     {
         seconds = 0;
         minutes += 1;
         if (timeLabel)
             lv_label_set_text_fmt(timeLabel, "%02u:%02u", hours, minutes);
     }
-    if (minutes % 60 == 0)
+    if (minutes >= 60)
     {
         minutes = 0;
         hours += 1;
         if (timeLabel)
             lv_label_set_text_fmt(timeLabel, "%02u:%02u", hours, minutes);
     }
-    if (hours % 24 == 0)
+    if (hours >= 24)
     {
         hours = 0;
         days += 1; // not really displayed but is here for future use
     }
+    int16_t temp = 50;
+    int16_t humidity = 100;
+    // Sensor_GetTemp
+    // Sensor_GetHumidity
+
+    lv_label_set_text_fmt(lbl_temp, "%d", temp);
+    lv_label_set_text_fmt(lbl_humidity, "%d", humidity);
+
+    if (temp > g_thresholds.TH_TEMP)
+        lv_label_set_text(lbl_temp_info, "Cooling on");
+    else if (temp < g_thresholds.TH_TEMP)
+        lv_label_set_text(lbl_temp_info, "Cooling off");
 }
 
 // Obtained from https://lvgl.io/docs/open/9.5/widgets/label.html
@@ -92,7 +111,7 @@ void lv_moving_title(lv_obj_t *s_screen)
     lv_label_set_long_mode(label, LV_LABEL_LONG_MODE_SCROLL_CIRCULAR); /*Circular scroll*/
     lv_obj_set_width(label, 300);
     lv_label_set_text(label, "Zackariya Taylor, Isobel Jones, Darragh Nugent, Bon Nguyen,");
-    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 90);
+    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 80);
     lv_obj_add_style(label, &label_style, LV_STATE_DEFAULT); /*Add the style to the label*/
 }
 
@@ -190,7 +209,20 @@ void scr_dashboard_init(void)
     lv_obj_add_style(alert_btn, &style_transp, LV_STATE_DEFAULT);
     lv_obj_remove_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
 
+    lv_obj_t *temp = create_card(s_screen, "Temp", 170, 50,
+                                 lv_palette_main(LV_PALETTE_YELLOW), &lbl_temp, LV_ALIGN_TOP_RIGHT);
+    lv_obj_align_to(temp, nav_bar, LV_ALIGN_OUT_TOP_LEFT, 5, -5);
+
+    lv_obj_t *humidity = create_card(s_screen, "Humidity", 170, 50,
+                                     lv_palette_main(LV_PALETTE_BLUE), &lbl_humidity, LV_ALIGN_TOP_RIGHT);
+
+    lv_obj_align_to(humidity, nav_bar, LV_ALIGN_OUT_TOP_RIGHT, -5, -5);
+
+    lbl_temp_info = lv_label_create(temp);
+    lv_obj_set_style_text_color(lbl_temp_info, lv_color_white(), 0);
+    lv_obj_align(lbl_temp_info, LV_ALIGN_LEFT_MID, 10, 20);
+
     // Lv timer for time
-    lv_timer_create(handleDateCB, 1000, NULL);
+    lv_timer_create(handleCB, 1000, NULL);
 }
 lv_obj_t *scr_dashboard_get(void) { return s_screen; }

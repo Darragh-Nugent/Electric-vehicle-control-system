@@ -26,6 +26,25 @@ static lv_obj_t *humidity_spinbox;
 
 #define SPINBOX_SCALE 10.0f
 
+const char *thresholdPrompt = "This is threshold configuration settings for the electric vehicle.\n"
+                              "Note, only the relevant sensors can trigger a fault: \n"
+                              " \n"
+                              "Power\n"
+                              "Distance\n"
+                              "Acceleration";
+
+const char *powerPrompt = "Set the maximum power the motor can recieve in W (Max of 23 W)";
+
+const char *accelPrompt = "Set the maximum acceleration in m/s/s";
+const char *distancePrompt = "Set the distance an object can be in m (Max of 10)";
+
+const char *tempPrompt = "Set the maximum detected temperature in degrees celcius";
+
+// const char *luxPrompt = "Set the maximum detected lux value in lx\n"
+                        // "[Note wil limit is used to turn on headlights]";
+
+const char *humidityPrompt = "Sets the maximum detected humidity in %";
+
 typedef struct
 {
     lv_obj_t *spinbox;
@@ -86,7 +105,10 @@ static void lv_spinbox_decrement_event_cb(lv_event_t *e)
 static lv_obj_t *create_threshold_card(
     lv_obj_t *parent,
     const char *title,
-    const char *unit)
+    const char *unit,
+    const int16_t min,
+    const uint16_t max
+)
 {
     lv_obj_t *card = lv_obj_create(parent);
 
@@ -118,8 +140,10 @@ static lv_obj_t *create_threshold_card(
 
     lv_obj_t *spinbox = lv_spinbox_create(card);
 
-    lv_spinbox_set_range(spinbox, 0, 999); // should be defines
-    lv_spinbox_set_digit_count(spinbox, 3);
+    lv_spinbox_set_range(spinbox, min, max); // should be defines
+    if (max > 999) lv_spinbox_set_digit_count(spinbox, 4);
+    else if (max > 99 && max < 1000) lv_spinbox_set_digit_count(spinbox, 3);
+    else lv_spinbox_set_digit_count(spinbox, 2);
     lv_spinbox_set_dec_point_pos(spinbox, 0);
     lv_spinbox_step_prev(spinbox);
     lv_obj_set_width(spinbox, 100);
@@ -197,6 +221,14 @@ void lv_tab(lv_obj_t *s_screen)
     lv_obj_remove_flag(lv_tabview_get_content(tabview), LV_OBJ_FLAG_SCROLLABLE);
 }
 
+void formatText(lv_obj_t *text, lv_align_t align)
+{
+    lv_obj_set_align(text, align);
+    lv_obj_set_style_text_color(text, lv_color_white(), 0);
+    lv_obj_set_width(text, 220);
+    lv_label_set_long_mode(text, LV_LABEL_LONG_WRAP);
+}
+
 void scr_settings_init(void)
 {
     s_screen = lv_obj_create(NULL);
@@ -205,12 +237,17 @@ void scr_settings_init(void)
     lv_obj_clear_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
 
     // Create cards
-    power_spinbox = create_threshold_card(power_tab, "Power", "P");
-    accel_spinbox = create_threshold_card(accel_tab, "Acceleration", "m/s/s");
-    dist_spinbox = create_threshold_card(dist_tab, "Distance", "m");
+    power_spinbox = create_threshold_card(power_tab, "Power", "P", 
+        SENSOR_POWER_MIN, SENSOR_POWER_MAX);
+    accel_spinbox = create_threshold_card(accel_tab, "Acceleration", "m/s/s",
+        SENSOR_ACCELERATION_MIN,SENSOR_ACCELERATION_MAX);
+    dist_spinbox = create_threshold_card(dist_tab, "Distance", "m"
+        ,SENSOR_DISTANCE_MIN,SENSOR_DISTANCE_MAX);
     // lux_spinbox = create_threshold_card(lux_tab, "Lux", "lx");
-    temp_spinbox = create_threshold_card(temp_tab, "Temperature", "Celcius");
-    humidity_spinbox = create_threshold_card(humidity_tab, "Humidity", "%%");
+    temp_spinbox = create_threshold_card(temp_tab, "Temperature", "Celcius",
+        SENSOR_TEMP_MIN,SENSOR_TEMP_MAX);
+    humidity_spinbox = create_threshold_card(humidity_tab, "Humidity", "%%",
+        SENSOR_HUMIDITY_MIN, SENSOR_HUMIDITY_MAX);
 
     // Initialise relevant data to submit
     static submit_t power_submit_t = {.spinbox = NULL, .msgType = UI_MSG_SENSOR_UPDATE_POWER};
@@ -246,8 +283,34 @@ void scr_settings_init(void)
     // lv_obj_align_to(dist, accel, LV_ALIGN_OUT_BOTTOM_MID, 0,8);
     // Label
 
-    lv_obj_t *label = create_label(info_tab, "Thresholds");
-    lv_obj_align(label, LV_ALIGN_TOP_RIGHT, -30, 40);
+    lv_obj_t *thresholdLabel = create_label(info_tab, "Thresholds");
+    lv_obj_align(thresholdLabel, LV_ALIGN_TOP_RIGHT, 0, 0);
+
+    lv_obj_t *thresholdText = lv_label_create(info_tab);
+    formatText(thresholdText, LV_ALIGN_CENTER);
+    lv_label_set_text(thresholdText, thresholdPrompt);
+    lv_obj_remove_flag(thresholdText, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *powerText = lv_label_create(power_tab);
+    formatText(powerText, LV_ALIGN_TOP_MID);
+    lv_label_set_text(powerText, powerPrompt);
+
+    lv_obj_t *accelText = lv_label_create(accel_tab);
+    formatText(accelText, LV_ALIGN_TOP_MID);
+    lv_label_set_text(accelText, accelPrompt);
+
+
+    lv_obj_t *distText = lv_label_create(dist_tab);
+    formatText(distText, LV_ALIGN_TOP_MID);
+    lv_label_set_text(distText, distancePrompt);
+
+    lv_obj_t *tempText = lv_label_create(temp_tab);
+    formatText(tempText, LV_ALIGN_TOP_MID);
+    lv_label_set_text(tempText, tempPrompt);
+
+    lv_obj_t *humidityText = lv_label_create(humidity_tab);
+    formatText(humidityText, LV_ALIGN_TOP_MID);
+    lv_label_set_text(humidityText, humidityPrompt);
 
     lv_obj_t *home_button = create_icon_button(info_tab, LV_SYMBOL_HOME, btn_home_cb, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_set_width(home_button, 40);

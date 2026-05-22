@@ -391,7 +391,8 @@ lv_obj_t *create_card(lv_obj_t *parent,
                       lv_coord_t x,
                       lv_coord_t y,
                       lv_color_t color,
-                      lv_obj_t **value_label)
+                      lv_obj_t **value_label,
+                        lv_align_t alignValue)
 {
     lv_obj_t *card = lv_obj_create(parent);
 
@@ -434,7 +435,7 @@ lv_obj_t *create_card(lv_obj_t *parent,
         lv_label_set_text(*value_label, "--");
 
         lv_obj_align(*value_label,
-                     LV_ALIGN_CENTER,
+                     alignValue,
                      0,
                      10);
     }

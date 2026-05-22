@@ -130,6 +130,7 @@ static void prvDispatchMsg(const UiMsg_t *msg)
         UARTprintf("SENSOR: UPDATING HUMIDITY: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_TEMP:
+        g_thresholds.TH_TEMP = msg->payload.u;
         // Sensor_UpdateTemp(msg->payload.u);
         UARTprintf("SENSOR: UPDATING TEMP: %d\n", msg->payload.u);
         break;

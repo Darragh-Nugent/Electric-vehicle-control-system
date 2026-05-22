@@ -78,13 +78,13 @@ void scr_status_init(void)
 
     /* Cards */
     create_card(s_screen, "Motor State", 10, 50,
-                lv_palette_main(LV_PALETTE_RED), &lbl_state);
+                lv_palette_main(LV_PALETTE_RED), &lbl_state, LV_ALIGN_CENTER);
 
     create_card(s_screen, "Warning/Fault", 170, 50,
-                lv_palette_main(LV_PALETTE_BLUE), &lbl_fault);
+                lv_palette_main(LV_PALETTE_BLUE), &lbl_fault, LV_ALIGN_CENTER);
 
     lv_obj_t *safetyCond = create_card(s_screen, "Active Safety Conditions", 90, 155,
-                                       lv_palette_main(LV_PALETTE_YELLOW), NULL);
+                                       lv_palette_main(LV_PALETTE_YELLOW), NULL, LV_ALIGN_CENTER);
 
     lv_obj_align(safetyCond, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_set_size(safetyCond, 300, 100);

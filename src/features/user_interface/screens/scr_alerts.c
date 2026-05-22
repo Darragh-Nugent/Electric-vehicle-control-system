@@ -8,11 +8,6 @@
 
 static lv_obj_t *s_screen;
 
-static void btn_home_cb(lv_event_t *e)
-{
-    screen_manager_goto(SCREEN_DASHBOARD);
-}
-
 static void event_cb(lv_event_t * e)
 {
     updateGUIState(UI_MSG_FAULT_CLEARED, 0);
@@ -33,8 +28,6 @@ void createMsgBox(lv_obj_t * parent)
     lv_obj_t * btn;
     btn = lv_msgbox_add_footer_button(mbox1, "Acknowledge");
     lv_obj_add_event_cb(btn, event_cb, LV_EVENT_CLICKED, NULL);
-
-
 
     return;
 }

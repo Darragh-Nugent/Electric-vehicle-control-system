@@ -38,6 +38,7 @@ typedef struct
     uint16_t TH_POWER;
     uint16_t TH_ACCEL;
     uint16_t TH_DIST;
+    int16_t TH_TEMP;
 } sensorThresholds_t;
 
 extern const char *motor_state_names[];
