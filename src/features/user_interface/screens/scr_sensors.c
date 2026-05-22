@@ -49,9 +49,7 @@ static void btn_humidity_sensor_cb(lv_event_t *e){
     screen_manager_goto(SCREEN_HUMIDITY_SENSOR);
 }
 
-static void btn_default_graph_cb(lv_event_t *e){
-    screen_manager_goto(SCREEN_DEFAULT_GRAPH);
-}
+
 
 
 

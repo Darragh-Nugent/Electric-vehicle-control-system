@@ -11,6 +11,7 @@
 #include "features/motor/motor_api.h"
 #include <math.h>
 
+extern UiMsg_t g_ui_state;
 
 // LV_IMAGE_DECLARE(img_hand);
 static lv_obj_t *s_screen;
@@ -38,12 +39,7 @@ static void submit_rpm_cb(lv_event_t *e)
     uint16_t rpm = atoi(text);
     UARTprintf("RPM: %i\n", rpm);
     LV_LOG_USER("RPM set: %d", rpm);
-
-    bool res = ui_push_u(UI_MSG_MOTOR_RPM, rpm);
-    if (!res)
-    {
-        UARTprintf("Hmm, I'll see if i remember to fix this later");
-    }
+    updateGUIState(UI_MSG_MOTOR_RPM,rpm);
 }
 
 // Text Area cb
@@ -68,30 +64,24 @@ static void ta_event_cb(lv_event_t *e)
 // Dropdown Button cb     "IDLE\nRUN\nBREAK\nEXPLODE",
 static void on_state_changed(const char *state)
 {
-    bool res = false;
     if (lv_strcmp(state, "IDLE") == 0)
     {
         UARTprintf("IDLE\n");
-        res = ui_push_u(UI_MSG_MOTOR_IDLE, MOTOR_STATE_IDLE);
+        updateGUIState(UI_MSG_MOTOR_IDLE, MOTOR_STATE_IDLE);
     }
     else if (lv_strcmp(state, "RUN") == 0)
     {
         UARTprintf("RUNNING\n");
-        res = ui_push_u(UI_MSG_MOTOR_RUNNING, MOTOR_STATE_RUNNING);
+        updateGUIState(UI_MSG_MOTOR_RUNNING,MOTOR_STATE_RUNNING);
     }
     else if (lv_strcmp(state, "BREAK") == 0)
     {
         UARTprintf("BREAK\n");
-        res = ui_push_u(UI_MSG_MOTOR_BREAKING, MOTOR_STATE_BRAKING);
+        updateGUIState(UI_MSG_MOTOR_BREAKING,MOTOR_STATE_BRAKING);
     }
     else if (lv_strcmp(state, "EXPLODE") == 0)
     {
         UARTprintf("KABOOOM\n");
-    }
-
-    if (!res)
-    {
-        UARTprintf("Let's hope this is never printed");
     }
 }
 

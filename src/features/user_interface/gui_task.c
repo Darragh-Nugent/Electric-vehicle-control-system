@@ -53,8 +53,8 @@
 //*****************************************************************************
 extern volatile uint32_t g_ui32SysClock;
 
-// Queue handle (producers include data.h and use this queue)
-QueueHandle_t g_ui_queue;
+
+UiMsg_t g_ui_state;
 
 tContext g_sContext;
 static lv_display_t *my_display;
@@ -84,7 +84,6 @@ static void prvLvglTickCb(TimerHandle_t xTimer)
 // - side note - relevant getters and setters for motor/sensors are called via api functions depending on which screen is currently displayed (not implemented yet)
 static void prvDispatchMsg(const UiMsg_t *msg)
 {
-    UARTprintf("Dispatching MSGS\n");
     switch (msg->type)
     {
 
@@ -154,18 +153,8 @@ static void prvDispatchMsg(const UiMsg_t *msg)
     default:
         break;
     }
-}
-
-// Drain the Queue and prevents sensors to flood the queue to prevent
-// old values
-static void prvDrainQueue(void)
-{
-    UiMsg_t msg;
-    uint8_t safeguard = 16; // may change if it seems like its skipping alot
-    while (safeguard-- && xQueueReceive(g_ui_queue, &msg, 0) == pdTRUE)
-    {
-        prvDispatchMsg(&msg);
-    }
+    // Reset state, avoid processing stale data
+    g_ui_state.type = UI_MSG_STATE_NONE;
 }
 
 void display_init(void)
@@ -183,8 +172,7 @@ void display_init(void)
 
 void vCreateGuiTask(void)
 {
-    g_ui_queue = xQueueCreate(UI_QUEUE_DEPTH, sizeof(UiMsg_t));
-    UARTprintf("Inside create gui, after queue\n");
+    UARTprintf("Inside create gui\n");
     prvGuiHardwareInit();
     BaseType_t ret = xTaskCreate(
         prvGuiTask,
@@ -223,7 +211,7 @@ void prvGuiTask(void *pvParameters)
     for (;;)
     {
         // Consume all pending data updates
-        prvDrainQueue();
+        prvDispatchMsg(&g_ui_state);
 
         // Lvgl rendering/timers
         uint32_t delay_ms = lv_timer_handler();

@@ -6,7 +6,14 @@
 #include "gui_utils.h"
 #include "gui_config.h"
 
+extern UiMsg_t g_ui_state;
+
 typedef void (*dropdown_cb_t)(const char *text);
+
+void updateGUIState(UiMsgType_t msg, uint32_t value){
+    g_ui_state.type = msg;
+    g_ui_state.payload.u = value;
+}
 
 void setBackgroundColour(lv_obj_t *parent)
 {

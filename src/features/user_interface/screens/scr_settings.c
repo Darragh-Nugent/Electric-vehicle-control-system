@@ -58,10 +58,9 @@ static void lv_submit_cb(lv_event_t *e)
     if (lv_event_get_code(e) != LV_EVENT_CLICKED)
         return;
 
-    lv_event_code_t code = lv_event_get_code(e);
     submit_t *res = (submit_t *)lv_event_get_user_data(e);
     uint16_t value = lv_spinbox_get_value(res->spinbox);
-    ui_push_u(res->msgType, value);
+    updateGUIState(res->msgType, value);
 }
 
 static void lv_spinbox_increment_event_cb(lv_event_t *e)

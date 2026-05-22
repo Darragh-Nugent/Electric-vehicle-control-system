@@ -1,6 +1,8 @@
 #include "lvgl.h"
 #include "../data.h"
 
+
+void updateGUIState(UiMsgType_t msg, uint32_t value);
 void setBackgroundColour(lv_obj_t *parent);
 lv_obj_t *nav_button_init(lv_obj_t *parent, const char *label, lv_event_cb_t cb,
                           lv_align_t align, int32_t x_ofs, int32_t y_ofs);
