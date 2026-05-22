@@ -170,7 +170,7 @@ static void motorTask(void *pvParameters)
             }
             
 
-            if (frozenSpeedCount > 300) // 300ms of identical readings
+            if (frozenSpeedCount > 300) // 7.5s of identical readings
             {
                 UARTprintf("RUNNING EXIT: sensor freeze\n");
                 setDuty(0);
@@ -197,8 +197,8 @@ static void motorTask(void *pvParameters)
                 break;
             }
 
-            // ;ow-speed recovery only applies when speed is low but not zero. /////
-            if (referenceSpeed > 250 && actualSpeed.value < ( referenceSpeed - ((referenceSpeed * LOW_SPEED_ERROR_PERCENT) / 100)))// if (referenceSpeed > 100 && actualSpeed.value < 200)
+            // low-speed recovery only applies when speed is low but not zero. /////
+            if (referenceSpeed > 250 && actualSpeed.value < ( referenceSpeed - ((referenceSpeed * 4) / 5)))// if (referenceSpeed > 100 && actualSpeed.value < 200)
             {
                 lowSpeedCount++;
             }
