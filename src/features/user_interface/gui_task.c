@@ -42,7 +42,6 @@
 #include "timers.h"
 #include "gui_task.h"
 #include "lvgl.h"
-#include "./features/motor/motor_api.h"
 
 #define GUI_TICK 5
 

@@ -89,6 +89,9 @@ motor_state_t motorGetState(void)
     return state;
 }
 
+void motorAcknowledgeFault(void) {
+}
+
 // Set the state of the motor.
 // Returns true if state update was successful.
 bool motorSetState(motor_state_t state)

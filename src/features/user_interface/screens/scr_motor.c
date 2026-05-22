@@ -39,7 +39,7 @@ static void submit_rpm_cb(lv_event_t *e)
     uint16_t rpm = atoi(text);
     UARTprintf("RPM: %i\n", rpm);
     LV_LOG_USER("RPM set: %d", rpm);
-    updateGUIState(UI_MSG_MOTOR_RPM,rpm);
+    updateGUIState(UI_MSG_MOTOR_RPM, rpm);
 }
 
 // Text Area cb
@@ -72,12 +72,12 @@ static void on_state_changed(const char *state)
     else if (lv_strcmp(state, "RUN") == 0)
     {
         UARTprintf("RUNNING\n");
-        updateGUIState(UI_MSG_MOTOR_RUNNING,MOTOR_STATE_RUNNING);
+        updateGUIState(UI_MSG_MOTOR_RUNNING, MOTOR_STATE_RUNNING);
     }
     else if (lv_strcmp(state, "BREAK") == 0)
     {
         UARTprintf("BREAK\n");
-        updateGUIState(UI_MSG_MOTOR_BREAKING,MOTOR_STATE_BRAKING);
+        updateGUIState(UI_MSG_MOTOR_BREAKING, MOTOR_STATE_BRAKING);
     }
     else if (lv_strcmp(state, "EXPLODE") == 0)
     {
@@ -149,7 +149,9 @@ void scr_motor_init(void)
     lv_obj_t *nav_bar = lv_obj_create(s_screen);
     lv_obj_set_size(nav_bar, LV_HOR_RES, 50);         // Set the navigation bar's height
     lv_obj_align(nav_bar, LV_ALIGN_BOTTOM_MID, 0, 0); // Align it to the bottom of the screen
-
+    lv_obj_set_style_border_width(nav_bar, 2, 0);
+    lv_obj_set_style_border_color(nav_bar, COLOR_WHITE_LV, 0);
+    lv_obj_set_style_bg_color(nav_bar, COLOR_STATUS_CARD_BG_LV, 0);
     lv_obj_set_flex_flow(nav_bar, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(nav_bar,
                           LV_FLEX_ALIGN_SPACE_BETWEEN,

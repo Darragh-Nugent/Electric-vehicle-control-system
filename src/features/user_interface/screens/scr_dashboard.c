@@ -10,6 +10,11 @@ void scr_dashboard_set_sensor(uint32_t idx, float f) {};
 void scr_dashboard_set_motor_state(uint32_t state) {};
 
 static lv_obj_t *s_screen;
+static lv_obj_t *timeLabel;
+static uint8_t seconds = 0;
+static uint8_t minutes = 20;
+static uint8_t hours = 9;
+static uint8_t days = 0;
 
 static void btn_motor_cb(lv_event_t *e)
 {
@@ -42,6 +47,30 @@ static void btn_settings_cb(lv_event_t *e)
     screen_manager_goto(SCREEN_SETTINGS);
 }
 
+void handleDateCB(lv_timer_t *e)
+{
+    seconds += 1;
+    if (seconds % 60 == 0)
+    {
+        seconds = 0;
+        minutes += 1;
+        if (timeLabel)
+            lv_label_set_text_fmt(timeLabel, "%02u:%02u", hours, minutes);
+    }
+    if (minutes % 60 == 0)
+    {
+        minutes = 0;
+        hours += 1;
+        if (timeLabel)
+            lv_label_set_text_fmt(timeLabel, "%02u:%02u", hours, minutes);
+    }
+    if (hours % 24 == 0)
+    {
+        hours = 0;
+        days += 1; // not really displayed but is here for future use
+    }
+}
+
 // Obtained from https://lvgl.io/docs/open/9.5/widgets/label.html
 void lv_moving_title(lv_obj_t *s_screen)
 {
@@ -63,7 +92,7 @@ void lv_moving_title(lv_obj_t *s_screen)
     lv_label_set_long_mode(label, LV_LABEL_LONG_MODE_SCROLL_CIRCULAR); /*Circular scroll*/
     lv_obj_set_width(label, 300);
     lv_label_set_text(label, "Zackariya Taylor, Isobel Jones, Darragh Nugent, Bon Nguyen,");
-    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 60);
+    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 90);
     lv_obj_add_style(label, &label_style, LV_STATE_DEFAULT); /*Add the style to the label*/
 }
 
@@ -72,18 +101,64 @@ void scr_dashboard_init(void)
     // To Do: Modularise colour
     s_screen = lv_obj_create(NULL);
     setBackgroundColour(s_screen);
-    // lv_obj_set_style_bg_color(s_screen, COLOR_BACKGROUND_GREEN, LV_PART_MAIN);
 
     // Label
     lv_obj_t *label = create_label(s_screen, "Group #30");
-    (void)label; // ignore label for now, return value is kept for possible future use
+    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 30); // ignore label for now, return value is kept for possible future use
     lv_moving_title(s_screen);
+
+    lv_obj_t *header = lv_obj_create(s_screen);
+    lv_obj_set_size(header, LV_HOR_RES, 25);
+    lv_obj_align(header, LV_ALIGN_OUT_TOP_MID, 0, 0);
+    lv_obj_remove_flag(header, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_radius(header, 0, 0);
+
+    static lv_style_t no_border;
+    lv_style_init(&no_border);
+    lv_style_set_border_width(&no_border, 0);
+    lv_obj_add_style(header, &no_border, 0);
+
+    static lv_style_t style_date;
+    lv_style_init(&style_date);
+    lv_style_set_bg_color(&style_date, lv_color_hex(STATUS_CARD_BG));
+    lv_style_set_bg_opa(&style_date, LV_OPA_COVER);
+    lv_obj_add_style(header, &style_date, 0);
+
+    lv_obj_t *dateLabel = lv_label_create(header);
+    lv_label_set_text(dateLabel, "24/05/2026");
+    lv_obj_center(dateLabel);
+
+    timeLabel = lv_label_create(header);
+    lv_label_set_text_fmt(timeLabel, "%u:%u", hours, minutes);
+    lv_obj_align(timeLabel, LV_ALIGN_LEFT_MID, 0, 0);
+
+    lv_obj_t *batteryLabel = lv_label_create(header);
+    lv_label_set_text(batteryLabel, LV_SYMBOL_BATTERY_3);
+    lv_obj_align(batteryLabel, LV_ALIGN_RIGHT_MID, 0, 0);
+
+    lv_obj_t *wifiLabel = lv_label_create(header);
+    lv_label_set_text(wifiLabel, LV_SYMBOL_WIFI);
+    lv_obj_align_to(wifiLabel, batteryLabel, LV_ALIGN_OUT_LEFT_MID, -5, 0);
+
+    lv_obj_t *bluetoothLabel = lv_label_create(header);
+    lv_label_set_text(bluetoothLabel, LV_SYMBOL_BLUETOOTH);
+    lv_obj_align_to(bluetoothLabel, wifiLabel, LV_ALIGN_OUT_LEFT_MID, -5, 0);
+
+    lv_obj_set_style_text_color(dateLabel, lv_color_white(), 0);
+    lv_obj_set_style_text_color(timeLabel, lv_color_white(), 0);
+    lv_obj_set_style_text_color(batteryLabel, lv_color_white(), 0);
+    lv_obj_set_style_text_color(wifiLabel, lv_color_white(), 0);
+    lv_obj_set_style_text_color(bluetoothLabel, lv_color_white(), 0);
 
     // Create a container for the navigation bar at the bottom
     lv_obj_t *nav_bar = lv_obj_create(s_screen);
     lv_obj_set_size(nav_bar, LV_HOR_RES, 50);         // Set the navigation bar's height
     lv_obj_align(nav_bar, LV_ALIGN_BOTTOM_MID, 0, 0); // Align it to the bottom of the screen
     lv_obj_remove_flag(nav_bar, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(nav_bar, COLOR_STATUS_CARD_BG_LV, 0);
+    lv_obj_set_style_border_width(nav_bar, 2, 0);
+    lv_obj_set_style_border_color(nav_bar, COLOR_WHITE_LV, 0);
+
     // Create the buttons within the navigation bar, spaced evenly
     lv_obj_t *motor_btn = nav_button_init(nav_bar, "Motor", btn_motor_cb, LV_ALIGN_LEFT_MID, 10, 0);
     lv_obj_t *sensors_btn = nav_button_init(nav_bar, "Sensors", btn_sensors_cb, LV_ALIGN_CENTER, 0, 0);
@@ -96,6 +171,9 @@ void scr_dashboard_init(void)
     lv_obj_set_width(status_btn, 80);
     lv_obj_set_width(settings_btn, 40);
     lv_obj_set_width(alert_btn, 40);
+
+    lv_obj_align(settings_btn, LV_ALIGN_TOP_LEFT, 8, 30);
+    lv_obj_align(alert_btn, LV_ALIGN_TOP_RIGHT, -8, 30);
 
     // Add some spacing between buttons
     lv_obj_align(motor_btn, LV_ALIGN_LEFT_MID, 10, 0);
@@ -111,9 +189,8 @@ void scr_dashboard_init(void)
     lv_obj_add_style(settings_btn, &style_transp, LV_STATE_DEFAULT);
     lv_obj_add_style(alert_btn, &style_transp, LV_STATE_DEFAULT);
     lv_obj_remove_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
-    // To Do:
-    // maybe remove nav for alerts, it should pop up instantly over everything
-    // add in other sensors as their own seperate pages
-    // add in charts/graph
+
+    // Lv timer for time
+    lv_timer_create(handleDateCB, 1000, NULL);
 }
 lv_obj_t *scr_dashboard_get(void) { return s_screen; }

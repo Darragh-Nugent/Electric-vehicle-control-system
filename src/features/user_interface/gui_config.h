@@ -60,7 +60,11 @@
 
 // STATUS
 #define STATUS_CARD_BG 0x1E293B
+#define COLOR_STATUS_CARD_BG_LV lv_color_make(30, 41, 59)
 #define STATUS_CARD_WIDTH 140
 #define STATUS_CARD_HEIGHT 75
+
+#define COLOR_WHITE_LV lv_color_make(255, 255, 255)
+
 
 #endif
