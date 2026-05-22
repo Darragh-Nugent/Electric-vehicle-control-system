@@ -12,6 +12,7 @@ static int32_t scaleYMin = 0;
 static int32_t scaleYMax = 100;
 static lv_obj_t *s_screen;
 graph_t *pwr_graph;
+extern graph_t *lux_graph;
 
 
 
@@ -41,8 +42,7 @@ void scr_pwr_sensor_init(void)
 
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     lv_obj_set_width(prev_button,40);
-    pwr_graph = create_graph(s_screen,scaleYMin,scaleYMax,OVERHEAD_GAP,PERIOD,get_power);
-    
+    pwr_graph = reset_graph(lux_graph,scaleYMin,scaleYMax,get_power);
 }
 
 lv_obj_t *scr_pwr_sensor_get(void)

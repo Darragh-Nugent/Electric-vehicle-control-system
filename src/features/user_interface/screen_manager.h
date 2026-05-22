@@ -2,6 +2,8 @@
 #include "lvgl.h"
 
 #define COLOR_BACKGROUND_GREEN lv_color_make(124, 218, 124)
+#define DEFAULT_OVERHEAD_GAP 20
+#define DEFAULT_PERIOD 200
 
 typedef enum {
     SCREEN_DASHBOARD = 0,
@@ -13,6 +15,7 @@ typedef enum {
     SCREEN_LIGHT_SENSOR,
     SCREEN_ACCEL_SENSOR,
     SCREEN_DIST_SENSOR,
+    SCREEN_DEFAULT_GRAPH,
     SCREEN_TEMP_SENSOR,
     SCREEN_HUMIDITY_SENSOR,
     SCREEN_STATUS,

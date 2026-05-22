@@ -3,6 +3,8 @@
 #include "../data.h"
 #include "./screen_manager.h"
 #include "utils/uartstdio.h"
+#include "gui_utils.h"
+
 typedef void (*dropdown_cb_t)(const char *text);
 
 void setBackgroundColour(lv_obj_t *parent)
@@ -248,11 +250,27 @@ graph_t *create_graph(lv_obj_t *s_screen, int32_t yMin, int32_t yMax,
     graph->scaleYMin = yMin;
     graph->overheadGap = overhead;
     graph->get_value_cb = cb; // Function cb reference to get value for specific sensor
-    graph->timer = lv_timer_create(add_graph_data_cb, period, graph);
+    // If user specifies a callback function
+    if (cb) graph->timer = lv_timer_create(add_graph_data_cb, period, graph);
+    else graph->timer = NULL;
 
     return graph;
 }
 
+graph_t *reset_graph(graph_t *graph, int32_t yMin, int32_t yMax, graph_data_cb_t cb)
+{
+
+    lv_chart_set_range(graph->chart, LV_CHART_AXIS_PRIMARY_Y, yMin, yMax);
+    lv_chart_series_t *ser = lv_chart_get_series_next(graph->chart, NULL);
+    if (ser)
+    {
+        lv_chart_set_all_value(graph->chart, ser, LV_CHART_POINT_NONE);
+        lv_chart_refresh(graph->chart);
+    }
+
+    graph->get_value_cb = cb;
+    return graph;
+}
 /**
  * This section covers the rounded scale used for the motor and humidity sensors
  *
