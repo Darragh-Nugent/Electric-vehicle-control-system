@@ -58,6 +58,7 @@ static void motorTask(void *pvParameters)
     uint16_t period_value = 50;
     uint16_t lowSpeedCount = 0;
     uint16_t zeroSpeedCount = 0;
+    uint16_t frozenSpeedCount = 0;
 
     const TickType_t controlPeriodTicks = pdMS_TO_TICKS(CONTROL_PERIOD_MS);
     const float controlPeriodSeconds = CONTROL_PERIOD_MS / 1000.0f;
@@ -150,9 +151,6 @@ static void motorTask(void *pvParameters)
             //     motorSetSpeed(1000);
             // }
 
-            static uint16_t prevActualSpeed = 0;
-            static uint16_t frozenSpeedCount = 0;
-
             if (actualSpeed.seq == prev_speed_seq && referenceSpeed > 100)
             {
                 frozenSpeedCount++;
@@ -160,7 +158,6 @@ static void motorTask(void *pvParameters)
             else
             {
                 frozenSpeedCount = 0;
-                // prevActualSpeed = actualSpeed;
                 prev_speed_seq = actualSpeed.seq;
             }
             
