@@ -49,6 +49,7 @@ extern void vCreateGuiTask(void);
 
 extern void hallSensorGPIOConfig(void);
 extern void hallSensorIntDisable(void);
+extern void disableHeadLights(void);
 
 extern SemaphoreHandle_t motorStateMutex;
 extern SemaphoreHandle_t motorSetSpeedMutex;
@@ -146,6 +147,13 @@ static void prvSetupHardware(void)
     /* Set-up interrupts for hall sensors */
     hallSensorGPIOConfig();
     hallSensorIntDisable(); // the hall effect ISR should be disabled by default (IDLE)
+
+
+    // Initialise LED as outputs
+    GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_4 | GPIO_PIN_0);
+    // Initialise led as off
+    disableHeadLights();
 }
 /*-----------------------------------------------------------*/
 

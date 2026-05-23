@@ -4,6 +4,7 @@
 #include "../screen_manager.h"
 #include "lvgl.h"
 #include "../gui_utils.h"
+#include "features/led.h"
 // #include "../sensors.h"
 
 void scr_dashboard_set_rpm(float f) {};
@@ -78,6 +79,8 @@ void handleCB(lv_timer_t *e)
     }
     int16_t temp = 50;
     int16_t humidity = 100;
+    uint32_t lux = 4;
+    // Sensor_GetLux
     // Sensor_GetTemp
     // Sensor_GetHumidity
 
@@ -88,6 +91,8 @@ void handleCB(lv_timer_t *e)
         lv_label_set_text(lbl_temp_info, "Cooling on");
     else if (temp < g_thresholds.TH_TEMP)
         lv_label_set_text(lbl_temp_info, "Cooling off");
+    if (lux < 5) enableHeadLights();
+    else if (lux > 5) disableHeadLights();
 }
 
 // Obtained from https://lvgl.io/docs/open/9.5/widgets/label.html
