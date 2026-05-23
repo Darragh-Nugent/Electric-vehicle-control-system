@@ -12,6 +12,7 @@
 extern SemaphoreHandle_t motorStateMutex;
 extern SemaphoreHandle_t motorSetSpeedMutex;
 extern SemaphoreHandle_t motorStartSemaphore;
+extern SemaphoreHandle_t motorEStopSemaphore;
 
 // State transitions
 

@@ -37,7 +37,6 @@ extern SemaphoreHandle_t motorStartSemaphore;
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
 extern SemaphoreHandle_t faultAcknowledgedSemaphore;
 extern volatile bool speed_semaphore_given;
-extern volatile bool motorEStopRequested;
 
 extern void hallSensorIntDisable(void);
 
@@ -84,10 +83,8 @@ static void motorTask(void *pvParameters)
             break;
         case MOTOR_STATE_STARTING:
         {
-            if (motorEStopRequested)
+            if (xSemaphoreTake(motorEStopSemaphore, 0) == pdTRUE)
             {
-                motorEStopRequested = false;
-
                 UARTprintf("STARTING EXIT: e-stop requested\n");
                 motorEStop();
                 break;
@@ -132,9 +129,8 @@ static void motorTask(void *pvParameters)
 
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
 
-            if (motorEStopRequested)
+            if (xSemaphoreTake(motorEStopSemaphore, 0) == pdTRUE)
             {
-                motorEStopRequested = false;
 
                 UARTprintf("RUNNING EXIT: e-stop requested\n");
 

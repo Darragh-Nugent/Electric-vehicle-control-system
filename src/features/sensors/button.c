@@ -71,7 +71,7 @@ void xButtonsHandler(void)
                 }
                 else
                 {
-                    motorRequestEStop();
+                    xSemaphoreGiveFromISR(motorEStopSemaphore, &xOPTTaskWoken);
                 }
         }
 
