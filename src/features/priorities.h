@@ -5,6 +5,8 @@
 #include "task.h"
 
 #define MOTOR_CONTROL_PRIORITY         (configMAX_PRIORITIES - 1)
+#define SPEED_SENSOR_PRIORITY          (configMAX_PRIORITIES - 2)
+#define I2C_PRIORITY                   (tskIDLE_PRIORITY + 1)
 #define ACCELERATION_SENSOR_PRIORITY   (tskIDLE_PRIORITY + 1)
 #define DISTANCE_SENSOR_PRIORITY       (tskIDLE_PRIORITY + 1)
 #define ENV_SENSOR_PRIORITY            (tskIDLE_PRIORITY + 1)
@@ -12,6 +14,5 @@
 #define TIMER_GUI_PRIORITY             (GUI_PRIORITY + 1) // PREVENT FROM BLOCKING GUI TASK (HAS TO BE HIGHER)
 #define LIGHT_SENSOR_PRIORITY          (tskIDLE_PRIORITY + 1)
 #define POWER_SENSOR_PRIORITY          (tskIDLE_PRIORITY + 1)
-#define SPEED_SENSOR_PRIORITY          (tskIDLE_PRIORITY + 1)
 
 #endif

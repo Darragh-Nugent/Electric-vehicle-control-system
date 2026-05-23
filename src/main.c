@@ -25,11 +25,12 @@
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
 #include "driver_lib/udma.h"
-#include "driver_lib/fpu.h"
 #include "drivers/touch.h"
 #include "grlib.h"
 #include "drivers/Kentec320x240x16_ssd2119_spi.h"
 #include "features/user_interface/touch_driver.h"
+#include "driverlib/fpu.h"
+
 // Motor lib
 #include <motorlib.h>
 tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
@@ -55,6 +56,8 @@ extern SemaphoreHandle_t motorStateMutex;
 extern SemaphoreHandle_t motorSetSpeedMutex;
 extern SemaphoreHandle_t motorStartSemaphore;
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
+extern SemaphoreHandle_t motorEStopSemaphore;
+extern SemaphoreHandle_t uartMutex;
 
 SemaphoreHandle_t faultAcknowledgedSemaphore = NULL;
 
@@ -64,24 +67,29 @@ int main(void)
 {
     prvSetupHardware();
     IntMasterEnable();
+    FPUEnable();
+    FPULazyStackingEnable();
 
     motorStateMutex = xSemaphoreCreateMutex();
     motorSetSpeedMutex = xSemaphoreCreateMutex();
     motorStartSemaphore = xSemaphoreCreateBinary();
     motorUpToSpeedSemaphore = xSemaphoreCreateBinary();
     faultAcknowledgedSemaphore = xSemaphoreCreateBinary();
+    motorEStopSemaphore = xSemaphoreCreateBinary();
+
+    uartMutex = xSemaphoreCreateMutex();
 
     while (
         motorStateMutex == NULL ||
         motorSetSpeedMutex == NULL ||
         motorStartSemaphore == NULL ||
         motorUpToSpeedSemaphore == NULL ||
-        faultAcknowledgedSemaphore == NULL)
-    {
-    }
+        faultAcknowledgedSemaphore == NULL ||
+        motorEStopSemaphore == NULL ||
+        uartMutex == NULL) {}
 
     vCreateMotorTask();
-    // vCreateSensorTasks();
+    vCreateSensorTasks();
     vCreateGuiTask();
 
     vTaskStartScheduler();
@@ -170,8 +178,8 @@ void vApplicationMallocFailedHook(void)
     to query the size of free heap space that remains (although it does not
     provide information on how the remaining heap might be fragmented). */
     IntMasterDisable();
-    for (;;)
-        ;
+    UARTprintf("\nMALLOC FAILED\n");
+    for( ;; );
 }
 /*-----------------------------------------------------------*/
 
@@ -198,8 +206,9 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
     function is called if a stack overflow is detected. */
     IntMasterDisable();
-    for (;;)
-        ;
+    UARTprintf("\nSTACK OVERFLOW: %s\n", pcTaskName);
+    for( ;; );
+
 }
 /*-----------------------------------------------------------*/
 

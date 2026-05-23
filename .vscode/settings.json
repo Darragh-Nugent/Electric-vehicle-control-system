@@ -1,0 +1,6 @@
+{
+    "github.copilot.enable": {
+        "c": false
+    },
+    "editor.inlineSuggest.suppressSuggestions": true
+}

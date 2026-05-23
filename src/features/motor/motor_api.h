@@ -12,6 +12,7 @@
 extern SemaphoreHandle_t motorStateMutex;
 extern SemaphoreHandle_t motorSetSpeedMutex;
 extern SemaphoreHandle_t motorStartSemaphore;
+extern SemaphoreHandle_t motorEStopSemaphore;
 
 // State transitions
 
@@ -20,6 +21,8 @@ void motorStart(void);
 void motorRunning(void);
 void motorEStop(void);
 void motorFaultLatched(void);
+void motorRequestEStop(void);
+void motorAcknowledgeFault(void);
 
 // State accessors
 
@@ -30,5 +33,4 @@ bool motorSetState(motor_state_t state);
 
 void motorSetSpeed(uint16_t rpm);
 uint16_t motorGetSpeed(void);
-void motorAcknowledgeFault(void);
 #endif

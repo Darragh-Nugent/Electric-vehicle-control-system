@@ -42,6 +42,7 @@
 #include "timers.h"
 #include "gui_task.h"
 #include "lvgl.h"
+#include "semphr.h"
 
 #define GUI_TICK 5
 
@@ -51,6 +52,8 @@
 //
 //*****************************************************************************
 extern volatile uint32_t g_ui32SysClock;
+
+extern SemaphoreHandle_t motorStartSemaphore;
 
 UiMsg_t g_ui_state;
 
@@ -98,7 +101,8 @@ static void prvDispatchMsg(const UiMsg_t *msg)
         UARTprintf("MOTOR: SETTING STATE TO IDLE\n");
         break;
     case UI_MSG_MOTOR_STARTING:
-        motorSetState(msg->payload.u);
+        // motorSetState(msg->payload.u);
+        // xSemaphoreGive(motorStartSemaphore);
         UARTprintf("MOTOR: SETTING STATE TO STARTING\n");
         break;
     case UI_MSG_MOTOR_RUNNING:

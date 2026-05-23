@@ -22,12 +22,14 @@
 #include "motorlib.h"
 #include "features/priorities.h"
 #include "motor_api.h"
+#include "features/sensors/api/sensors_api.h"
 
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
 
 volatile bool speed_semaphore_given = false; // bytes are atomic on Cortex-M4 processors.
 
-void hallSensorHandler(void)
+
+void xhallSensorHandler(void)
 {
     GPIOIntClear(GPIO_PORTM_BASE, GPIO_PIN_3);
     GPIOIntClear(GPIO_PORTH_BASE, GPIO_PIN_2);
@@ -39,7 +41,9 @@ void hallSensorHandler(void)
 
     updateMotor(hall_a, hall_b, hall_c);
 
+
     // speed measuring code here
+    addRotation();
 
     if (!speed_semaphore_given) // TODO: also check if the speed threshold has been met.
     {

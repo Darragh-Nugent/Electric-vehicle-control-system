@@ -49,6 +49,7 @@
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
 
+ #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_PREEMPTION                1
 #define configUSE_IDLE_HOOK                 1
 #define configUSE_TICK_HOOK                 0
@@ -68,6 +69,7 @@
 #define configTIMER_TASK_PRIORITY           (tskIDLE_PRIORITY + 2) // Higher than GUI so UI clock is accurate
 #define configTIMER_TASK_STACK_DEPTH        256 // Stack size of timer tasks in words (e.g 256 -> 1kb)
 #define configTIMER_QUEUE_LENGTH            10 // Timer commands can stay in queue
+#define configUSE_MALLOC_FAILED_HOOK        1
 
 //#define configMAX_PRIORITIES                ( ( unsigned portBASE_TYPE ) 16 )
 #define configMAX_PRIORITIES ( 16 )
