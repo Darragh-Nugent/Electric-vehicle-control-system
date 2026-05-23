@@ -82,14 +82,7 @@ void motorControlResetReferenceSpeed(void)
 
 
 uint16_t motorLQRUpdate(uint16_t referenceSpeedRPM_in, uint16_t actualSpeedRPM, float dtSeconds)
-{
-    
-    if (referenceSpeedRPM_in ==0) // to byypass min duty if estopping
-    {
-        integralError = 0.0f;
-        return 0;
-    }
-    
+{    
     float omega = actualSpeedRPM * (2.0f * 3.1415926535f / 60.0f);
     float omegaRef = referenceSpeedRPM_in * (2.0f * 3.1415926535f / 60.0f);
 

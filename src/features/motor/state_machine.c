@@ -137,7 +137,6 @@ static void motorTask(void *pvParameters)
                 motorEStopRequested = false;
 
                 UARTprintf("RUNNING EXIT: e-stop requested\n");
-                motorControllerReset();
 
                 motorEStop();
                 break;
@@ -173,7 +172,6 @@ static void motorTask(void *pvParameters)
             if (frozenSpeedCount > 300) // 7.5s of identical readings
             {
                 UARTprintf("RUNNING EXIT: sensor freeze\n");
-                setDuty(0);
                 motorControllerReset();
                 motorEStop();
                 break;
@@ -191,7 +189,6 @@ static void motorTask(void *pvParameters)
             if (zeroSpeedCount > 5)
             {
                 UARTprintf("RUNNING EXIT: sustained zero speed\n");
-                setDuty(0);
                 motorControllerReset();
                 motorEStop();
                 break;
@@ -217,7 +214,6 @@ static void motorTask(void *pvParameters)
             if (lowSpeedCount > 50)
             {
                 UARTprintf("RUNNING EXIT: lowSpeed timeout\n");
-                setDuty(0);
                 motorControllerReset();
                 motorEStop();
                 break;
@@ -259,7 +255,13 @@ static void motorTask(void *pvParameters)
             setDuty(duty);
            
             #if MOTOR_SERIALPLOT_ENABLE
-                motorSerialPlotOutput(0, referenceSpeed, actualSpeed.value, duty);
+                static uint8_t brakePlotCount = 0;
+                brakePlotCount++;
+                if (brakePlotCount >= 5)
+                {
+                    motorSerialPlotOutput(0, referenceSpeed, actualSpeed.value, duty);
+                    brakePlotCount = 0;
+                }
             #endif
 
             if (referenceSpeed ==0 && actualSpeed.value <= 50)
@@ -274,11 +276,9 @@ static void motorTask(void *pvParameters)
             if (stoppedCount >= 5)
             {
                 stoppedCount = 0;
-                setDuty(0);
                 motorControllerReset();
                 motorControlResetReferenceSpeed();
 
-                // hallSensorIntDisable(); // maybe enable this...
                 motorFaultLatched();
             }
 
