@@ -27,11 +27,11 @@ static lv_obj_t *humidity_spinbox;
 #define SPINBOX_SCALE 10.0f
 
 const char *thresholdPrompt = "This is threshold configuration settings for the electric vehicle.\n"
-                              "Note, only the relevant sensors can trigger a fault: \n"
-                              " \n"
+                              "Only the relevant sensors can trigger a fault: \n"
                               "Power\n"
                               "Distance\n"
-                              "Acceleration";
+                              "Acceleration\n"
+                              "[Warnings occur when these exceed 80%% of max]";
 
 const char *powerPrompt = "Set the maximum power the motor can recieve in W (Max of 23 W)";
 
@@ -219,13 +219,15 @@ void lv_tab(lv_obj_t *s_screen)
     lv_obj_set_style_bg_opa(humidity_tab, LV_OPA_COVER, 0);
 
     lv_obj_remove_flag(lv_tabview_get_content(tabview), LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_remove_flag(info_tab, LV_OBJ_FLAG_SCROLLABLE);
 }
 
-void formatText(lv_obj_t *text, lv_align_t align)
+void formatText(lv_obj_t *text, lv_align_t align, int16_t xOffs, int16_t yOffs)
 {
-    lv_obj_set_align(text, align);
+    lv_obj_align(text, align,xOffs,yOffs);
     lv_obj_set_style_text_color(text, lv_color_white(), 0);
     lv_obj_set_width(text, 220);
+    lv_obj_set_height(text, 250);
     lv_label_set_long_mode(text, LV_LABEL_LONG_WRAP);
 }
 
@@ -287,29 +289,29 @@ void scr_settings_init(void)
     lv_obj_align(thresholdLabel, LV_ALIGN_TOP_RIGHT, 0, 0);
 
     lv_obj_t *thresholdText = lv_label_create(info_tab);
-    formatText(thresholdText, LV_ALIGN_CENTER);
+    formatText(thresholdText, LV_ALIGN_CENTER,0,60);
     lv_label_set_text(thresholdText, thresholdPrompt);
     lv_obj_remove_flag(thresholdText, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *powerText = lv_label_create(power_tab);
-    formatText(powerText, LV_ALIGN_TOP_MID);
+    formatText(powerText, LV_ALIGN_TOP_MID,0,0);
     lv_label_set_text(powerText, powerPrompt);
 
     lv_obj_t *accelText = lv_label_create(accel_tab);
-    formatText(accelText, LV_ALIGN_TOP_MID);
+    formatText(accelText, LV_ALIGN_TOP_MID,0,0);
     lv_label_set_text(accelText, accelPrompt);
 
 
     lv_obj_t *distText = lv_label_create(dist_tab);
-    formatText(distText, LV_ALIGN_TOP_MID);
+    formatText(distText, LV_ALIGN_TOP_MID,0,0);
     lv_label_set_text(distText, distancePrompt);
 
     lv_obj_t *tempText = lv_label_create(temp_tab);
-    formatText(tempText, LV_ALIGN_TOP_MID);
+    formatText(tempText, LV_ALIGN_TOP_MID,0,0);
     lv_label_set_text(tempText, tempPrompt);
 
     lv_obj_t *humidityText = lv_label_create(humidity_tab);
-    formatText(humidityText, LV_ALIGN_TOP_MID);
+    formatText(humidityText, LV_ALIGN_TOP_MID,0,0);
     lv_label_set_text(humidityText, humidityPrompt);
 
     lv_obj_t *home_button = create_icon_button(info_tab, LV_SYMBOL_HOME, btn_home_cb, LV_ALIGN_TOP_LEFT, 0, 0);

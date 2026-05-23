@@ -11,16 +11,27 @@ void scr_dashboard_set_rpm(float f) {};
 void scr_dashboard_set_sensor(uint32_t idx, float f) {};
 void scr_dashboard_set_motor_state(uint32_t state) {};
 
+typedef enum
+{
+    DASH_DIST_ACCEL = 0,
+    DASH_POWER_LUX,
+    DASH_TEMP_HUMIDITY,
+    DASH_MODE_COUNT
+} dashboard_mode_t;
+
 static lv_obj_t *s_screen;
 static lv_obj_t *timeLabel;
 static uint8_t seconds = 0;
 static uint8_t minutes = 20;
 static uint8_t hours = 9;
 static uint8_t days = 0;
-
-static lv_obj_t *lbl_temp;
-static lv_obj_t *lbl_humidity;
-static lv_obj_t *lbl_temp_info;
+static dashboard_mode_t dashboardMode = DASH_DIST_ACCEL;
+static lv_obj_t *lbl_lhs_title;
+static lv_obj_t *lbl_rhs_title;
+static lv_obj_t *lbl_lhs;
+static lv_obj_t *lbl_rhs;
+static lv_obj_t *lbl_lhs_info;
+static lv_obj_t *lbl_rhs_info;
 
 extern sensorThresholds_t g_thresholds;
 
@@ -55,6 +66,81 @@ static void btn_settings_cb(lv_event_t *e)
     screen_manager_goto(SCREEN_SETTINGS);
 }
 
+static void btn_swap_display_cb(lv_event_t *e)
+{
+    (void)e;
+    dashboardMode = (dashboard_mode_t)((dashboardMode + 1) % DASH_MODE_COUNT);
+}
+
+static void resetLabels(char *lhsTitle, char *rhsTitle)
+{
+    lv_label_set_text(lbl_lhs_info, "");
+    lv_label_set_text(lbl_rhs_info, "");
+    lv_label_set_text(lbl_lhs_title, lhsTitle);
+    lv_label_set_text(lbl_rhs_title, rhsTitle);
+
+    lv_obj_set_style_text_color(lbl_lhs_info,
+                                lv_color_hex(0xCBD5E1),
+                                0);
+    lv_obj_set_style_text_color(lbl_rhs_info,
+                                lv_color_hex(0xCBD5E1),
+                                0);
+}
+
+static void updateTempAndHumidity(int16_t temp, int16_t humidity)
+{
+    lv_label_set_text_fmt(lbl_lhs, "%d °C", temp);
+    lv_label_set_text_fmt(lbl_rhs, "%d %%", humidity);
+    resetLabels("Temp", "Humidity");
+    if (temp > g_thresholds.TH_TEMP)
+        lv_label_set_text(lbl_lhs_info, "Cooling on");
+    else if (temp < g_thresholds.TH_TEMP)
+        lv_label_set_text(lbl_lhs_info, "Cooling off");
+}
+
+static void updateDistAndAccel(uint16_t dist, uint16_t accel)
+{
+    lv_label_set_text_fmt(lbl_lhs, "%d m", dist);
+    lv_label_set_text_fmt(lbl_rhs, "%d ", accel);
+    resetLabels("Distance", "Accel");
+    if (dist >= g_thresholds.TH_DIST * WARNING_THRESHOLD)
+    {
+        lv_obj_set_style_text_color(lbl_lhs_info,
+                                    SCARY_RED,
+                                    0);
+        lv_label_set_text(lbl_lhs_info, "Warning");
+    }
+    else
+        lv_label_set_text(lbl_lhs_info, "");
+
+    if (accel >= g_thresholds.TH_ACCEL * WARNING_THRESHOLD)
+    {
+        lv_obj_set_style_text_color(lbl_rhs_info,
+                                    SCARY_RED,
+                                    0);
+        lv_label_set_text(lbl_rhs_info, "Warning");
+    }
+    else
+        lv_label_set_text(lbl_rhs_info, "");
+}
+
+static void updatePowerAndLux(uint16_t power, uint16_t lux)
+{
+    lv_label_set_text_fmt(lbl_lhs, "%d m", power);
+    lv_label_set_text_fmt(lbl_rhs, "%d ", lux);
+    resetLabels("Power", "Lux");
+
+    if (power >= g_thresholds.TH_POWER * WARNING_THRESHOLD)
+    {
+        lv_obj_set_style_text_color(lbl_lhs_info,
+                                    SCARY_RED,
+                                    0);
+        lv_label_set_text(lbl_lhs_info, "Warning");
+    }
+    else
+        lv_label_set_text(lbl_lhs_info, "");
+}
+
 void handleCB(lv_timer_t *e)
 {
     seconds += 1;
@@ -77,22 +163,39 @@ void handleCB(lv_timer_t *e)
         hours = 0;
         days += 1; // not really displayed but is here for future use
     }
+
     int16_t temp = 50;
     int16_t humidity = 100;
-    uint32_t lux = 4;
-    // Sensor_GetLux
-    // Sensor_GetTemp
-    // Sensor_GetHumidity
+    uint16_t dist = 10;
+    uint16_t accel = 1000;
+    uint16_t power = 10;
+    uint16_t lux = 1000;
 
-    lv_label_set_text_fmt(lbl_temp, "%d", temp);
-    lv_label_set_text_fmt(lbl_humidity, "%d", humidity);
+    if (lux < 5)
+        enableHeadLights();
+    else if (lux > 5)
+        disableHeadLights();
 
-    if (temp > g_thresholds.TH_TEMP)
-        lv_label_set_text(lbl_temp_info, "Cooling on");
-    else if (temp < g_thresholds.TH_TEMP)
-        lv_label_set_text(lbl_temp_info, "Cooling off");
-    if (lux < 5) enableHeadLights();
-    else if (lux > 5) disableHeadLights();
+    switch (dashboardMode)
+    {
+    case DASH_TEMP_HUMIDITY:
+
+        updateTempAndHumidity(temp, humidity);
+        break;
+
+    case DASH_DIST_ACCEL:
+
+        updateDistAndAccel(dist, accel);
+        break;
+
+    case DASH_POWER_LUX:
+
+        updatePowerAndLux(power, lux);
+        break;
+
+    default:
+        break;
+    }
 }
 
 // Obtained from https://lvgl.io/docs/open/9.5/widgets/label.html
@@ -189,12 +292,14 @@ void scr_dashboard_init(void)
     lv_obj_t *status_btn = nav_button_init(nav_bar, "Status", btn_status_cb, LV_ALIGN_RIGHT_MID, -10, 0);
     lv_obj_t *settings_btn = create_icon_button(s_screen, LV_SYMBOL_SETTINGS, btn_settings_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     lv_obj_t *alert_btn = create_icon_button(s_screen, LV_SYMBOL_WARNING, btn_alert_cb, LV_ALIGN_TOP_RIGHT, -8, 8);
+    lv_obj_t *swap_btn = create_icon_button(s_screen, LV_SYMBOL_SHUFFLE, btn_swap_display_cb, LV_ALIGN_CENTER, 0, 25);
     // Align the buttons horizontally within the navigation bar
     lv_obj_set_width(motor_btn, 80);
     lv_obj_set_width(sensors_btn, 80);
     lv_obj_set_width(status_btn, 80);
     lv_obj_set_width(settings_btn, 40);
     lv_obj_set_width(alert_btn, 40);
+    lv_obj_set_width(swap_btn, 40);
 
     lv_obj_align(settings_btn, LV_ALIGN_TOP_LEFT, 8, 30);
     lv_obj_align(alert_btn, LV_ALIGN_TOP_RIGHT, -8, 30);
@@ -214,19 +319,39 @@ void scr_dashboard_init(void)
     lv_obj_add_style(alert_btn, &style_transp, LV_STATE_DEFAULT);
     lv_obj_remove_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
 
-    lv_obj_t *temp = create_card(s_screen, "Temp", 170, 50,
-                                 lv_palette_main(LV_PALETTE_YELLOW), &lbl_temp, LV_ALIGN_TOP_RIGHT);
+    lv_obj_t *temp = create_card(s_screen, "", 170, 50,
+                                 lv_palette_main(LV_PALETTE_YELLOW), &lbl_lhs, LV_ALIGN_TOP_RIGHT);
     lv_obj_align_to(temp, nav_bar, LV_ALIGN_OUT_TOP_LEFT, 5, -5);
 
-    lv_obj_t *humidity = create_card(s_screen, "Humidity", 170, 50,
-                                     lv_palette_main(LV_PALETTE_BLUE), &lbl_humidity, LV_ALIGN_TOP_RIGHT);
+    lv_obj_t *humidity = create_card(s_screen, "", 170, 50,
+                                     lv_palette_main(LV_PALETTE_BLUE), &lbl_rhs, LV_ALIGN_TOP_RIGHT);
+    lv_obj_remove_flag(temp, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_remove_flag(humidity, LV_OBJ_FLAG_SCROLLABLE);
+    lbl_lhs_title = lv_label_create(temp);
+    lv_label_set_text(lbl_lhs_title, "--");
+    lv_obj_set_style_text_color(lbl_lhs_title,
+                                lv_color_hex(0xCBD5E1),
+                                0);
+    lv_obj_align(lbl_lhs_title, LV_ALIGN_TOP_LEFT, 0, 0);
 
+    lbl_rhs_title = lv_label_create(humidity);
+    lv_label_set_text(lbl_rhs_title, "--");
+    lv_obj_set_style_text_color(lbl_rhs_title,
+                                lv_color_hex(0xCBD5E1),
+                                0);
+    lv_obj_align(lbl_rhs_title, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    lv_obj_set_width(temp, STATUS_CARD_WIDTH - 10);
+    lv_obj_set_width(humidity, STATUS_CARD_WIDTH - 10);
     lv_obj_align_to(humidity, nav_bar, LV_ALIGN_OUT_TOP_RIGHT, -5, -5);
 
-    lbl_temp_info = lv_label_create(temp);
-    lv_obj_set_style_text_color(lbl_temp_info, lv_color_white(), 0);
-    lv_obj_align(lbl_temp_info, LV_ALIGN_LEFT_MID, 10, 20);
+    lbl_lhs_info = lv_label_create(temp);
+    lv_obj_set_style_text_color(lbl_lhs_info, lv_color_white(), 0);
+    lv_obj_align(lbl_lhs_info, LV_ALIGN_LEFT_MID, 10, 20);
 
+    lbl_rhs_info = lv_label_create(humidity);
+    lv_obj_set_style_text_color(lbl_rhs_info, lv_color_white(), 0);
+    lv_obj_align(lbl_rhs_info, LV_ALIGN_LEFT_MID, 10, 20);
     // Lv timer for time
     lv_timer_create(handleCB, 1000, NULL);
 }
