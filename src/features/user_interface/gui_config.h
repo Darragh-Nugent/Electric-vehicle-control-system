@@ -7,6 +7,8 @@
 #define DEFAULT_OVERHEAD_GAP 200
 #define DEFAULT_PERIOD 200
 
+#define WARNING_THRESHOLD 0.8
+
 // Alert
 #define SCARY_RED lv_color_hex(0xFF6666)
 

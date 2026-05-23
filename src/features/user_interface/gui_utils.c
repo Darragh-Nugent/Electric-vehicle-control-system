@@ -437,7 +437,7 @@ lv_obj_t *create_card(lv_obj_t *parent,
         lv_obj_align(*value_label,
                      alignValue,
                      0,
-                     10);
+                     15);
     }
 
     return card;
