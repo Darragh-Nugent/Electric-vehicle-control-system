@@ -90,5 +90,5 @@ float getPower(void)
     current[2] = -(current[0] + current[1]);
 
     // Find average using a denominator of 2 as one will always be 0
-    return (current[0] + current[1] + current[2]) / 2 * VOLTS;
+    return (fabs(current[0]) + fabs(current[1]) + fabs(current[2])) / 2 * VOLTS;
 }
