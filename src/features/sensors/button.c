@@ -66,11 +66,12 @@ void xButtonsHandler(void)
         {
             if (motor_state == MOTOR_STATE_FAULT)
                 {
-                    motorAcknowledgeFault();
+                    // motorAcknowledgeFault();
+                    xSemaphoreGiveFromISR(faultAcknowledgedSemaphore, &xOPTTaskWoken);
                 }
                 else
                 {
-                    motorRequestEStop();
+                    xSemaphoreGiveFromISR(motorEStopSemaphore, &xOPTTaskWoken);
                 }
         }
 

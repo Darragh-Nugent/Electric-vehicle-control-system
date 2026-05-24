@@ -78,8 +78,8 @@ void vCreateSensorTasks(void)
     xButtonSemaphore = xSemaphoreCreateBinary();
     xI2CSemaphore = xSemaphoreCreateBinary();
     xOPT3001Semaphore = xSemaphoreCreateBinary();
-    xI2CSendQueue = xQueueCreate(1, sizeof(i2c_send_message_t));
-    xI2CRecvQueue = xQueueCreate(1, sizeof(i2c_recv_message_t));
+    xI2CSendQueue = xQueueCreate(20, sizeof(i2c_send_message_t));
+    xI2CRecvQueue = xQueueCreate(20, sizeof(i2c_recv_message_t));
 
     xSensorEvents = xEventGroupCreate();
 
@@ -126,6 +126,8 @@ void vCreateSensorTasks(void)
 
 static void prvI2CInit(void)
 {
+    IntPrioritySet(INT_I2C2, configMAX_SYSCALL_INTERRUPT_PRIORITY);
+
     //
     // Enable I2C0 for Bootsetpack 1
     //
@@ -184,15 +186,14 @@ static void prvI2CInit(void)
 
     // Enable i2c interrupt sources
     // I2CMasterIntEnableEx(I2C0_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
-    I2CMasterIntEnableEx(I2C2_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
+    // I2CMasterIntEnableEx(I2C2_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
+    I2CMasterIntEnableEx(I2C2_BASE, I2C_MASTER_INT_DATA);
 
     // IntEnable(INT_I2C0); // should be in opt_task (thats what the semaphore example had)
     IntEnable(INT_I2C2);
 
     // I2CMasterTimeoutSet(I2C0_BASE, g_ui32SysClock / 100);
-    I2CMasterTimeoutSet(I2C2_BASE, g_ui32SysClock / 100);
-
-    IntMasterEnable();
+    // I2CMasterTimeoutSet(I2C2_BASE, g_ui32SysClock / 100);
 }
 
 static void prvTimerInit(void)
@@ -204,8 +205,7 @@ static void prvTimerInit(void)
     IntPrioritySet(INT_TIMER6A, configMAX_SYSCALL_INTERRUPT_PRIORITY);
 
     // Enable the sensor timers
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER6); // Enable the Timer 0 Module.
-    // SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER6); // Enable the Timer 6 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 2 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); // Enable the Timer 3 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER4); // Enable the Timer 4 Module.
@@ -214,9 +214,6 @@ static void prvTimerInit(void)
     // Configure the interrupt time
     TimerConfigure(TIMER6_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER6_BASE, TIMER_A, g_ui32SysClock / 2); // set to ~ 2Hz
-
-    // TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
-    // TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
 
     TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock); // set to ~ 1Hz
@@ -230,14 +227,11 @@ static void prvTimerInit(void)
     TimerConfigure(TIMER5_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER5_BASE, TIMER_A, g_ui32SysClock / 20); // set to ~ 20Hz
 
-    // Regester and enable the interrupts
+    // Register and enable the interrupts
     TimerIntRegister(TIMER6_BASE, TIMER_A, xOPT3001TimerHandler);
     TimerIntEnable(TIMER6_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER6_BASE, TIMER_A);
 
-    // TimerIntRegister(TIMER1_BASE, TIMER_A, xBMI160TimerHandler);
-    // TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
-    // TimerEnable(TIMER1_BASE, TIMER_A);
 
     TimerIntRegister(TIMER2_BASE, TIMER_A, xSHT31TimerHandler);
     TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
@@ -254,9 +248,6 @@ static void prvTimerInit(void)
     TimerIntRegister(TIMER5_BASE, TIMER_A, xDistTimerHandler);
     TimerIntEnable(TIMER5_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER5_BASE, TIMER_A);
-
-    // Enable Master Interrupts
-    IntMasterEnable();
 }
 
 static void prvADCInit(void)
@@ -290,7 +281,6 @@ static void prvADCInit(void)
 
     IntEnable(INT_ADC1SS0);
     /* Enable global interrupts in the NVIC. */
-    IntMasterEnable();
 }
 
 static void prvButtonInit(void)
@@ -308,5 +298,4 @@ static void prvButtonInit(void)
     IntEnable(INT_GPIOJ);
 
     /* Enable global interrupts in the NVIC. */
-    IntMasterEnable();
 }

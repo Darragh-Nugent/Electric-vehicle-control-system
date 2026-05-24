@@ -44,8 +44,8 @@ static void IntDefaultHandler(void);
 extern void xPortPendSVHandler(void);
 extern void vPortSVCHandler(void);
 extern void xPortSysTickHandler(void);
+extern void TouchScreenIntHandler(void);
 
-// extern void xI2C0Handler(void);
 extern void xI2C2Handler(void);
 
 extern void xOPT3001TimerHandler(void);
@@ -117,13 +117,13 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // ADC Sequence 0
     IntDefaultHandler,                      // ADC Sequence 1
     IntDefaultHandler,                      // ADC Sequence 2
-    IntDefaultHandler,                      // ADC Sequence 3
+    TouchScreenIntHandler,                  // ADC Sequence 3
     IntDefaultHandler,                      // Watchdog timer
     IntDefaultHandler,                      // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
     IntDefaultHandler,                      // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
-    xSHT31TimerHandler,                          // Timer 2 subtimer A
+    xSHT31TimerHandler,                     // Timer 2 subtimer A
     IntDefaultHandler,                      // Timer 2 subtimer B
     IntDefaultHandler,                      // Analog Comparator 0
     IntDefaultHandler,                      // Analog Comparator 1
@@ -200,7 +200,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // LCD Controller 0
     xOPT3001TimerHandler,                   // Timer 6 subtimer A
     IntDefaultHandler,                      // Timer 6 subtimer B
-    IntDefaultHandler,                      // Timer 7 subtimer A
+    IntDefaultHandler,                    // Timer 7 subtimer A
     IntDefaultHandler,                      // Timer 7 subtimer B
     IntDefaultHandler,                      // I2C6 Master and Slave
     IntDefaultHandler,                      // I2C7 Master and Slave

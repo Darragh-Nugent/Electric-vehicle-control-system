@@ -17,6 +17,7 @@ SemaphoreHandle_t motorStateMutex = NULL;
 SemaphoreHandle_t motorSetSpeedMutex = NULL;
 SemaphoreHandle_t motorStartSemaphore = NULL;
 SemaphoreHandle_t motorUpToSpeedSemaphore = NULL;
+SemaphoreHandle_t motorEStopSemaphore = NULL;
 
 extern SemaphoreHandle_t faultAcknowledgedSemaphore;
 
@@ -24,7 +25,9 @@ extern motor_state_t motor_state;
 extern void hallSensorIntEnable(void);
 extern void kickStartMotor(void);
 
-volatile bool motorEStopRequested = false;
+extern void setDuty(int);
+
+// volatile bool motorEStopRequested = false;
 
 
 // Transition state to idle
@@ -45,7 +48,7 @@ void motorRunning(void)
     sensor_sample_t currentSpeed = Sensor_GetSpeed();
     motorControlSetReferenceSpeed(currentSpeed.value);
     // motorControlSetReferenceSpeed(userSetSpeed);  // start ramp at desired speed, not actual
-    motorPIInit(MOTOR_DUTY_START);
+    motorControllerInit();
 
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_RUNNING;
@@ -56,7 +59,7 @@ void motorRunning(void)
 // Enable the hall effect sensor ISR and kick start the motor.
 void motorStart(void)
 {
-    // UARTprintf("STATE: STARTING\n");
+    setDuty(MOTOR_DUTY_START);
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_STARTING;
     xSemaphoreGive(motorStateMutex);
@@ -122,11 +125,14 @@ bool motorSetState(motor_state_t state)
 
 void motorRequestEStop(void)
 {
-    motorEStopRequested = true;
+    // motorEStopRequested = true;
+    xSemaphoreGive(motorEStopSemaphore);
 }
 
 void motorAcknowledgeFault(void)
 {
-    BaseType_t xTaskWoken = pdFALSE;
-    xSemaphoreGiveFromISR(faultAcknowledgedSemaphore, &xTaskWoken);
+    if (motor_state == MOTOR_STATE_FAULT) 
+    {
+        xSemaphoreGive(faultAcknowledgedSemaphore);
+    }
 }

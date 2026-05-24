@@ -24,47 +24,57 @@
 #include "utils/uartstdio.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
+#include "driver_lib/udma.h"
+#include "drivers/touch.h"
+#include "grlib.h"
+#include "drivers/Kentec320x240x16_ssd2119_spi.h"
+#include "features/user_interface/touch_driver.h"
+#include "driverlib/fpu.h"
 
 // Motor lib
 #include <motorlib.h>
-
+tDMAControlTable psDMAControlTable[64] __attribute__((aligned(1024)));
 /* The system clock frequency. */
 uint32_t g_ui32SysClock;
 
 /* Set up the hardware ready to run this demo. */
-static void prvSetupHardware( void );
+static void prvSetupHardware(void);
 
 /* This function sets up UART0 to be used for a console to display information
  * as the example is running. */
 static void prvConfigureUART(void);
 
-extern void vCreateMotorTask( void );
+extern void vCreateMotorTask(void);
 extern void vCreateSensorTasks(void);
 extern void vCreateGuiTask(void);
 
 extern void hallSensorGPIOConfig(void);
 extern void hallSensorIntDisable(void);
+extern void disableHeadLights(void);
 
 extern SemaphoreHandle_t motorStateMutex;
 extern SemaphoreHandle_t motorSetSpeedMutex;
 extern SemaphoreHandle_t motorStartSemaphore;
 extern SemaphoreHandle_t motorUpToSpeedSemaphore;
+extern SemaphoreHandle_t motorEStopSemaphore;
 extern SemaphoreHandle_t uartMutex;
 
 SemaphoreHandle_t faultAcknowledgedSemaphore = NULL;
 
 /*-----------------------------------------------------------*/
 
-int main( void )
+int main(void)
 {
     prvSetupHardware();
-    IntMasterEnable();
+    FPUEnable();
+    FPULazyStackingEnable();
 
     motorStateMutex = xSemaphoreCreateMutex();
     motorSetSpeedMutex = xSemaphoreCreateMutex();
     motorStartSemaphore = xSemaphoreCreateBinary();
     motorUpToSpeedSemaphore = xSemaphoreCreateBinary();
     faultAcknowledgedSemaphore = xSemaphoreCreateBinary();
+    motorEStopSemaphore = xSemaphoreCreateBinary();
 
     uartMutex = xSemaphoreCreateMutex();
 
@@ -74,15 +84,19 @@ int main( void )
         motorStartSemaphore == NULL ||
         motorUpToSpeedSemaphore == NULL ||
         faultAcknowledgedSemaphore == NULL ||
+        motorEStopSemaphore == NULL ||
         uartMutex == NULL) {}
 
-    // vCreateMotorTask();
+    vCreateMotorTask();
     vCreateSensorTasks();
-    // vCreateGuiTask();
+    vCreateGuiTask();
 
     vTaskStartScheduler();
 
-    for( ;; );
+    IntMasterEnable();
+
+    for (;;)
+        ;
 }
 /*-----------------------------------------------------------*/
 static void prvConfigureUART(void)
@@ -114,11 +128,25 @@ static void prvConfigureUART(void)
 
 static void prvSetupHardware(void)
 {
+    FPUEnable();
+    FPULazyStackingEnable();
     /* Run from the PLL at configCPU_CLOCK_HZ MHz. */
     g_ui32SysClock = MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ |
-            SYSCTL_OSC_MAIN | SYSCTL_USE_PLL |
-            SYSCTL_CFG_VCO_240), configCPU_CLOCK_HZ);
+                                             SYSCTL_OSC_MAIN | SYSCTL_USE_PLL |
+                                             SYSCTL_CFG_VCO_240),
+                                            configCPU_CLOCK_HZ);
 
+    //
+    // Initialize the display driver.
+    //
+    Kentec320x240x16_SSD2119Init(g_ui32SysClock);
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_UDMA);
+    SysCtlDelay(10);
+    uDMAControlBaseSet(&psDMAControlTable[0]);
+    uDMAEnable();
+    TouchScreenInit(g_ui32SysClock);
+    TouchScreenCallbackSet(TouchCallBack);
     /* Configure device pins. */
     PinoutSet(false, false);
 
@@ -128,10 +156,17 @@ static void prvSetupHardware(void)
     /* Set-up interrupts for hall sensors */
     hallSensorGPIOConfig();
     hallSensorIntDisable(); // the hall effect ISR should be disabled by default (IDLE)
+
+
+    // Initialise LED as outputs
+    GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_4 | GPIO_PIN_0);
+    // Initialise led as off
+    disableHeadLights();
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationMallocFailedHook( void )
+void vApplicationMallocFailedHook(void)
 {
     /* vApplicationMallocFailedHook() will only be called if
     configUSE_MALLOC_FAILED_HOOK is set to 1 in FreeRTOSConfig.h.  It is a hook
@@ -149,7 +184,7 @@ void vApplicationMallocFailedHook( void )
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationIdleHook( void )
+void vApplicationIdleHook(void)
 {
     /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
     to 1 in FreeRTOSConfig.h.  It will be called on each iteration of the idle
@@ -163,10 +198,10 @@ void vApplicationIdleHook( void )
 }
 /*-----------------------------------------------------------*/
 
-void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
+void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
 {
-    ( void ) pcTaskName;
-    ( void ) pxTask;
+    (void)pcTaskName;
+    (void)pxTask;
 
     /* Run time stack overflow checking is performed if
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
@@ -178,13 +213,12 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName )
 }
 /*-----------------------------------------------------------*/
 
-void *malloc( size_t xSize )
+void *malloc(size_t xSize)
 {
     /* There should not be a heap defined, so trap any attempts to call
     malloc. */
     IntMasterDisable();
-    for( ;; );
+    for (;;)
+        ;
 }
 /*-----------------------------------------------------------*/
-
-

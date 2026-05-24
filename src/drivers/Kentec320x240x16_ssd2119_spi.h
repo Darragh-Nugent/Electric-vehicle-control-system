@@ -1,0 +1,36 @@
+//*****************************************************************************
+//
+// Kentec320x240x16_ssd2119_spi.h - Prototypes fpr the Kentec
+//                                  BOOSTXL-K350QVG-S1 TFT display drivers with
+//                                  an SSD2119 and SPI interface.
+//
+// Copyright (c) 2016-2017 Texas Instruments Incorporated.  All rights reserved.
+// Software License Agreement
+// 
+// Texas Instruments (TI) is supplying this software for use solely and
+// exclusively on TI's microcontroller products. The software is owned by
+// TI and/or its suppliers, and is protected under applicable copyright
+// laws. You may not combine this software with "viral" open-source
+// software in order to form a larger program.
+// 
+// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
+// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
+// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
+// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
+// DAMAGES, FOR ANY REASON WHATSOEVER.
+// 
+// This is part of revision 2.1.4.178 of the EK-TM4C1294XL Firmware Package.
+//
+//*****************************************************************************
+#ifndef __KENTEC320X240X16_SSD2119_SPI_H__
+#define __KENTEC320X240X16_SSD2119_SPI_H__
+
+extern void LED_backlight_ON(void);
+extern void LED_backlight_OFF(void);
+extern void Kentec320x240x16_SSD2119Init(uint32_t ui32SysClock);
+extern const tDisplay g_sKentec320x240x16_SSD2119;
+void SSD2119_WriteCommand(uint16_t cmd);
+void SSD2119_WriteData(uint16_t data);
+void SSD2119_PixelDraw(tDisplay *context, int32_t x1, int32_t y1, uint32_t buff);
+#endif // __KENTEC320X240X16_SSD2119_SPI_H__

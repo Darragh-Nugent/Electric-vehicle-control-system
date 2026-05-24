@@ -49,13 +49,14 @@
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
 
+ #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_PREEMPTION                1
 #define configUSE_IDLE_HOOK                 1
 #define configUSE_TICK_HOOK                 0
 #define configCPU_CLOCK_HZ                  ( ( unsigned long ) 120000000 )
 #define configTICK_RATE_HZ                  ( ( portTickType ) 1000 )
 #define configMINIMAL_STACK_SIZE            ( ( unsigned short ) 200 )
-#define configTOTAL_HEAP_SIZE               ( ( size_t ) ( 20240 ) )
+#define configTOTAL_HEAP_SIZE               ( ( size_t ) ( 1024 * 67 ) )
 #define configMAX_TASK_NAME_LEN             ( 12 )
 #define configUSE_TRACE_FACILITY            1
 #define configUSE_16_BIT_TICKS              0
@@ -64,6 +65,10 @@
 #define configUSE_MUTEXES                   1
 #define configUSE_RECURSIVE_MUTEXES         1
 #define configCHECK_FOR_STACK_OVERFLOW      2
+#define configUSE_TIMERS                    1
+#define configTIMER_TASK_PRIORITY           (tskIDLE_PRIORITY + 2) // Higher than GUI so UI clock is accurate
+#define configTIMER_TASK_STACK_DEPTH        256 // Stack size of timer tasks in words (e.g 256 -> 1kb)
+#define configTIMER_QUEUE_LENGTH            10 // Timer commands can stay in queue
 #define configUSE_MALLOC_FAILED_HOOK        1
 
 //#define configMAX_PRIORITIES                ( ( unsigned portBASE_TYPE ) 16 )
@@ -82,6 +87,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil             1
 #define INCLUDE_vTaskDelay                  1
 #define INCLUDE_uxTaskGetStackHighWaterMark 1
+#define INCLUDE_xTimerPendFunctionCall 1
 
 /* Cortex-M3/4 interrupt priority configuration follows...................... */
 

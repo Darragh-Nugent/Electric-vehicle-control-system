@@ -9,3 +9,4 @@
 
 float getPower(void);
 void PowerInit(void);
+float getCurrent(void);
