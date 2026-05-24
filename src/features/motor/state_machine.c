@@ -27,7 +27,7 @@
 #include "utils/muart.h"
 
 #define CONTROL_PERIOD_MS 25
-#define MOTOR_SERIALPLOT_ENABLE 0
+#define MOTOR_SERIALPLOT_ENABLE 1
 
 motor_state_t motor_state = MOTOR_STATE_IDLE;
 static void motorTask(void *pvParameters);
@@ -69,14 +69,12 @@ static void motorTask(void *pvParameters)
     setDuty(duty_value);
 
     initMotorControl();
-
+    vTaskDelay(pdMS_TO_TICKS(5000));
     for (;;)
     {
         switch (motor_state)
         {
         case MOTOR_STATE_IDLE:
-            // vTaskDelay(pdMS_TO_TICKS(15000));
-            // UARTprintf("IDLE done, starting motor\n");
             motorSetSpeed(1500);
             xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
             UARTprintf("speed: %d\n", Sensor_GetSpeed().value);
@@ -127,7 +125,6 @@ static void motorTask(void *pvParameters)
         }
         case MOTOR_STATE_RUNNING:
         {
-
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
 
             if (xSemaphoreTake(motorEStopSemaphore, 0) == pdTRUE)
