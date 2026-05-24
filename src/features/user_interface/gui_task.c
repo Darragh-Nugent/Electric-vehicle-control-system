@@ -56,6 +56,7 @@ extern volatile uint32_t g_ui32SysClock;
 extern SemaphoreHandle_t motorStartSemaphore;
 
 UiMsg_t g_ui_state;
+motor_state_t state;
 
 tContext g_sContext;
 static lv_display_t *my_display;
@@ -86,7 +87,6 @@ static void prvDispatchMsg(const UiMsg_t *msg)
 {
     switch (msg->type)
     {
-
     // Motor data — update motor screen; dashboard shows summary
     case UI_MSG_MOTOR_RPM:
         motorSetSpeed(msg->payload.u);
@@ -145,6 +145,7 @@ static void prvDispatchMsg(const UiMsg_t *msg)
     // Faults — always visible regardless of active screen
     case UI_MSG_FAULT_RAISED:
         screen_manager_goto(SCREEN_ALERT);
+        motorRequestEStop();
         break;
     case UI_MSG_FAULT_CLEARED:
         g_ui_state.type = UI_MSG_STATE_NONE;
@@ -213,7 +214,7 @@ void prvGuiTask(void *pvParameters)
     for (;;)
     {
         // Consume all pending data updates
-        motor_state_t state = motorGetState();//MOTOR_STATE_FAULT; // portmax delay, be careful this doesnt delay the UI
+        state = motorGetState(); // MOTOR_STATE_FAULT; // portmax delay, be careful this doesnt delay the UI
         if (state == MOTOR_STATE_FAULT)
             g_ui_state.type = UI_MSG_FAULT_RAISED;
         prvDispatchMsg(&g_ui_state);

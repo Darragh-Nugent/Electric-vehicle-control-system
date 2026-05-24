@@ -64,17 +64,17 @@ static void ta_event_cb(lv_event_t *e)
 // Dropdown Button cb     "IDLE\nRUN\nBREAK\nEXPLODE",
 static void on_state_changed(const char *state)
 {
-    if (lv_strcmp(state, "IDLE") == 0)
+    if (lv_strcmp(state, "EStop") == 0)
     {
-        UARTprintf("IDLE\n");
-        updateGUIState(UI_MSG_MOTOR_IDLE, MOTOR_STATE_IDLE);
+        UARTprintf("EStop\n");
+        updateGUIState(UI_MSG_FAULT_RAISED, MOTOR_STATE_BRAKING);
     }
     else if (lv_strcmp(state, "RUN") == 0)
     {
         UARTprintf("RUNNING\n");
         updateGUIState(UI_MSG_MOTOR_RUNNING, MOTOR_STATE_RUNNING);
     }
-    else if (lv_strcmp(state, "BREAK") == 0)
+    else if (lv_strcmp(state, "BRAKE") == 0)
     {
         UARTprintf("BREAK\n");
         updateGUIState(UI_MSG_MOTOR_BREAKING, MOTOR_STATE_BRAKING);
@@ -181,7 +181,7 @@ void scr_motor_init(void)
     // Drop Down
     lv_obj_t *mode_dd = create_dropdown(
         nav_bar,
-        "IDLE\nRUN\nBREAK\nEXPLODE",
+        "RUN\nBRAKE\nEStop\nEXPLODE",
         on_state_changed);
 
     lv_obj_set_size(mode_dd, 120, 30);
