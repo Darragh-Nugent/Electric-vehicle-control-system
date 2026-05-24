@@ -26,6 +26,9 @@ typedef struct
 } sensors_t;
 
 static sensors_t sensor;
+static sensor_point_t accelThreshold;
+static sensor_point_t distThreshold;
+static sensor_point_t powerThreshold;
 
 void Sensor_Init(void)
 {
@@ -44,6 +47,18 @@ void Sensor_Init(void)
     sensor.rpm.mutex = xSemaphoreCreateMutex();
     sensor.power.mutex = xSemaphoreCreateMutex();
     sensor.distance.mutex = xSemaphoreCreateMutex();
+
+    // Initially set thresholds to max value
+    powerThreshold.sample.value = 0xFFFF;
+    distThreshold.sample.value = 0xFFFF;
+    accelThreshold.sample.value = 0xFFFF;
+
+
+    powerThreshold.mutex = xSemaphoreCreateMutex();
+    distThreshold.mutex = xSemaphoreCreateMutex();
+    accelThreshold.mutex = xSemaphoreCreateMutex();
+
+
 }
 
 static void Sensor_Update(sensor_point_t* point, uint16_t value)
@@ -69,6 +84,7 @@ static sensor_sample_t Sensor_Get(sensor_point_t* point)
     return temp;
 }
 
+
 void Sensor_UpdateLux(uint16_t value)
 {
     Sensor_Update(&sensor.lux, value);
@@ -87,6 +103,16 @@ void Sensor_UpdateAccel(uint16_t value)
 sensor_sample_t Sensor_GetAccel(void)
 {
     return Sensor_Get(&sensor.abs_accel);
+}
+
+void Sensor_UpdateThresholdAccel(uint16_t value)
+{
+    Sensor_Update(&accelThreshold, value);
+}
+
+sensor_sample_t Sensor_GetThresholdAccel(void)
+{
+    return Sensor_Get(&accelThreshold);
 }
 
 void Sensor_UpdateTemp(uint16_t value)
@@ -129,6 +155,16 @@ sensor_sample_t Sensor_GetPower(void)
     return Sensor_Get(&sensor.power);
 }
 
+void Sensor_UpdateThresholdPower(uint16_t value)
+{
+    Sensor_Update(&powerThreshold, value);
+}
+
+sensor_sample_t Sensor_GetThresholdPower(void)
+{
+    return Sensor_Get(&powerThreshold);
+}
+
 void Sensor_UpdateDistance(uint16_t value)
 {
     Sensor_Update(&sensor.distance, value);
@@ -137,4 +173,14 @@ void Sensor_UpdateDistance(uint16_t value)
 sensor_sample_t Sensor_GetDistance(void)
 {
     return Sensor_Get(&sensor.distance);
+}
+
+void Sensor_UpdateThresholdDistance(uint16_t value)
+{
+    Sensor_Update(&distThreshold, value);
+}
+
+sensor_sample_t Sensor_GetThresholdDistance(void)
+{
+    return Sensor_Get(&distThreshold);
 }

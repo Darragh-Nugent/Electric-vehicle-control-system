@@ -17,7 +17,7 @@
 #define ADC_MAX_COUNTS 4096.0f
 #define GAIN 10
 #define SHUNT_RESISTANCE 0.007f
-#define VOLTS 24
+#define VOLTS 24.0f
 
 SemaphoreHandle_t xPowerSemaphore;
 
@@ -58,7 +58,9 @@ float getPower(void)
     current[0] = (REF_VOLTS / 2.0f - converted_voltage[0]) / (GAIN * SHUNT_RESISTANCE);
     current[1] = (REF_VOLTS / 2.0f - converted_voltage[1]) / (GAIN * SHUNT_RESISTANCE);
 
-    current[2] = (current[0] + current[1]) / 2.0f;
+    // Sum of currents in motor will always add to 0
+    current[2] = -(current[0] + current[1]);
 
-    return (current[0] + current[1] + current[2]) * VOLTS;
+    // Find average using a denominator of 2 as one will always be 0
+    return (current[0] + current[1] + current[2]) / 2 * VOLTS;
 }

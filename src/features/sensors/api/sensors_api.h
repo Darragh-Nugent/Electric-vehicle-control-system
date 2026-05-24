@@ -18,6 +18,8 @@ void Sensor_UpdateLux(uint16_t lux);
 
 sensor_sample_t Sensor_GetAccel(void);
 void Sensor_UpdateAccel(uint16_t accel);
+sensor_sample_t Sensor_GetThresholdAccel(void);
+void Sensor_UpdateThresholdAccel(uint16_t value);
 
 sensor_sample_t Sensor_GetTemp(void);
 void Sensor_UpdateTemp(uint16_t temp);
@@ -30,6 +32,10 @@ void Sensor_UpdateSpeed(uint16_t rpm);
 
 sensor_sample_t Sensor_GetPower(void);
 void Sensor_UpdatePower(uint16_t power);
+sensor_sample_t Sensor_GetThresholdPower(void);
+void Sensor_UpdateThresholdPower(uint16_t value);
 
 sensor_sample_t Sensor_GetDistance(void);
 void Sensor_UpdateDistance(uint16_t dist);
+sensor_sample_t Sensor_GetThresholdDistance(void);
+void Sensor_UpdateThresholdDistance(uint16_t value);

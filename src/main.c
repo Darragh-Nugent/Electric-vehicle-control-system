@@ -76,7 +76,7 @@ int main( void )
         faultAcknowledgedSemaphore == NULL ||
         uartMutex == NULL) {}
 
-    vCreateMotorTask();
+    // vCreateMotorTask();
     vCreateSensorTasks();
     // vCreateGuiTask();
 
