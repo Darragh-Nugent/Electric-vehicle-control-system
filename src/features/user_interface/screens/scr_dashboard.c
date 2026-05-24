@@ -149,19 +149,28 @@ void handleCB(lv_timer_t *e)
         seconds = 0;
         minutes += 1;
         if (timeLabel)
-            lv_label_set_text_fmt(timeLabel, "%02u:%02u", hours, minutes);
+            lv_label_set_text_fmt(timeLabel, "%02u:%02u:%02u", hours, minutes, seconds);
     }
     if (minutes >= 60)
     {
         minutes = 0;
         hours += 1;
         if (timeLabel)
-            lv_label_set_text_fmt(timeLabel, "%02u:%02u", hours, minutes);
+            lv_label_set_text_fmt(timeLabel, "%02u:%02u:%02u", hours, minutes, seconds);
     }
     if (hours >= 24)
     {
         hours = 0;
         days += 1; // not really displayed but is here for future use
+    }
+    if (timeLabel)
+    {
+        lv_label_set_text_fmt(
+            timeLabel,
+            "%02u:%02u:%02u",
+            hours,
+            minutes,
+            seconds);
     }
 
     int16_t temp = 50;
@@ -256,7 +265,10 @@ void scr_dashboard_init(void)
     lv_obj_center(dateLabel);
 
     timeLabel = lv_label_create(header);
-    lv_label_set_text_fmt(timeLabel, "%u:%u", hours, minutes);
+    lv_label_set_text_fmt(timeLabel, "%02u:%02u:%02u",
+                          hours,
+                          minutes,
+                          seconds);
     lv_obj_align(timeLabel, LV_ALIGN_LEFT_MID, 0, 0);
 
     lv_obj_t *batteryLabel = lv_label_create(header);

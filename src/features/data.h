@@ -28,6 +28,7 @@ typedef struct
     int16_t radius;
     int16_t needle_length;
     int32_t cur_value; // this is a temporary value, can be removed once sensors are actually connected
+    int32_t max_value;
     lv_point_precise_t needle_points[2];
     scale_data_cb_t get_value_cb;
 } roundScale_t;

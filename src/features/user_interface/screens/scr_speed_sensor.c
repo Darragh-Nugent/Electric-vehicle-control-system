@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "../../data.h"
 #include "../gui_utils.h"
+#include "features/sensors/api/sensors_api.h"
 #define CHART_POINT_COUNT 80
 #define TIME_LABEL_WIDTH 6
 static lv_obj_t *s_screen;
@@ -27,7 +28,7 @@ static void btn_home_cb(lv_event_t *e)
 static int32_t get_speed(void)
 {
     // Sensor_GetSpeed();
-    return lv_rand(0, 3000);
+    return Sensor_GetSpeed().value;
 }
 
 void scr_speed_sensor_init(void)

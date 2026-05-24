@@ -9,6 +9,7 @@
 #include "../../data.h"
 #include "features/motor/states.h"
 #include "features/motor/motor_api.h"
+#include "features/sensors/api/sensors_api.h"
 #include <math.h>
 
 extern UiMsg_t g_ui_state;
@@ -128,7 +129,7 @@ void motor_state_update_cb(lv_timer_t *timer)
 static int32_t get_speed(void)
 {
     // Sensor_GetSpeed or something
-    return (int32_t)lv_rand(-1, 2);
+    return Sensor_GetSpeed().value;
 }
 
 void scr_motor_init(void)
@@ -136,7 +137,15 @@ void scr_motor_init(void)
     s_screen = lv_obj_create(NULL);
     setBackgroundColour(s_screen);
     lv_obj_remove_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
-    speedometer = create_speedometer(s_screen, get_speed, SPEEDO_SCALE_RADIUS, SPEEDO_NEEDLE_LENGTH, 0, SPEEDO_PERIOD);
+    speedometer = create_speedometer(s_screen,
+                                     get_speed,
+                                     SPEEDO_SCALE_RADIUS,
+                                     SPEEDO_NEEDLE_LENGTH,
+                                     0,
+                                     SPEEDO_PERIOD,
+                                     6,
+                                     19,
+                                     3);
     // To DO:
     // Add relevant buttons and diagnostics for motor
 
