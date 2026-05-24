@@ -148,6 +148,7 @@ static void prvDispatchMsg(const UiMsg_t *msg)
         motorRequestEStop();
         break;
     case UI_MSG_FAULT_CLEARED:
+        UARTprintf("CLEARED!");
         g_ui_state.type = UI_MSG_STATE_NONE;
         motorAcknowledgeFault();
         break;
@@ -215,9 +216,10 @@ void prvGuiTask(void *pvParameters)
     {
         // Consume all pending data updates
         state = motorGetState(); // MOTOR_STATE_FAULT; // portmax delay, be careful this doesnt delay the UI
+        prvDispatchMsg(&g_ui_state);
+
         if (state == MOTOR_STATE_FAULT)
             g_ui_state.type = UI_MSG_FAULT_RAISED;
-        prvDispatchMsg(&g_ui_state);
 
         // Lvgl rendering/timers
         uint32_t delay_ms = lv_timer_handler();

@@ -24,7 +24,7 @@
 #include "features/motor/motor_api.h"
 #include "utils/muart.h"
 
-#define MAX_VALID_RPM 6000
+#define MAX_VALID_RPM 5500
 #define MAX_INVALID_SPEED_COUNT 10
 
 /*-----------------------------------------------------------*/
@@ -39,6 +39,8 @@ extern void xI2CHandler(void);
  * Functions for the light sensor
  */
 extern void prvSensorOPT3001TimerInit(void);
+
+extern void motorRequestEStop(void);
 
 /*-----------------------------------------------------------*/
 
@@ -230,7 +232,7 @@ void vSpeedSensorTask(void *pvParameters)
             else
             {
                 filteredSpeed = lastValidSpeed;
-                // MotorRequestEStop();
+                motorRequestEStop();
             }
         }
         else

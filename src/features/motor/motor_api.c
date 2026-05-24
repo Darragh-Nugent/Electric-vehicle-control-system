@@ -25,6 +25,8 @@ extern motor_state_t motor_state;
 extern void hallSensorIntEnable(void);
 extern void kickStartMotor(void);
 
+extern void setDuty(int);
+
 // volatile bool motorEStopRequested = false;
 
 
@@ -57,7 +59,7 @@ void motorRunning(void)
 // Enable the hall effect sensor ISR and kick start the motor.
 void motorStart(void)
 {
-    // UARTprintf("STATE: STARTING\n");
+    setDuty(MOTOR_DUTY_START);
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
     motor_state = MOTOR_STATE_STARTING;
     xSemaphoreGive(motorStateMutex);
@@ -129,5 +131,8 @@ void motorRequestEStop(void)
 
 void motorAcknowledgeFault(void)
 {
-    xSemaphoreGive(faultAcknowledgedSemaphore);
+    if (motor_state == MOTOR_STATE_FAULT) 
+    {
+        xSemaphoreGive(faultAcknowledgedSemaphore);
+    }
 }
