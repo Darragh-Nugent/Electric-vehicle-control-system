@@ -53,7 +53,7 @@ void vCreateMotorTask(void)
 
 static void motorTask(void *pvParameters)
 {
-    UARTprintf("Motor task started\n");
+    MUARTprintf("Motor task started\n");
     uint16_t duty_value = 10;
     uint16_t period_value = 50;
     uint16_t lowSpeedCount = 0;
@@ -93,7 +93,7 @@ static void motorTask(void *pvParameters)
 
             static uint8_t validSpeedCount = 0;
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
-            UARTprintf("speed: %d", actualSpeed.value);
+            // MUARTprintf("speed: %d", actualSpeed.value);
 
             if (actualSpeed.seq > prev_speed_seq)
             {
@@ -133,7 +133,7 @@ static void motorTask(void *pvParameters)
             if (xSemaphoreTake(motorEStopSemaphore, 0) == pdTRUE)
             {
 
-                UARTprintf("RUNNING EXIT: e-stop requested\n");
+                MUARTprintf("RUNNING EXIT: e-stop requested\n");
 
                 motorEStop();
                 break;
@@ -279,7 +279,7 @@ static void motorTask(void *pvParameters)
             break;
         }
         case MOTOR_STATE_FAULT:
-            UARTprintf("STATE: FAULT\n");
+            MUARTprintf("STATE: FAULT\n");
 
             hallSensorIntDisable(); // need to decide later where the best state is to call this.
             speed_semaphore_given = false;

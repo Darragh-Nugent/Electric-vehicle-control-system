@@ -102,7 +102,7 @@ static void prvDispatchMsg(const UiMsg_t *msg)
         break;
     case UI_MSG_MOTOR_STARTING:
         // motorSetState(msg->payload.u);
-        // xSemaphoreGive(motorStartSemaphore);
+        xSemaphoreGive(motorStartSemaphore);
         UARTprintf("MOTOR: SETTING STATE TO STARTING\n");
         break;
     case UI_MSG_MOTOR_RUNNING:

@@ -88,7 +88,7 @@ int main(void)
         motorEStopSemaphore == NULL ||
         uartMutex == NULL) {}
 
-    vCreateMotorTask();
+    // vCreateMotorTask();
     vCreateSensorTasks();
     vCreateGuiTask();
 
