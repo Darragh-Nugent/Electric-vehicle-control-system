@@ -87,6 +87,7 @@ void vSensorManagerTask(void *pvParameters)
     float lastValidSpeed = 0.0f;
     uint8_t invalidSpeedCount = 0;
 
+    xEventGroupClearBits(xSensorEvents, ALL_SENSOR_EVENTS);
     // Loop Forever
     while (1)
     {
@@ -108,7 +109,7 @@ void vSensorManagerTask(void *pvParameters)
 
             if (filteredPower > Sensor_GetThresholdPower().value)
             {
-                Motor_EStop();
+                // Motor_EStop();
             }
         }
 
@@ -146,46 +147,46 @@ void vSensorManagerTask(void *pvParameters)
 
                 if (filteredAccel > Sensor_GetThresholdAccel().value)
                 {
-                    Motor_EStop();
+                    // Motor_EStop();
                 }
             }
         }
-    }
 
-    if (events & TEMP_SENSOR_EVENT)
-    {
-        float temp;
-        float humidity;
-        if (SensorSHT31GetTemHum(&temp, &humidity))
+        if (events & TEMP_SENSOR_EVENT)
         {
-            float filteredTemp = filterMovingAverage(&tempFilter, temp);
-            float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
-            if (local_uart_mode == TEMP)
+            float temp;
+            float humidity;
+            if (SensorSHT31GetTemHum(&temp, &humidity))
             {
-                UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));
-            }
-            else if (local_uart_mode == HUMIDITY)
-            {
-                UARTprintf("%d,%d\n", (int)(humidity), (int)(filteredHumidity));
+                float filteredTemp = filterMovingAverage(&tempFilter, temp);
+                float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
+                if (local_uart_mode == TEMP)
+                {
+                    UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));
+                }
+                else if (local_uart_mode == HUMIDITY)
+                {
+                    UARTprintf("%d,%d\n", (int)(humidity), (int)(filteredHumidity));
+                }
             }
         }
-    }
 
-    if (events & DIST_SENSOR_EVENT)
-    {
-        uint16_t distance;
-        if (getDistance(&distance))
+        if (events & DIST_SENSOR_EVENT)
         {
-            float filteredDistance = filterExponential(&distFilter, distance);
-            Sensor_UpdateDistance(filteredDistance);
-            if (local_uart_mode == DIST)
+            uint16_t distance;
+            if (getDistance(&distance))
             {
-                UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);
-            }
+                float filteredDistance = filterExponential(&distFilter, distance);
+                Sensor_UpdateDistance(filteredDistance);
+                if (local_uart_mode == DIST)
+                {
+                    UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);
+                }
 
-            if (filteredDistance > Sensor_GetThresholdDistance().value)
-            {
-                Motor_EStop();
+                if (filteredDistance > Sensor_GetThresholdDistance().value)
+                {
+                    // Motor_EStop();
+                }
             }
         }
     }
@@ -230,7 +231,7 @@ void vSpeedSensorTask(void *pvParameters)
             else
             {
                 filteredSpeed = lastValidSpeed;
-                motorRequestEStop();
+                // MotorRequestEStop();
             }
         }
         else

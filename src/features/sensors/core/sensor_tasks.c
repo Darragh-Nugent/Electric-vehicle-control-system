@@ -100,7 +100,7 @@ void vCreateSensorTasks(void)
     xTaskCreate(
         vSensorManagerTask,
         "LightSensorTask",
-        configMINIMAL_STACK_SIZE * 8 ,
+        configMINIMAL_STACK_SIZE * 8,
         NULL,
         LIGHT_SENSOR_PRIORITY,
         NULL);
@@ -197,9 +197,15 @@ static void prvI2CInit(void)
 
 static void prvTimerInit(void)
 {
+    IntPrioritySet(INT_TIMER2A, configMAX_SYSCALL_INTERRUPT_PRIORITY);
+    IntPrioritySet(INT_TIMER3A, configMAX_SYSCALL_INTERRUPT_PRIORITY);
+    IntPrioritySet(INT_TIMER4A, configMAX_SYSCALL_INTERRUPT_PRIORITY);
+    IntPrioritySet(INT_TIMER5A, configMAX_SYSCALL_INTERRUPT_PRIORITY);
+    IntPrioritySet(INT_TIMER6A, configMAX_SYSCALL_INTERRUPT_PRIORITY);
+
     // Enable the sensor timers
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER6); // Enable the Timer 0 Module.
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
+    // SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 2 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); // Enable the Timer 3 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER4); // Enable the Timer 4 Module.
@@ -209,8 +215,8 @@ static void prvTimerInit(void)
     TimerConfigure(TIMER6_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER6_BASE, TIMER_A, g_ui32SysClock / 2); // set to ~ 2Hz
 
-    TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
-    TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
+    // TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
+    // TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
 
     TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock); // set to ~ 1Hz
@@ -229,9 +235,9 @@ static void prvTimerInit(void)
     TimerIntEnable(TIMER6_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER6_BASE, TIMER_A);
 
-    TimerIntRegister(TIMER1_BASE, TIMER_A, xBMI160TimerHandler);
-    TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
-    TimerEnable(TIMER1_BASE, TIMER_A);
+    // TimerIntRegister(TIMER1_BASE, TIMER_A, xBMI160TimerHandler);
+    // TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
+    // TimerEnable(TIMER1_BASE, TIMER_A);
 
     TimerIntRegister(TIMER2_BASE, TIMER_A, xSHT31TimerHandler);
     TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
