@@ -66,7 +66,6 @@ SemaphoreHandle_t faultAcknowledgedSemaphore = NULL;
 int main(void)
 {
     prvSetupHardware();
-    IntMasterEnable();
     FPUEnable();
     FPULazyStackingEnable();
 
@@ -93,6 +92,8 @@ int main(void)
     vCreateGuiTask();
 
     vTaskStartScheduler();
+
+    IntMasterEnable();
 
     for (;;)
         ;

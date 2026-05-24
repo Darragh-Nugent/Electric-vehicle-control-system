@@ -200,7 +200,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // LCD Controller 0
     xOPT3001TimerHandler,                   // Timer 6 subtimer A
     IntDefaultHandler,                      // Timer 6 subtimer B
-    xBMI160TimerHandler,                    // Timer 7 subtimer A
+    IntDefaultHandler,                    // Timer 7 subtimer A
     IntDefaultHandler,                      // Timer 7 subtimer B
     IntDefaultHandler,                      // I2C6 Master and Slave
     IntDefaultHandler,                      // I2C7 Master and Slave
