@@ -37,7 +37,7 @@ void xOPT3001TimerHandler(void)
 void xBMI160TimerHandler(void)
 {
     // UARTprintf("acceleration timer\n");
-    TimerIntClear(TIMER1_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
+    TimerIntClear(TIMER7_BASE, TIMER_TIMA_TIMEOUT); // Clear the timer interrupt.
     xEventGroupSetBits(xSensorEvents, ACCEL_SENSOR_EVENT);
 }
 

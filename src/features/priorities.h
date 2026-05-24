@@ -6,7 +6,7 @@
 
 #define MOTOR_CONTROL_PRIORITY         (configMAX_PRIORITIES - 1)
 #define SPEED_SENSOR_PRIORITY          (tskIDLE_PRIORITY + 1)
-#define I2C_PRIORITY                   (tskIDLE_PRIORITY + 1)
+#define I2C_PRIORITY                   (tskIDLE_PRIORITY + 3)
 #define ACCELERATION_SENSOR_PRIORITY   (tskIDLE_PRIORITY + 1)
 #define DISTANCE_SENSOR_PRIORITY       (tskIDLE_PRIORITY + 1)
 #define ENV_SENSOR_PRIORITY            (tskIDLE_PRIORITY + 1)

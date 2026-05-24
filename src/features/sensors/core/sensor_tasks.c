@@ -199,7 +199,7 @@ static void prvTimerInit(void)
 {
     // Enable the sensor timers
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER6); // Enable the Timer 0 Module.
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1); // Enable the Timer 1 Module.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER7); // Enable the Timer 1 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2); // Enable the Timer 2 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3); // Enable the Timer 3 Module.
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER4); // Enable the Timer 4 Module.
@@ -209,8 +209,8 @@ static void prvTimerInit(void)
     TimerConfigure(TIMER6_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER6_BASE, TIMER_A, g_ui32SysClock / 2); // set to ~ 2Hz
 
-    TimerConfigure(TIMER1_BASE, TIMER_CFG_PERIODIC);
-    TimerLoadSet(TIMER1_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
+    TimerConfigure(TIMER7_BASE, TIMER_CFG_PERIODIC);
+    TimerLoadSet(TIMER7_BASE, TIMER_A, g_ui32SysClock / 100); // set to ~ 100Hz
 
     TimerConfigure(TIMER2_BASE, TIMER_CFG_PERIODIC);
     TimerLoadSet(TIMER2_BASE, TIMER_A, g_ui32SysClock); // set to ~ 1Hz
@@ -229,9 +229,9 @@ static void prvTimerInit(void)
     TimerIntEnable(TIMER6_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER6_BASE, TIMER_A);
 
-    TimerIntRegister(TIMER1_BASE, TIMER_A, xBMI160TimerHandler);
-    TimerIntEnable(TIMER1_BASE, TIMER_TIMA_TIMEOUT);
-    TimerEnable(TIMER1_BASE, TIMER_A);
+    TimerIntRegister(TIMER7_BASE, TIMER_A, xBMI160TimerHandler);
+    TimerIntEnable(TIMER7_BASE, TIMER_TIMA_TIMEOUT);
+    TimerEnable(TIMER7_BASE, TIMER_A);
 
     TimerIntRegister(TIMER2_BASE, TIMER_A, xSHT31TimerHandler);
     TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);

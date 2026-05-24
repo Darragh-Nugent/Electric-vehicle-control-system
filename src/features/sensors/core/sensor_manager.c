@@ -108,7 +108,7 @@ void vSensorManagerTask(void *pvParameters)
 
             if (filteredPower > Sensor_GetThresholdPower().value)
             {
-                Motor_EStop();
+                // Motor_EStop();
             }
         }
 
@@ -146,7 +146,7 @@ void vSensorManagerTask(void *pvParameters)
 
                 if (filteredAccel > Sensor_GetThresholdAccel().value)
                 {
-                    Motor_EStop();
+                    // Motor_EStop();
                 }
             }
         }
@@ -185,7 +185,7 @@ void vSensorManagerTask(void *pvParameters)
 
             if (filteredDistance > Sensor_GetThresholdDistance().value)
             {
-                Motor_EStop();
+                // Motor_EStop();
             }
         }
     }
