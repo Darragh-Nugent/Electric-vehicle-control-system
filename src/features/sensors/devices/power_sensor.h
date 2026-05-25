@@ -6,7 +6,7 @@
 #include "task.h"
 #include "semphr.h"
 
-
-float getPower(void);
 void PowerInit(void);
+float getPower(void);
 float getCurrent(void);
+void getCurrentAndPower(float* current, float* power);

@@ -232,7 +232,6 @@ static void prvTimerInit(void)
     TimerIntEnable(TIMER6_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER6_BASE, TIMER_A);
 
-
     TimerIntRegister(TIMER2_BASE, TIMER_A, xSHT31TimerHandler);
     TimerIntEnable(TIMER2_BASE, TIMER_TIMA_TIMEOUT);
     TimerEnable(TIMER2_BASE, TIMER_A);
@@ -267,19 +266,19 @@ static void prvADCInit(void)
     GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_7);
 
     // Enable the proccessor to trigger the sample
-    ADCSequenceConfigure(ADC1_BASE, 0, ADC_TRIGGER_PROCESSOR, 0);
+    ADCSequenceConfigure(ADC1_BASE, 1, ADC_TRIGGER_PROCESSOR, 0);
 
     // Step 0: PE3 (AIN0)
-    ADCSequenceStepConfigure(ADC1_BASE, 0, 0, ADC_CTL_CH0);
+    ADCSequenceStepConfigure(ADC1_BASE, 1, 0, ADC_CTL_CH0);
 
     // Step 1: PD7 (AIN4), end + interrupt
-    ADCSequenceStepConfigure(ADC1_BASE, 0, 1,
+    ADCSequenceStepConfigure(ADC1_BASE, 1, 1,
                              ADC_CTL_CH4 | ADC_CTL_END | ADC_CTL_IE);
 
-    ADCSequenceEnable(ADC1_BASE, 0);
-    ADCIntEnable(ADC1_BASE, 0);
+    ADCSequenceEnable(ADC1_BASE, 1);
+    ADCIntEnable(ADC1_BASE, 1);
 
-    IntEnable(INT_ADC1SS0);
+    IntEnable(INT_ADC1SS1);
     /* Enable global interrupts in the NVIC. */
 }
 

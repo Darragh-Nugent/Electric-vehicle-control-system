@@ -7,6 +7,8 @@ typedef struct {
     float gain;
     float resistance;
     float motor_voltage;
+    uint32_t offsetA;
+    uint32_t offsetB;
 } power_sensor_dev_t;
 
 void Power_Sensor_Init(power_sensor_dev_t new_dev);

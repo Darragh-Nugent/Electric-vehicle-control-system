@@ -35,6 +35,9 @@ void Sensor_UpdatePower(uint16_t power);
 sensor_sample_t Sensor_GetThresholdPower(void);
 void Sensor_UpdateThresholdPower(uint16_t value);
 
+sensor_sample_t Sensor_GetCurrent(void);
+void Sensor_UpdateCurrent(uint16_t value);
+
 sensor_sample_t Sensor_GetDistance(void);
 void Sensor_UpdateDistance(uint16_t dist);
 sensor_sample_t Sensor_GetThresholdDistance(void);

@@ -22,6 +22,7 @@ typedef struct
     sensor_point_t humidity;
     sensor_point_t rpm;
     sensor_point_t power;
+    sensor_point_t current;
     sensor_point_t distance;
 } sensors_t;
 
@@ -38,6 +39,7 @@ void Sensor_Init(void)
     sensor.humidity.sample = (sensor_sample_t){0};
     sensor.rpm.sample = (sensor_sample_t){0};
     sensor.power.sample = (sensor_sample_t){0};
+    sensor.current.sample = (sensor_sample_t){0};
     sensor.distance.sample = (sensor_sample_t){0};
 
     sensor.lux.mutex = xSemaphoreCreateMutex();
@@ -46,6 +48,7 @@ void Sensor_Init(void)
     sensor.humidity.mutex = xSemaphoreCreateMutex();
     sensor.rpm.mutex = xSemaphoreCreateMutex();
     sensor.power.mutex = xSemaphoreCreateMutex();
+    sensor.current.mutex = xSemaphoreCreateMutex();
     sensor.distance.mutex = xSemaphoreCreateMutex();
 
     // Initially set thresholds to max value
@@ -57,8 +60,6 @@ void Sensor_Init(void)
     powerThreshold.mutex = xSemaphoreCreateMutex();
     distThreshold.mutex = xSemaphoreCreateMutex();
     accelThreshold.mutex = xSemaphoreCreateMutex();
-
-
 }
 
 static void Sensor_Update(sensor_point_t* point, uint16_t value)
@@ -163,6 +164,16 @@ void Sensor_UpdateThresholdPower(uint16_t value)
 sensor_sample_t Sensor_GetThresholdPower(void)
 {
     return Sensor_Get(&powerThreshold);
+}
+
+void Sensor_UpdateCurrent(uint16_t value)
+{
+    Sensor_Update(&sensor.current, value);
+}
+
+sensor_sample_t Sensor_GetCurrent(void)
+{
+    return Sensor_Get(&sensor.current);
 }
 
 void Sensor_UpdateDistance(uint16_t value)

@@ -80,6 +80,7 @@ void vSensorManagerTask(void *pvParameters)
     moving_avg_t humidityFilter = {{0}, 0, 0};
     exp_filter_t accelFilter = {0.25, 0};
     exp_filter_t powerFilter = {0.25, 0};
+    exp_filter_t currentFilter = {0.25, 0};
     exp_filter_t distFilter = {0.4, 0};
 
     uart_mode_t local_uart_mode = NONE;
@@ -98,9 +99,14 @@ void vSensorManagerTask(void *pvParameters)
 
         if (events & POWER_SENSOR_EVENT)
         {
-            float power = getPower();
+            float power;
+            float current;
+            getCurrentAndPower(&current, &power);
+
             float filteredPower = filterExponential(&powerFilter, power);
+            float filteredCurrent = filterExponential(&currentFilter, current);
             Sensor_UpdatePower(filteredPower);
+            Sensor_UpdateCurrent(filteredCurrent);
             if (local_uart_mode == POWER)
             {
                 UARTprintf("%d,%d\n", (int)power, (int)filteredPower);

@@ -22,14 +22,10 @@
 
 SemaphoreHandle_t xPowerSemaphore;
 
-uint32_t adc_values[2];
-
 void xPowerHandler(void)
 {
     BaseType_t xTaskWoken = pdFALSE;
-    ADCIntClear(ADC1_BASE, 0);
-
-    ADCSequenceDataGet(ADC1_BASE, 0, adc_values);
+    ADCIntClear(ADC1_BASE, 1);
 
     xSemaphoreGiveFromISR(xPowerSemaphore, &xTaskWoken);
     portYIELD_FROM_ISR(xTaskWoken);
@@ -38,6 +34,7 @@ void xPowerHandler(void)
 void PowerInit(void)
 {
     xPowerSemaphore = xSemaphoreCreateBinary();
+
     power_sensor_dev_t dev;
     dev.ref_voltage = REF_VOLTS;
     dev.adc_max_counts = ADC_MAX_COUNTS;
@@ -51,28 +48,38 @@ void PowerInit(void)
 // TODO: remove duplicate code. Use getCurrent always and scale by voltage when needed (it's a constant). 
 float getCurrent(void)
 {
-    ADCProcessorTrigger(ADC1_BASE, 0);
-    xSemaphoreTake(xPowerSemaphore, portMAX_DELAY);
+    xSemaphoreTake(xPowerSemaphore, 0);
+
     uint32_t local_adc_values[2];
 
-    taskENTER_CRITICAL();
-    local_adc_values[0] = adc_values[0];
-    local_adc_values[1] = adc_values[1];
-    taskEXIT_CRITICAL();
+    ADCProcessorTrigger(ADC1_BASE, 1);
+    xSemaphoreTake(xPowerSemaphore, portMAX_DELAY);
+    ADCSequenceDataGet(ADC1_BASE, 1, local_adc_values);
 
     return Power_Sensor_GetCurrent(local_adc_values[0], local_adc_values[1]);
 }
 
 float getPower(void)
 {
-    ADCProcessorTrigger(ADC1_BASE, 0);
-    xSemaphoreTake(xPowerSemaphore, portMAX_DELAY);
+    xSemaphoreTake(xPowerSemaphore, 0);
+    
     uint32_t local_adc_values[2];
 
-    taskENTER_CRITICAL();
-    local_adc_values[0] = adc_values[0];
-    local_adc_values[1] = adc_values[1];
-    taskEXIT_CRITICAL();
+    ADCProcessorTrigger(ADC1_BASE, 1);
+    xSemaphoreTake(xPowerSemaphore, portMAX_DELAY);
+    ADCSequenceDataGet(ADC1_BASE, 1, local_adc_values);    
 
     return Power_Sensor_GetPower(local_adc_values[0], local_adc_values[1]);
+}
+
+void getCurrentAndPower(float* current, float* power)
+{
+    uint32_t local_adc_values[2];
+
+    ADCProcessorTrigger(ADC1_BASE, 1);
+    xSemaphoreTake(xPowerSemaphore, portMAX_DELAY);
+    ADCSequenceDataGet(ADC1_BASE, 1, local_adc_values);
+
+    *current = Power_Sensor_GetCurrent(local_adc_values[0], local_adc_values[1]);
+    *power = *current * VOLTS;
 }
