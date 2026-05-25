@@ -134,7 +134,7 @@ static void updateDistAndAccel()
 static void updatePowerAndLux(uint16_t lux)
 {
     uint16_t power = Sensor_GetPower().value;
-    lv_label_set_text_fmt(lbl_lhs, "%d m", power);
+    lv_label_set_text_fmt(lbl_lhs, "%d W", power);
     lv_label_set_text_fmt(lbl_rhs, "%d ", lux);
     resetLabels("Power", "Lux");
 

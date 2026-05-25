@@ -192,7 +192,7 @@ void lv_tab(lv_obj_t *s_screen)
     dist_tab = lv_tabview_add_tab(tabview, "Distance");
     // lux_tab = lv_tabview_add_tab(tabview, "Lux");
     temp_tab = lv_tabview_add_tab(tabview, "Temp");
-    humidity_tab = lv_tabview_add_tab(tabview, "Humidity");
+    // humidity_tab = lv_tabview_add_tab(tabview, "Humidity");
 
     tab_count = lv_tabview_get_tab_count(tabview);
     for (i = 0; i < tab_count; i++)
@@ -216,8 +216,8 @@ void lv_tab(lv_obj_t *s_screen)
     lv_obj_set_style_bg_color(temp_tab, lv_palette_lighten(LV_PALETTE_CYAN, 3), 0);
     lv_obj_set_style_bg_opa(temp_tab, LV_OPA_COVER, 0);
 
-    lv_obj_set_style_bg_color(humidity_tab, lv_palette_lighten(LV_PALETTE_LIGHT_GREEN, 3), 0);
-    lv_obj_set_style_bg_opa(humidity_tab, LV_OPA_COVER, 0);
+    // lv_obj_set_style_bg_color(humidity_tab, lv_palette_lighten(LV_PALETTE_LIGHT_GREEN, 3), 0);
+    // lv_obj_set_style_bg_opa(humidity_tab, LV_OPA_COVER, 0);
 
     lv_obj_remove_flag(lv_tabview_get_content(tabview), LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_remove_flag(info_tab, LV_OBJ_FLAG_SCROLLABLE);
@@ -249,8 +249,8 @@ void scr_settings_init(void)
     // lux_spinbox = create_threshold_card(lux_tab, "Lux", "lx");
     temp_spinbox = create_threshold_card(temp_tab, "Temperature", "Celcius",
         SENSOR_TEMP_MIN,SENSOR_TEMP_MAX);
-    humidity_spinbox = create_threshold_card(humidity_tab, "Humidity", "%%",
-        SENSOR_HUMIDITY_MIN, SENSOR_HUMIDITY_MAX);
+    // humidity_spinbox = create_threshold_card(humidity_tab, "Humidity", "%%",
+    //     SENSOR_HUMIDITY_MIN, SENSOR_HUMIDITY_MAX);
 
     // Initialise relevant data to submit
     static submit_t power_submit_t = {.spinbox = NULL, .msgType = UI_MSG_SENSOR_UPDATE_POWER};
@@ -273,7 +273,7 @@ void scr_settings_init(void)
     lv_obj_t *sub_dist_btn = submit_threshold_btn(dist_tab, "SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0, 0, &dist_submit_t);
     // lv_obj_t *sub_lux_btn = submit_threshold_btn(lux_tab,"SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0,0,&lux_submit_t);
     lv_obj_t *sub_temp_btn = submit_threshold_btn(temp_tab, "SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0, 0, &temp_submit_t);
-    lv_obj_t *sub_humidity_btn = submit_threshold_btn(humidity_tab, "SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0, 0, &humidity_submit_t);
+    // lv_obj_t *sub_humidity_btn = submit_threshold_btn(humidity_tab, "SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0, 0, &humidity_submit_t);
 
     // Prevent annoying warnings showing up
     (void)sub_pwr_btn;
@@ -281,7 +281,7 @@ void scr_settings_init(void)
     (void)sub_dist_btn;
     // (void) sub_lux_btn;
     (void)sub_temp_btn;
-    (void)sub_humidity_btn;
+    // (void)sub_humidity_btn;
     // lv_obj_align_to(accel, power, LV_ALIGN_OUT_BOTTOM_MID, 0,8);
     // lv_obj_align_to(dist, accel, LV_ALIGN_OUT_BOTTOM_MID, 0,8);
     // Label
@@ -311,9 +311,9 @@ void scr_settings_init(void)
     formatText(tempText, LV_ALIGN_TOP_MID,0,0);
     lv_label_set_text(tempText, tempPrompt);
 
-    lv_obj_t *humidityText = lv_label_create(humidity_tab);
-    formatText(humidityText, LV_ALIGN_TOP_MID,0,0);
-    lv_label_set_text(humidityText, humidityPrompt);
+    // lv_obj_t *humidityText = lv_label_create(humidity_tab);
+    // formatText(humidityText, LV_ALIGN_TOP_MID,0,0);
+    // lv_label_set_text(humidityText, humidityPrompt);
 
     lv_obj_t *home_button = create_icon_button(info_tab, LV_SYMBOL_HOME, btn_home_cb, LV_ALIGN_TOP_LEFT, 0, 0);
     lv_obj_set_width(home_button, 40);
