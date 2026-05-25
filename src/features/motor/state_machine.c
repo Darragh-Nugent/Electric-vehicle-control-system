@@ -57,8 +57,8 @@ static void motorTask(void *pvParameters)
     uint16_t duty_value = 10;
     uint16_t period_value = 50;
     uint16_t lowSpeedCount = 0;
-    uint16_t zeroSpeedCount = 0;
     uint16_t frozenSpeedCount = 0;
+    uint8_t validSpeedCount = 0;
 
     const TickType_t controlPeriodTicks = pdMS_TO_TICKS(CONTROL_PERIOD_MS);
     const float controlPeriodSeconds = CONTROL_PERIOD_MS / 1000.0f;
@@ -75,9 +75,9 @@ static void motorTask(void *pvParameters)
         switch (motor_state)
         {
         case MOTOR_STATE_IDLE:
-            motorSetSpeed(1500);
             xSemaphoreTake(motorStartSemaphore, portMAX_DELAY); // give from UI,, comment out for testing while ui not done
             UARTprintf("speed: %d\n", Sensor_GetSpeed().value);
+            xSemaphoreTake(motorEStopSemaphore, 0);
             motorStart();
             break;
         case MOTOR_STATE_STARTING:
@@ -89,9 +89,7 @@ static void motorTask(void *pvParameters)
                 break;
             }
 
-            static uint8_t validSpeedCount = 0;
             sensor_sample_t actualSpeed = Sensor_GetSpeed();
-            // MUARTprintf("speed: %d", actualSpeed.value);
 
             if (actualSpeed.seq > prev_speed_seq)
             {
@@ -115,6 +113,7 @@ static void motorTask(void *pvParameters)
 
             else if (xSemaphoreTake(motorUpToSpeedSemaphore, pdMS_TO_TICKS(100)) != pdTRUE)
             {
+                UARTprintf("Attempting kickstart!\n");
                 speed_semaphore_given = false;
                 kickStartMotor();
             }
@@ -162,23 +161,6 @@ static void motorTask(void *pvParameters)
             if (frozenSpeedCount > 300) // 7.5s of identical readings
             {
                 UARTprintf("RUNNING EXIT: sensor freeze\n");
-                motorControllerReset();
-                motorEStop();
-                break;
-            }
-
-            if (referenceSpeed > 100 && actualSpeed.value == 0)
-            {
-                zeroSpeedCount++;
-            }
-            else
-            {
-                zeroSpeedCount = 0;
-            }
-
-            if (zeroSpeedCount > 5)
-            {
-                UARTprintf("RUNNING EXIT: sustained zero speed\n");
                 motorControllerReset();
                 motorEStop();
                 break;
@@ -277,15 +259,12 @@ static void motorTask(void *pvParameters)
         }
         case MOTOR_STATE_FAULT:
             MUARTprintf("STATE: FAULT\n");
-
-            hallSensorIntDisable(); // need to decide later where the best state is to call this.
             speed_semaphore_given = false;
             // Reset speed semaphore
-            xSemaphoreTake(motorUpToSpeedSemaphore, 0); 
             xSemaphoreTake(faultAcknowledgedSemaphore, portMAX_DELAY); // give from UI
-            // xSemaphoreTake(faultAcknowledgedSemaphore, pdMS_TO_TICKS(5000)); // for testing
+            xSemaphoreTake(motorEStopSemaphore, 0);
             lowSpeedCount = 0;
-            zeroSpeedCount = 0;
+            validSpeedCount = 0;
             motorInit();
             break;
         default:

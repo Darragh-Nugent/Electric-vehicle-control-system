@@ -10,7 +10,8 @@ extern UiMsg_t g_ui_state;
 
 typedef void (*dropdown_cb_t)(const char *text);
 
-void updateGUIState(UiMsgType_t msg, uint32_t value){
+void updateGUIState(UiMsgType_t msg, uint32_t value)
+{
     g_ui_state.type = msg;
     g_ui_state.payload.u = value;
 }
@@ -71,7 +72,7 @@ lv_obj_t *create_icon_button(lv_obj_t *parent, const char *icon, lv_event_cb_t c
     lv_obj_set_size(button, 80, 36);
     lv_obj_align(button, align, x, y);
     lv_obj_add_event_cb(button, cb, LV_EVENT_CLICKED, NULL);
-    lv_obj_set_style_bg_color(button,COLOR_STATUS_CARD_BG_LV,0);
+    lv_obj_set_style_bg_color(button, COLOR_STATUS_CARD_BG_LV, 0);
 
     lv_obj_t *home = lv_label_create(button);
     lv_label_set_text(home, icon); // LVGL built-in icon
@@ -212,8 +213,8 @@ void add_graph_data_cb(lv_timer_t *t)
 }
 
 // Create the chart
-static lv_obj_t *create_chart(lv_obj_t *s_screen, int32_t yMin, 
-    int32_t yMax, int16_t overhead, uint16_t pointCount)
+static lv_obj_t *create_chart(lv_obj_t *s_screen, int32_t yMin,
+                              int32_t yMax, int16_t overhead, uint16_t pointCount)
 {
     /*Create a stacked_area_chart.obj*/
     lv_obj_t *chart = lv_chart_create(s_screen);
@@ -276,8 +277,10 @@ graph_t *create_graph(lv_obj_t *s_screen, int32_t yMin, int32_t yMax,
     graph->overheadGap = overhead;
     graph->get_value_cb = cb; // Function cb reference to get value for specific sensor
     // If user specifies a callback function
-    if (cb) graph->timer = lv_timer_create(add_graph_data_cb, period, graph);
-    else graph->timer = NULL;
+    if (cb)
+        graph->timer = lv_timer_create(add_graph_data_cb, period, graph);
+    else
+        graph->timer = NULL;
 
     return graph;
 }
@@ -287,16 +290,17 @@ graph_t *create_graph(lv_obj_t *s_screen, int32_t yMin, int32_t yMax,
  *
  */
 
-// Convert a value (0–100) into an angle in degrees
-static float value_to_angle(int32_t value)
+// Convert a value (0-max value) into an angle in degrees
+static float value_to_angle(int32_t value, int32_t max_value)
 {
-    return 135 + (270 * value) / 100; // start 135°, range 270°
+    return 135.0f + (270.0f * value) / max_value;
 }
 
 // Update the needle points based on a value
-static void update_needle_points(roundScale_t *scale, int32_t value)
+static void
+update_needle_points(roundScale_t *scale, int32_t value, int32_t max_value)
 {
-    float angle = value_to_angle(value);
+    float angle = value_to_angle(value, max_value);
     float rad = angle * (M_PI / 180.0f);
 
     // Unsure why the inital x,y needle coords rely on scale when the parent of the needle is the screen, so position should be relative to the screen
@@ -312,22 +316,27 @@ static void update_needle_points(roundScale_t *scale, int32_t value)
 static void needle_anim_cb(void *obj, int32_t value)
 {
     roundScale_t *scale = (roundScale_t *)obj;
-    update_needle_points(scale, value);
+    update_needle_points(scale, value, scale->max_value);
     lv_obj_invalidate(scale->needle); // only redraw the needle
 }
 
 static void needle_update_timer_cb(lv_timer_t *t)
 {
     roundScale_t *scale = (roundScale_t *)lv_timer_get_user_data(t);
-    int32_t sensor_value = scale->get_value_cb();
-    int16_t value = scale->cur_value + sensor_value;
-    int32_t tot_sensor_value = value;
+    // int32_t sensor_value = scale->get_value_cb();
+    // int16_t value = scale->cur_value + sensor_value;
+    int32_t tot_sensor_value = scale->get_value_cb();
     if (tot_sensor_value < 0)
         tot_sensor_value = 0;
-    else if (tot_sensor_value > 50 && tot_sensor_value < 100)
-        tot_sensor_value -= lv_rand(-1, 2);
-    else if (tot_sensor_value > 100)
-        tot_sensor_value = 100;
+
+    if (tot_sensor_value > scale->max_value)
+        tot_sensor_value = scale->max_value;
+    // if (tot_sensor_value < 0)
+    //     tot_sensor_value = 0;
+    // else if (tot_sensor_value > 50 && tot_sensor_value < 100)
+    //     tot_sensor_value -= lv_rand(-1, 2);
+    // else if (tot_sensor_value > 100)
+    //     tot_sensor_value = 100;
     // Animate needle from last value to sensor_value over 100 ms
     lv_anim_t a;
     lv_anim_init(&a);
@@ -335,13 +344,20 @@ static void needle_update_timer_cb(lv_timer_t *t)
     lv_anim_set_values(&a, scale->cur_value, tot_sensor_value);
     lv_anim_set_time(&a, NEEDLE_ANIM_TIME);
     lv_anim_set_exec_cb(&a, needle_anim_cb);
-    lv_anim_start(&a);
 
+    lv_anim_del(scale, needle_anim_cb);
+    lv_anim_start(&a);
     scale->cur_value = tot_sensor_value;
 }
 
 // Modified and obtained from https://lvgl.io/docs/open/widgets/scale
-roundScale_t *create_speedometer(lv_obj_t *parent, scale_data_cb_t cb, int16_t radius, int16_t needle_length, int32_t cur_value, int16_t period)
+roundScale_t *create_speedometer(lv_obj_t *parent, scale_data_cb_t cb, int16_t radius,
+                                 int16_t needle_length,
+                                 int32_t cur_value,
+                                 int16_t period,
+                                 int16_t maxValue,
+                                 int16_t totTickCount,
+                                 int16_t majorTick)
 {
     roundScale_t *round_scale = lv_malloc(sizeof(roundScale_t));
 
@@ -349,6 +365,7 @@ roundScale_t *create_speedometer(lv_obj_t *parent, scale_data_cb_t cb, int16_t r
     round_scale->radius = radius;
     round_scale->needle_length = needle_length;
     round_scale->get_value_cb = cb;
+    round_scale->max_value = maxValue;
 
     // Create scale background
     round_scale->scale = lv_scale_create(parent);
@@ -362,11 +379,11 @@ roundScale_t *create_speedometer(lv_obj_t *parent, scale_data_cb_t cb, int16_t r
     lv_obj_align(round_scale->scale, LV_ALIGN_LEFT_MID, 25, 0);
 
     lv_scale_set_label_show(round_scale->scale, true);
-    lv_scale_set_total_tick_count(round_scale->scale, 21);
-    lv_scale_set_major_tick_every(round_scale->scale, 2);
+    lv_scale_set_total_tick_count(round_scale->scale, totTickCount);
+    lv_scale_set_major_tick_every(round_scale->scale, majorTick);
     lv_obj_set_style_length(round_scale->scale, 5, LV_PART_ITEMS);
     lv_obj_set_style_length(round_scale->scale, 10, LV_PART_INDICATOR);
-    lv_scale_set_range(round_scale->scale, 0, 100);
+    lv_scale_set_range(round_scale->scale, 0, maxValue);
     lv_scale_set_angle_range(round_scale->scale, 270);
     lv_scale_set_rotation(round_scale->scale, 135);
 
@@ -380,7 +397,7 @@ roundScale_t *create_speedometer(lv_obj_t *parent, scale_data_cb_t cb, int16_t r
     lv_obj_set_style_line_rounded(round_scale->needle, true, LV_PART_MAIN);
 
     // Initialize needle at 0
-    update_needle_points(round_scale, cur_value);
+    update_needle_points(round_scale, cur_value, maxValue);
 
     round_scale->timer = lv_timer_create(needle_update_timer_cb, period, round_scale);
     return round_scale;
@@ -392,7 +409,7 @@ lv_obj_t *create_card(lv_obj_t *parent,
                       lv_coord_t y,
                       lv_color_t color,
                       lv_obj_t **value_label,
-                        lv_align_t alignValue)
+                      lv_align_t alignValue)
 {
     lv_obj_t *card = lv_obj_create(parent);
 

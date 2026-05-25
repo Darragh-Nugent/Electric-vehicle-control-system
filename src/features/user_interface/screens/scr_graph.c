@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../gui_utils.h"
+#include "features/sensors/api/sensors_api.h"
 
 static int32_t scaleYMin = 0;
 static int32_t scaleYMax = 100;
@@ -23,25 +24,25 @@ static void btn_home_cb(lv_event_t *e)
 static int32_t get_lux(void)
 {
     // Sensor_GetLux();
-    return lv_rand(0, 2000);
+    return (int32_t)Sensor_GetLux().value;
 }
 
 static int32_t get_power(void)
 {
     // Sensor_GetPower();
-    return lv_rand(0, 30);
+    return (int32_t)Sensor_GetPower().value;
 }
 
 static int32_t get_distance(void)
 {
     // Sensor_GetDistance();
-    return lv_rand(0, 20);
+    return (int32_t) Sensor_GetDistance().value;
 }
 
 static int32_t get_acceleration(void)
 {
     // Sensor_GetAcceleration();
-    return lv_rand(0, 1000);
+    return (int32_t) Sensor_GetAccel().value;
 }
 
 
@@ -60,7 +61,7 @@ void shared_graph_timer_cb(lv_timer_t *t)
         value = get_distance();
         prevPeriod = period;
         period = SENSOR_DISTANCE_PERIOD;
-        lv_label_set_text(label, "Distance (m)");
+        lv_label_set_text(label, "Distance (mm)");
         break;
     case SCREEN_ACCEL_SENSOR:
         value = get_acceleration();

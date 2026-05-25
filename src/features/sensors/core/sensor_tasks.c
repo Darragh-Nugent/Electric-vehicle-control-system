@@ -78,8 +78,8 @@ void vCreateSensorTasks(void)
     xButtonSemaphore = xSemaphoreCreateBinary();
     xI2CSemaphore = xSemaphoreCreateBinary();
     xOPT3001Semaphore = xSemaphoreCreateBinary();
-    xI2CSendQueue = xQueueCreate(1, sizeof(i2c_send_message_t));
-    xI2CRecvQueue = xQueueCreate(1, sizeof(i2c_recv_message_t));
+    xI2CSendQueue = xQueueCreate(20, sizeof(i2c_send_message_t));
+    xI2CRecvQueue = xQueueCreate(20, sizeof(i2c_recv_message_t));
 
     xSensorEvents = xEventGroupCreate();
 
@@ -100,7 +100,7 @@ void vCreateSensorTasks(void)
     xTaskCreate(
         vSensorManagerTask,
         "LightSensorTask",
-        configMINIMAL_STACK_SIZE * 8 ,
+        configMINIMAL_STACK_SIZE * 8,
         NULL,
         LIGHT_SENSOR_PRIORITY,
         NULL);
@@ -126,6 +126,8 @@ void vCreateSensorTasks(void)
 
 static void prvI2CInit(void)
 {
+    IntPrioritySet(INT_I2C2, configMAX_SYSCALL_INTERRUPT_PRIORITY);
+
     //
     // Enable I2C0 for Bootsetpack 1
     //
@@ -184,13 +186,14 @@ static void prvI2CInit(void)
 
     // Enable i2c interrupt sources
     // I2CMasterIntEnableEx(I2C0_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
-    I2CMasterIntEnableEx(I2C2_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
+    // I2CMasterIntEnableEx(I2C2_BASE, I2C_MASTER_INT_DATA | I2C_MASTER_INT_TIMEOUT);
+    I2CMasterIntEnableEx(I2C2_BASE, I2C_MASTER_INT_DATA);
 
     // IntEnable(INT_I2C0); // should be in opt_task (thats what the semaphore example had)
     IntEnable(INT_I2C2);
 
     // I2CMasterTimeoutSet(I2C0_BASE, g_ui32SysClock / 100);
-    I2CMasterTimeoutSet(I2C2_BASE, g_ui32SysClock / 100);
+    // I2CMasterTimeoutSet(I2C2_BASE, g_ui32SysClock / 100);
 }
 
 static void prvTimerInit(void)

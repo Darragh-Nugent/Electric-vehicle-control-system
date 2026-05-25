@@ -5,7 +5,8 @@
 #include "lvgl.h"
 #include "../gui_utils.h"
 #include "features/led.h"
-// #include "../sensors.h"
+#include "features/sensors/api/sensors_api.h"
+#include "utils/uartstdio.h"
 
 void scr_dashboard_set_rpm(float f) {};
 void scr_dashboard_set_sensor(uint32_t idx, float f) {};
@@ -87,8 +88,11 @@ static void resetLabels(char *lhsTitle, char *rhsTitle)
                                 0);
 }
 
-static void updateTempAndHumidity(int16_t temp, int16_t humidity)
+static void updateTempAndHumidity()
 {
+    int16_t temp = (int16_t)Sensor_GetTemp().value;
+    int16_t humidity = (int16_t)Sensor_GetHumidity().value;
+
     lv_label_set_text_fmt(lbl_lhs, "%d °C", temp);
     lv_label_set_text_fmt(lbl_rhs, "%d %%", humidity);
     resetLabels("Temp", "Humidity");
@@ -98,12 +102,15 @@ static void updateTempAndHumidity(int16_t temp, int16_t humidity)
         lv_label_set_text(lbl_lhs_info, "Cooling off");
 }
 
-static void updateDistAndAccel(uint16_t dist, uint16_t accel)
+static void updateDistAndAccel()
 {
-    lv_label_set_text_fmt(lbl_lhs, "%d m", dist);
+    uint16_t dist = Sensor_GetDistance().value;
+    uint16_t accel = Sensor_GetAccel().value;
+
+    lv_label_set_text_fmt(lbl_lhs, "%d mm", dist);
     lv_label_set_text_fmt(lbl_rhs, "%d ", accel);
     resetLabels("Distance", "Accel");
-    if (dist >= g_thresholds.TH_DIST * WARNING_THRESHOLD)
+    if (dist <=  g_thresholds.TH_DIST + g_thresholds.TH_DIST * WARNING_THRESHOLD)
     {
         lv_obj_set_style_text_color(lbl_lhs_info,
                                     SCARY_RED,
@@ -124,9 +131,10 @@ static void updateDistAndAccel(uint16_t dist, uint16_t accel)
         lv_label_set_text(lbl_rhs_info, "");
 }
 
-static void updatePowerAndLux(uint16_t power, uint16_t lux)
+static void updatePowerAndLux(uint16_t lux)
 {
-    lv_label_set_text_fmt(lbl_lhs, "%d m", power);
+    uint16_t power = Sensor_GetPower().value;
+    lv_label_set_text_fmt(lbl_lhs, "%d W", power);
     lv_label_set_text_fmt(lbl_rhs, "%d ", lux);
     resetLabels("Power", "Lux");
 
@@ -149,27 +157,30 @@ void handleCB(lv_timer_t *e)
         seconds = 0;
         minutes += 1;
         if (timeLabel)
-            lv_label_set_text_fmt(timeLabel, "%02u:%02u", hours, minutes);
+            lv_label_set_text_fmt(timeLabel, "%02u:%02u:%02u", hours, minutes, seconds);
     }
     if (minutes >= 60)
     {
         minutes = 0;
         hours += 1;
         if (timeLabel)
-            lv_label_set_text_fmt(timeLabel, "%02u:%02u", hours, minutes);
+            lv_label_set_text_fmt(timeLabel, "%02u:%02u:%02u", hours, minutes, seconds);
     }
     if (hours >= 24)
     {
         hours = 0;
         days += 1; // not really displayed but is here for future use
     }
-
-    int16_t temp = 50;
-    int16_t humidity = 100;
-    uint16_t dist = 10;
-    uint16_t accel = 1000;
-    uint16_t power = 10;
-    uint16_t lux = 1000;
+    if (timeLabel)
+    {
+        lv_label_set_text_fmt(
+            timeLabel,
+            "%02u:%02u:%02u",
+            hours,
+            minutes,
+            seconds);
+    }
+    uint16_t lux = (int16_t)Sensor_GetLux().value;
 
     if (lux < 5)
         enableHeadLights();
@@ -179,18 +190,15 @@ void handleCB(lv_timer_t *e)
     switch (dashboardMode)
     {
     case DASH_TEMP_HUMIDITY:
-
-        updateTempAndHumidity(temp, humidity);
+        updateTempAndHumidity();
         break;
 
     case DASH_DIST_ACCEL:
-
-        updateDistAndAccel(dist, accel);
+        updateDistAndAccel();
         break;
 
     case DASH_POWER_LUX:
-
-        updatePowerAndLux(power, lux);
+        updatePowerAndLux(lux);
         break;
 
     default:
@@ -256,7 +264,10 @@ void scr_dashboard_init(void)
     lv_obj_center(dateLabel);
 
     timeLabel = lv_label_create(header);
-    lv_label_set_text_fmt(timeLabel, "%u:%u", hours, minutes);
+    lv_label_set_text_fmt(timeLabel, "%02u:%02u:%02u",
+                          hours,
+                          minutes,
+                          seconds);
     lv_obj_align(timeLabel, LV_ALIGN_LEFT_MID, 0, 0);
 
     lv_obj_t *batteryLabel = lv_label_create(header);

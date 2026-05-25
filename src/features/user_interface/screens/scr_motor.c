@@ -9,6 +9,7 @@
 #include "../../data.h"
 #include "features/motor/states.h"
 #include "features/motor/motor_api.h"
+#include "features/sensors/api/sensors_api.h"
 #include <math.h>
 
 extern UiMsg_t g_ui_state;
@@ -64,17 +65,17 @@ static void ta_event_cb(lv_event_t *e)
 // Dropdown Button cb     "IDLE\nRUN\nBREAK\nEXPLODE",
 static void on_state_changed(const char *state)
 {
-    if (lv_strcmp(state, "IDLE") == 0)
+    if (lv_strcmp(state, "EStop") == 0)
     {
-        UARTprintf("IDLE\n");
-        updateGUIState(UI_MSG_MOTOR_IDLE, MOTOR_STATE_IDLE);
+        UARTprintf("EStop\n");
+        updateGUIState(UI_MSG_FAULT_RAISED, MOTOR_STATE_BRAKING);
     }
     else if (lv_strcmp(state, "RUN") == 0)
     {
         UARTprintf("RUNNING\n");
         updateGUIState(UI_MSG_MOTOR_RUNNING, MOTOR_STATE_RUNNING);
     }
-    else if (lv_strcmp(state, "BREAK") == 0)
+    else if (lv_strcmp(state, "BRAKE") == 0)
     {
         UARTprintf("BREAK\n");
         updateGUIState(UI_MSG_MOTOR_BREAKING, MOTOR_STATE_BRAKING);
@@ -128,7 +129,7 @@ void motor_state_update_cb(lv_timer_t *timer)
 static int32_t get_speed(void)
 {
     // Sensor_GetSpeed or something
-    return (int32_t)lv_rand(-1, 2);
+    return Sensor_GetSpeed().value;
 }
 
 void scr_motor_init(void)
@@ -136,7 +137,15 @@ void scr_motor_init(void)
     s_screen = lv_obj_create(NULL);
     setBackgroundColour(s_screen);
     lv_obj_remove_flag(s_screen, LV_OBJ_FLAG_SCROLLABLE);
-    speedometer = create_speedometer(s_screen, get_speed, SPEEDO_SCALE_RADIUS, SPEEDO_NEEDLE_LENGTH, 0, SPEEDO_PERIOD);
+    speedometer = create_speedometer(s_screen,
+                                     get_speed,
+                                     SPEEDO_SCALE_RADIUS,
+                                     SPEEDO_NEEDLE_LENGTH,
+                                     0,
+                                     SPEEDO_PERIOD,
+                                     6000,
+                                     19,
+                                     3);
     // To DO:
     // Add relevant buttons and diagnostics for motor
 
@@ -181,7 +190,7 @@ void scr_motor_init(void)
     // Drop Down
     lv_obj_t *mode_dd = create_dropdown(
         nav_bar,
-        "IDLE\nRUN\nBREAK\nEXPLODE",
+        "RUN\nBRAKE\nEStop\nEXPLODE",
         on_state_changed);
 
     lv_obj_set_size(mode_dd, 120, 30);

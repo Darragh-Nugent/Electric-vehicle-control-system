@@ -23,8 +23,10 @@
 #include "features/sensors/api/sensors_api.h"
 #include "features/motor/motor_api.h"
 #include "utils/muart.h"
+#include "features/motor/motor_api.h"
+#include "features/motor/motor_control.h"
 
-#define MAX_VALID_RPM 6000
+#define MAX_VALID_RPM 5500
 #define MAX_INVALID_SPEED_COUNT 10
 
 /*-----------------------------------------------------------*/
@@ -39,6 +41,8 @@ extern void xI2CHandler(void);
  * Functions for the light sensor
  */
 extern void prvSensorOPT3001TimerInit(void);
+
+extern void motorRequestEStop(void);
 
 /*-----------------------------------------------------------*/
 
@@ -67,7 +71,7 @@ void vSensorManagerTask(void *pvParameters)
     // Initialise the distance sensor
     UARTprintf("Dist init start\n"); ///////////////
     SensorVL53L0xInit();
-    UARTprintf("Dist init success\n"); ///////////////
+    // UARTprintf("Dist init success\n"); ///////////////
 
     UARTprintf("All Tests Passed!\n\n"); ///////////////
 
@@ -76,7 +80,6 @@ void vSensorManagerTask(void *pvParameters)
     moving_avg_t tempFilter = {{0}, 0, 0};
     moving_avg_t humidityFilter = {{0}, 0, 0};
     exp_filter_t accelFilter = {0.25, 0};
-    exp_filter_t speedFilter = {0.3, 0};
     exp_filter_t powerFilter = {0.25, 0};
     exp_filter_t distFilter = {0.4, 0};
 
@@ -84,9 +87,7 @@ void vSensorManagerTask(void *pvParameters)
 
     uint32_t events;
 
-    float lastValidSpeed = 0.0f;
-    uint8_t invalidSpeedCount = 0;
-
+    xEventGroupClearBits(xSensorEvents, ALL_SENSOR_EVENTS);
     // Loop Forever
     while (1)
     {
@@ -108,16 +109,18 @@ void vSensorManagerTask(void *pvParameters)
 
             if (filteredPower > Sensor_GetThresholdPower().value)
             {
-                // Motor_EStop();
+                motorRequestEStop();
             }
         }
 
         if (events & LIGHT_SENSOR_EVENT)
         {
+            // UARTprintf("Lux entered\n");
             float lux;
             // Read and convert OPT values
             if (getLux(&lux))
             {
+                // UARTprintf("got Lux\n");
                 float filteredLux = filterMovingAverage(&lightFilter, lux);
                 // MUARTprintf("%d,%d\n", (int)lux, (int)filteredLux);
                 Sensor_UpdateLux(filteredLux);
@@ -128,15 +131,17 @@ void vSensorManagerTask(void *pvParameters)
             }
             else
             {
-                MUARTprintf("Failed\n");
+                UARTprintf("Lux failed\n");
             }
         }
 
         if (events & ACCEL_SENSOR_EVENT)
         {
             uint16_t absoluteAccel;
+            // UARTprintf(">> accel: requesting read\n");
             if (getAbsoluteAccel(&absoluteAccel))
             {
+                // UARTprintf(">> accel: read returned ok=\n");
                 float filteredAccel = filterExponential(&accelFilter, (float)absoluteAccel);
                 Sensor_UpdateAccel(filteredAccel);
                 if (local_uart_mode == ACCEL)
@@ -146,46 +151,53 @@ void vSensorManagerTask(void *pvParameters)
 
                 if (filteredAccel > Sensor_GetThresholdAccel().value)
                 {
-                    // Motor_EStop();
+                    motorRequestEStop();
+                }
+            }
+            else
+            {
+                UARTprintf(">> accel: read returned not ok\n");
+            }
+        }
+
+        if (events & TEMP_SENSOR_EVENT)
+        {
+            float temp;
+            float humidity;
+            if (SensorSHT31GetTemHum(&temp, &humidity))
+            {
+                float filteredTemp = filterMovingAverage(&tempFilter, temp);
+                float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
+
+                Sensor_UpdateTemp(filteredTemp);
+                Sensor_UpdateHumidity(filteredHumidity);
+                if (local_uart_mode == TEMP)
+                {
+                    UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));
+                }
+                else if (local_uart_mode == HUMIDITY)
+                {
+                    UARTprintf("%d,%d\n", (int)(humidity), (int)(filteredHumidity));
                 }
             }
         }
-    }
 
-    if (events & TEMP_SENSOR_EVENT)
-    {
-        float temp;
-        float humidity;
-        if (SensorSHT31GetTemHum(&temp, &humidity))
+        if (events & DIST_SENSOR_EVENT)
         {
-            float filteredTemp = filterMovingAverage(&tempFilter, temp);
-            float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
-            if (local_uart_mode == TEMP)
+            uint16_t distance;
+            if (getDistance(&distance))
             {
-                UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));
-            }
-            else if (local_uart_mode == HUMIDITY)
-            {
-                UARTprintf("%d,%d\n", (int)(humidity), (int)(filteredHumidity));
-            }
-        }
-    }
+                float filteredDistance = filterExponential(&distFilter, distance);
+                Sensor_UpdateDistance(filteredDistance);
+                if (local_uart_mode == DIST)
+                {
+                    UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);
+                }
 
-    if (events & DIST_SENSOR_EVENT)
-    {
-        uint16_t distance;
-        if (getDistance(&distance))
-        {
-            float filteredDistance = filterExponential(&distFilter, distance);
-            Sensor_UpdateDistance(filteredDistance);
-            if (local_uart_mode == DIST)
-            {
-                UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);
-            }
-
-            if (filteredDistance > Sensor_GetThresholdDistance().value)
-            {
-                // Motor_EStop();
+                if (filteredDistance < Sensor_GetThresholdDistance().value)
+                {
+                    motorRequestEStop();
+                }
             }
         }
     }
@@ -230,7 +242,7 @@ void vSpeedSensorTask(void *pvParameters)
             else
             {
                 filteredSpeed = lastValidSpeed;
-                // MotorRequestEStop();
+                motorRequestEStop();
             }
         }
         else

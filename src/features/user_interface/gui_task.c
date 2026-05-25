@@ -37,6 +37,7 @@
 #include "screen_manager.h"
 #include "touch_driver.h"
 #include "features/motor/motor_api.h"
+#include "features/sensors/api/sensors_api.h"
 
 #include "features/data.h"
 #include "timers.h"
@@ -56,6 +57,7 @@ extern volatile uint32_t g_ui32SysClock;
 extern SemaphoreHandle_t motorStartSemaphore;
 
 UiMsg_t g_ui_state;
+motor_state_t state;
 
 tContext g_sContext;
 static lv_display_t *my_display;
@@ -86,7 +88,6 @@ static void prvDispatchMsg(const UiMsg_t *msg)
 {
     switch (msg->type)
     {
-
     // Motor data — update motor screen; dashboard shows summary
     case UI_MSG_MOTOR_RPM:
         motorSetSpeed(msg->payload.u);
@@ -115,38 +116,40 @@ static void prvDispatchMsg(const UiMsg_t *msg)
         break;
     // Sensor data
     case UI_MSG_SENSOR_UPDATE_POWER:
-        // Sensor_UpdatePower(msg->payload.u);
+        Sensor_UpdateThresholdPower(msg->payload.u);
         g_thresholds.TH_POWER = msg->payload.u;
         UARTprintf("SENSOR: UPDATING POWER: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_ACCELERATION:
-        // Sensor_UpdateAccel(msg->payload.u);
+        Sensor_UpdateThresholdAccel(msg->payload.u);
         g_thresholds.TH_ACCEL = msg->payload.u;
         UARTprintf("SENSOR: UPDATING ACCELERATION: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_DISTANCE:
-        // Sensor_UpdateDistance(msg->payload.u);
+        Sensor_UpdateThresholdDistance(msg->payload.u);
         g_thresholds.TH_DIST = msg->payload.u;
         UARTprintf("SENSOR: UPDATING DISTANCE: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_HUMIDITY:
-        // Sensor_UpdateHumidity(msg->payload.u);
+        Sensor_UpdateHumidity(msg->payload.u);
         UARTprintf("SENSOR: UPDATING HUMIDITY: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_TEMP:
         g_thresholds.TH_TEMP = msg->payload.u;
-        // Sensor_UpdateTemp(msg->payload.u);
+        Sensor_UpdateTemp(msg->payload.u);
         UARTprintf("SENSOR: UPDATING TEMP: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_LUX:
-        // Sensor_UpdateLux(msg->payload.u);
+        Sensor_UpdateLux(msg->payload.u);
         UARTprintf("SENSOR: UPDATING LUX: %d\n", msg->payload.u);
         break;
     // Faults — always visible regardless of active screen
     case UI_MSG_FAULT_RAISED:
         screen_manager_goto(SCREEN_ALERT);
+        motorRequestEStop();
         break;
     case UI_MSG_FAULT_CLEARED:
+        UARTprintf("CLEARED!");
         g_ui_state.type = UI_MSG_STATE_NONE;
         motorAcknowledgeFault();
         break;
@@ -209,14 +212,25 @@ void prvGuiTask(void *pvParameters)
         NULL,
         prvLvglTickCb);
 
+    // Initialise Thresholds
+    g_thresholds.TH_ACCEL = INITIAL_ACCEL_THRESHOLD;
+    g_thresholds.TH_DIST = INITIAL_DIST_THRESHOLD;
+    g_thresholds.TH_POWER = INITIAL_POWER_THRESHOLD ;
+    g_thresholds.TH_TEMP = INITIAL_TEMP_THRESHOLD;
+
+    Sensor_UpdateThresholdAccel(g_thresholds.TH_ACCEL);
+    Sensor_UpdateThresholdDistance(g_thresholds.TH_DIST);
+    Sensor_UpdateThresholdPower(g_thresholds.TH_POWER);
+
     xTimerStart(xTickTimer, portMAX_DELAY);
     for (;;)
     {
         // Consume all pending data updates
-        motor_state_t state = motorGetState();//MOTOR_STATE_FAULT; // portmax delay, be careful this doesnt delay the UI
+        state = motorGetState(); // MOTOR_STATE_FAULT; // portmax delay, be careful this doesnt delay the UI
+        prvDispatchMsg(&g_ui_state);
+
         if (state == MOTOR_STATE_FAULT)
             g_ui_state.type = UI_MSG_FAULT_RAISED;
-        prvDispatchMsg(&g_ui_state);
 
         // Lvgl rendering/timers
         uint32_t delay_ms = lv_timer_handler();
