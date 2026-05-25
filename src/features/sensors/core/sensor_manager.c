@@ -23,6 +23,8 @@
 #include "features/sensors/api/sensors_api.h"
 #include "features/motor/motor_api.h"
 #include "utils/muart.h"
+#include "features/motor/motor_api.h"
+#include "features/motor/motor_control.h"
 
 #define MAX_VALID_RPM 5500
 #define MAX_INVALID_SPEED_COUNT 10
@@ -107,7 +109,7 @@ void vSensorManagerTask(void *pvParameters)
 
             if (filteredPower > Sensor_GetThresholdPower().value)
             {
-                // Motor_EStop();
+                motorRequestEStop();
             }
         }
 
@@ -149,7 +151,7 @@ void vSensorManagerTask(void *pvParameters)
 
                 if (filteredAccel > Sensor_GetThresholdAccel().value)
                 {
-                    // Motor_EStop();
+                    motorRequestEStop();
                 }
             }
             else
@@ -192,9 +194,9 @@ void vSensorManagerTask(void *pvParameters)
                     UARTprintf("%d,%d\n", (int)distance, (int)filteredDistance);
                 }
 
-                if (filteredDistance > Sensor_GetThresholdDistance().value)
+                if (filteredDistance < Sensor_GetThresholdDistance().value)
                 {
-                    // Motor_EStop();
+                    motorRequestEStop();
                 }
             }
         }
@@ -240,7 +242,7 @@ void vSpeedSensorTask(void *pvParameters)
             else
             {
                 filteredSpeed = lastValidSpeed;
-                // MotorRequestEStop();
+                motorRequestEStop();
             }
         }
         else

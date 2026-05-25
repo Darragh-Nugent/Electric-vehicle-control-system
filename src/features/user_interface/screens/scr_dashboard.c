@@ -110,7 +110,7 @@ static void updateDistAndAccel()
     lv_label_set_text_fmt(lbl_lhs, "%d mm", dist);
     lv_label_set_text_fmt(lbl_rhs, "%d ", accel);
     resetLabels("Distance", "Accel");
-    if (dist >= g_thresholds.TH_DIST * WARNING_THRESHOLD)
+    if (dist <=  g_thresholds.TH_DIST + g_thresholds.TH_DIST * WARNING_THRESHOLD)
     {
         lv_obj_set_style_text_color(lbl_lhs_info,
                                     SCARY_RED,

@@ -37,6 +37,7 @@
 #include "screen_manager.h"
 #include "touch_driver.h"
 #include "features/motor/motor_api.h"
+#include "features/sensors/api/sensors_api.h"
 
 #include "features/data.h"
 #include "timers.h"
@@ -115,31 +116,31 @@ static void prvDispatchMsg(const UiMsg_t *msg)
         break;
     // Sensor data
     case UI_MSG_SENSOR_UPDATE_POWER:
-        // Sensor_UpdatePower(msg->payload.u);
+        Sensor_UpdateThresholdPower(msg->payload.u);
         g_thresholds.TH_POWER = msg->payload.u;
         UARTprintf("SENSOR: UPDATING POWER: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_ACCELERATION:
-        // Sensor_UpdateAccel(msg->payload.u);
+        Sensor_UpdateThresholdAccel(msg->payload.u);
         g_thresholds.TH_ACCEL = msg->payload.u;
         UARTprintf("SENSOR: UPDATING ACCELERATION: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_DISTANCE:
-        // Sensor_UpdateDistance(msg->payload.u);
+        Sensor_UpdateThresholdDistance(msg->payload.u);
         g_thresholds.TH_DIST = msg->payload.u;
         UARTprintf("SENSOR: UPDATING DISTANCE: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_HUMIDITY:
-        // Sensor_UpdateHumidity(msg->payload.u);
+        Sensor_UpdateHumidity(msg->payload.u);
         UARTprintf("SENSOR: UPDATING HUMIDITY: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_TEMP:
         g_thresholds.TH_TEMP = msg->payload.u;
-        // Sensor_UpdateTemp(msg->payload.u);
+        Sensor_UpdateTemp(msg->payload.u);
         UARTprintf("SENSOR: UPDATING TEMP: %d\n", msg->payload.u);
         break;
     case UI_MSG_SENSOR_UPDATE_LUX:
-        // Sensor_UpdateLux(msg->payload.u);
+        Sensor_UpdateLux(msg->payload.u);
         UARTprintf("SENSOR: UPDATING LUX: %d\n", msg->payload.u);
         break;
     // Faults — always visible regardless of active screen
@@ -210,6 +211,16 @@ void prvGuiTask(void *pvParameters)
         pdTRUE,
         NULL,
         prvLvglTickCb);
+
+    // Initialise Thresholds
+    g_thresholds.TH_ACCEL = INITIAL_ACCEL_THRESHOLD;
+    g_thresholds.TH_DIST = INITIAL_DIST_THRESHOLD;
+    g_thresholds.TH_POWER = INITIAL_POWER_THRESHOLD ;
+    g_thresholds.TH_TEMP = INITIAL_TEMP_THRESHOLD;
+
+    Sensor_UpdateThresholdAccel(g_thresholds.TH_ACCEL);
+    Sensor_UpdateThresholdDistance(g_thresholds.TH_DIST);
+    Sensor_UpdateThresholdPower(g_thresholds.TH_POWER);
 
     xTimerStart(xTickTimer, portMAX_DELAY);
     for (;;)
