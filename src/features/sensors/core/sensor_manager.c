@@ -63,8 +63,9 @@ void vSensorManagerTask(void *pvParameters)
     // Intialise env sensor
     SensorSHT31Init();
 
-    // // Initialise the power sensor
+    // Initialise the power sensor
     PowerInit();
+
 
     // Initialise the distance sensor
     UARTprintf("Dist init start\n"); ///////////////
@@ -200,6 +201,9 @@ void vSensorManagerTask(void *pvParameters)
 
 void vSpeedSensorTask(void *pvParameters)
 {
+    // Initialise the speed sensor
+    SpeedInit();
+
     uart_mode_t local_uart_mode = NONE;
 
     exp_filter_t speedFilter = {0.3f, 0};

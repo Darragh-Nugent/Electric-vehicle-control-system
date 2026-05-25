@@ -3,4 +3,5 @@
 #include <stdbool.h>
 
 void addRotation(void);
+void SpeedInit(void);
 float getRPM(void);

@@ -7,6 +7,7 @@
 #include "semphr.h"
 
 #include "utils/uartstdio.h"
+#include "drivers/speed_sensor_driver.h"
 
 #define INT_PER_ROTATION 24 // got this number by counting the number of interrupts in full rotation! dont change pls
 #define SPEED_SAMPLING_TIME 0.01f
@@ -22,26 +23,24 @@ void addRotation(void)
     partial_rotation++;
 }
 
+void SpeedInit(void)
+{
+    speed_sensor_dev_t dev;
+
+    dev.counts_per_rotation = INT_PER_ROTATION;
+    dev.sample_time = SPEED_SAMPLING_TIME;
+
+    Speed_Sensor_Init(dev);
+}
+
 float getRPM(void)
 {
-    static uint32_t prev_time = 0;
-    // uint32_t current_time = xTaskGetTickCount(); //<-------------************************************************** */
+    uint32_t counts;
 
-    // float time_ms = (current_time - prev_time)* portTICK_PERIOD_MS;
-    // prev_time = current_time;
-
-    // if (time_ms < 0.001f) return 0.0f;
-
-    uint32_t local_partial_rotation;
     taskENTER_CRITICAL();
-    local_partial_rotation = partial_rotation;
+    counts = partial_rotation;
     partial_rotation = 0;
     taskEXIT_CRITICAL();
 
-    float distance = (float)local_partial_rotation / INT_PER_ROTATION;
-    // float time_sec = time_ms / 1000.0f;
-
-
-
-    return (distance / SPEED_SAMPLING_TIME) * 60.0f;
+    return Speed_Sensor_GetRPM(counts);
 }
