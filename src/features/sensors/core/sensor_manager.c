@@ -166,6 +166,9 @@ void vSensorManagerTask(void *pvParameters)
             {
                 float filteredTemp = filterMovingAverage(&tempFilter, temp);
                 float filteredHumidity = filterMovingAverage(&humidityFilter, humidity);
+
+                Sensor_UpdateTemp(filteredTemp);
+                Sensor_UpdateHumidity(filteredHumidity);
                 if (local_uart_mode == TEMP)
                 {
                     UARTprintf("%d,%d\n", (int)(temp), (int)(filteredTemp));

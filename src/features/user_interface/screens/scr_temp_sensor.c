@@ -4,8 +4,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../gui_utils.h"
+#include "features/sensors/api/sensors_api.h"
+
 static lv_obj_t *s_screen;
-static int32_t temp = 20;
 void scr_sensor2_get_x(float x) {};
 
 void scr_sensor2_set_x(float x) {};
@@ -104,15 +105,9 @@ lv_obj_t * lv_scale_temp(lv_obj_t *s_screen)
 static void temp_timer_cb(lv_timer_t *t)
 {
     lv_obj_t *bar = lv_timer_get_user_data(t);
-    int32_t value = lv_rand(-1,1);
-    temp += value;
+    int32_t value = (int32_t) Sensor_GetTemp().value;
 
-    // if(xQueueReceive(tempQueue, &temp, 0) == pdPASS)
-    // {
-    //     lv_bar_set_value(bar, temp, LV_ANIM_ON);
-    // }
-    // OR a api call that handles queues internally
-    lv_bar_set_value(bar, temp, LV_ANIM_ON);
+    lv_bar_set_value(bar, value, LV_ANIM_ON);
 }
 
 lv_obj_t * lv_temp_bar(lv_obj_t * s_screen)
@@ -127,7 +122,7 @@ lv_obj_t * lv_temp_bar(lv_obj_t * s_screen)
 
     lv_obj_t * bar = lv_bar_create(s_screen);
     lv_obj_add_style(bar, &style_indic, LV_PART_INDICATOR);
-    lv_obj_set_size(bar, 10, 150);
+    lv_obj_set_size(bar, 10, 140);
     lv_obj_center(bar);
     lv_bar_set_range(bar, -20, 75);
     lv_bar_set_start_value(bar, -20, LV_ANIM_OFF);
@@ -161,7 +156,7 @@ void scr_temp_sensor_init(void)
     (void)label; // ignore label for now, return value is kept for possible future use
     lv_obj_t* scale = lv_scale_temp(s_screen);
     lv_obj_t* bar = lv_temp_bar(s_screen);
-    lv_obj_align_to(bar, scale, LV_ALIGN_LEFT_MID, -15, -10); //-20
+    lv_obj_align_to(bar, scale, LV_ALIGN_LEFT_MID, -15,0); //-20
     lv_obj_t *prev_button = create_icon_button(s_screen, LV_SYMBOL_PREV, btn_home_cb, LV_ALIGN_TOP_LEFT, 8, 8);
     lv_obj_set_width(prev_button,40);
 }

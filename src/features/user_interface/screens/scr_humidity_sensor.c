@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "../gui_utils.h"
+#include "features/sensors/api/sensors_api.h"
 
 static lv_obj_t *s_screen;
 roundScale_t *humidity_graph;
@@ -17,7 +18,7 @@ static void btn_home_cb(lv_event_t *e)
 static int32_t get_humidity(void)
 {
     // Sensor_GetHumidity();
-    return lv_rand(-1, 2);
+    return (int32_t)Sensor_GetHumidity().value;
 }
 
 void scr_humidity_sensor_init(void)

@@ -5,7 +5,8 @@
 #include "lvgl.h"
 #include "../gui_utils.h"
 #include "features/led.h"
-// #include "../sensors.h"
+#include "features/sensors/api/sensors_api.h"
+#include "utils/uartstdio.h"
 
 void scr_dashboard_set_rpm(float f) {};
 void scr_dashboard_set_sensor(uint32_t idx, float f) {};
@@ -87,8 +88,11 @@ static void resetLabels(char *lhsTitle, char *rhsTitle)
                                 0);
 }
 
-static void updateTempAndHumidity(int16_t temp, int16_t humidity)
+static void updateTempAndHumidity()
 {
+    int16_t temp = (int16_t)Sensor_GetTemp().value;
+    int16_t humidity = (int16_t)Sensor_GetHumidity().value;
+
     lv_label_set_text_fmt(lbl_lhs, "%d °C", temp);
     lv_label_set_text_fmt(lbl_rhs, "%d %%", humidity);
     resetLabels("Temp", "Humidity");
@@ -98,9 +102,12 @@ static void updateTempAndHumidity(int16_t temp, int16_t humidity)
         lv_label_set_text(lbl_lhs_info, "Cooling off");
 }
 
-static void updateDistAndAccel(uint16_t dist, uint16_t accel)
+static void updateDistAndAccel()
 {
-    lv_label_set_text_fmt(lbl_lhs, "%d m", dist);
+    uint16_t dist = Sensor_GetDistance().value;
+    uint16_t accel = Sensor_GetAccel().value;
+
+    lv_label_set_text_fmt(lbl_lhs, "%d mm", dist);
     lv_label_set_text_fmt(lbl_rhs, "%d ", accel);
     resetLabels("Distance", "Accel");
     if (dist >= g_thresholds.TH_DIST * WARNING_THRESHOLD)
@@ -124,8 +131,9 @@ static void updateDistAndAccel(uint16_t dist, uint16_t accel)
         lv_label_set_text(lbl_rhs_info, "");
 }
 
-static void updatePowerAndLux(uint16_t power, uint16_t lux)
+static void updatePowerAndLux(uint16_t lux)
 {
+    uint16_t power = Sensor_GetPower().value;
     lv_label_set_text_fmt(lbl_lhs, "%d m", power);
     lv_label_set_text_fmt(lbl_rhs, "%d ", lux);
     resetLabels("Power", "Lux");
@@ -172,13 +180,7 @@ void handleCB(lv_timer_t *e)
             minutes,
             seconds);
     }
-
-    int16_t temp = 50;
-    int16_t humidity = 100;
-    uint16_t dist = 10;
-    uint16_t accel = 1000;
-    uint16_t power = 10;
-    uint16_t lux = 1000;
+    uint16_t lux = (int16_t)Sensor_GetLux().value;
 
     if (lux < 5)
         enableHeadLights();
@@ -188,18 +190,15 @@ void handleCB(lv_timer_t *e)
     switch (dashboardMode)
     {
     case DASH_TEMP_HUMIDITY:
-
-        updateTempAndHumidity(temp, humidity);
+        updateTempAndHumidity();
         break;
 
     case DASH_DIST_ACCEL:
-
-        updateDistAndAccel(dist, accel);
+        updateDistAndAccel();
         break;
 
     case DASH_POWER_LUX:
-
-        updatePowerAndLux(power, lux);
+        updatePowerAndLux(lux);
         break;
 
     default:

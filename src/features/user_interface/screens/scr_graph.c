@@ -36,7 +36,7 @@ static int32_t get_power(void)
 static int32_t get_distance(void)
 {
     // Sensor_GetDistance();
-    return (int32_t) Sensor_GetPower().value;
+    return (int32_t) Sensor_GetDistance().value;
 }
 
 static int32_t get_acceleration(void)
@@ -61,7 +61,7 @@ void shared_graph_timer_cb(lv_timer_t *t)
         value = get_distance();
         prevPeriod = period;
         period = SENSOR_DISTANCE_PERIOD;
-        lv_label_set_text(label, "Distance (m)");
+        lv_label_set_text(label, "Distance (mm)");
         break;
     case SCREEN_ACCEL_SENSOR:
         value = get_acceleration();
