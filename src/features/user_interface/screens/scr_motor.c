@@ -143,7 +143,7 @@ void scr_motor_init(void)
                                      SPEEDO_NEEDLE_LENGTH,
                                      0,
                                      SPEEDO_PERIOD,
-                                     6,
+                                     6000,
                                      19,
                                      3);
     // To DO:
