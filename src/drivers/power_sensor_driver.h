@@ -10,5 +10,5 @@ typedef struct {
 } power_sensor_dev_t;
 
 void Power_Sensor_Init(power_sensor_dev_t new_dev);
-float Power_Sensor_GetCurrent(uint32_t voltageA, uint32_t voltageB);
-float Power_Sensor_GetPower(uint32_t voltageA, uint32_t voltageB);
+float Power_Sensor_GetCurrent(uint32_t adcA, uint32_t adcB);
+float Power_Sensor_GetPower(uint32_t adcA, uint32_t adcB);

@@ -11,7 +11,7 @@ void Power_Sensor_Init(power_sensor_dev_t new_dev)
     dev = new_dev;
 }
 
-float Power_Sensor_GetCurrent(uint16_t adcA, uint16_t adcB)
+float Power_Sensor_GetCurrent(uint32_t adcA, uint32_t adcB)
 {
     float converted_voltage[2];
     float current[3];
@@ -31,7 +31,7 @@ float Power_Sensor_GetCurrent(uint16_t adcA, uint16_t adcB)
     return (fabs(current[0]) + fabs(current[1]) + fabs(current[2])) / 2;
 }
 
-float Power_Sensor_GetPower(uint16_t adcA, uint16_t adcB)
+float Power_Sensor_GetPower(uint32_t adcA, uint32_t adcB)
 {
     float total_current = Power_Sensor_GetCurrent(adcA, adcB);
     return total_current * dev.motor_voltage;
