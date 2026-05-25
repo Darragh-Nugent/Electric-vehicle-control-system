@@ -141,7 +141,8 @@ static lv_obj_t *create_threshold_card(
     lv_obj_t *spinbox = lv_spinbox_create(card);
 
     lv_spinbox_set_range(spinbox, min, max); // should be defines
-    if (max > 999) lv_spinbox_set_digit_count(spinbox, 4);
+    if (max > 10000)  lv_spinbox_set_digit_count(spinbox, 5);
+    else if (max > 999) lv_spinbox_set_digit_count(spinbox, 4);
     else if (max > 99 && max < 1000) lv_spinbox_set_digit_count(spinbox, 3);
     else lv_spinbox_set_digit_count(spinbox, 2);
     lv_spinbox_set_dec_point_pos(spinbox, 0);
