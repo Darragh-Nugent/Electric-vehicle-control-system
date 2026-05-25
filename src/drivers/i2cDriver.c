@@ -31,7 +31,7 @@ bool I2C_write_reg(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
     // UARTprintf("Indside writei2c\n");
 
     i2c_send_message_t message;
-    message.id = 0;   // writer task id (not used in this implementation)
+    message.id = 0; // writer task id (not used in this implementation)
     message.type = I2C_REG_WRITE;
     message.sensor = ui8Addr;
     message.reg = ui8Reg;
@@ -45,9 +45,18 @@ bool I2C_write_reg(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
     i2c_recv_message_t response;
     response.success = false;
 
-    xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
-    // UARTprintf("wait on semaphore in writei2c\n");
-    xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
+    // UARTprintf("Entering send queue\n");
+    if (xQueueSend(xI2CSendQueue, &message, pdMS_TO_TICKS(200)) != pdTRUE)
+    {
+        UARTprintf("!! Response queue full, dropping response id=%d\n", response.sensor);
+    }
+    // UARTprintf("Entering rx queue\n");
+    if (xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(500)) != pdTRUE)
+    {
+        UARTprintf("!! No response received from I2C manager\n");
+        return false;
+    }
+    // UARTprintf("Exited rx queue\n");
 
     return response.success;
 }
@@ -60,7 +69,7 @@ bool I2C_write_bytes(uint8_t ui8Addr, uint8_t *data, uint16_t len)
     // UARTprintf("Indside writei2c\n");
 
     i2c_send_message_t message;
-    message.id = 0;   // writer task id (not used in this implementation)
+    message.id = 0;               // writer task id (not used in this implementation)
     message.type = I2C_RAW_WRITE; // write
     message.sensor = ui8Addr;
     message.len = len;
@@ -73,9 +82,16 @@ bool I2C_write_bytes(uint8_t ui8Addr, uint8_t *data, uint16_t len)
     i2c_recv_message_t response;
     response.success = false;
 
-    xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
-    // UARTprintf("wait on semaphore in writei2c\n");
-    xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
+    if (xQueueSend(xI2CSendQueue, &message, pdMS_TO_TICKS(200)) != pdTRUE)
+    {
+        UARTprintf("!! Response queue full, dropping response id=%d\n", response.sensor);
+    }
+    // UARTprintf("Entering rx queue\n");
+    if (xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(500)) != pdTRUE)
+    {
+        UARTprintf("!! No response received from I2C manager\n");
+        return false;
+    }
 
     return response.success;
 }
@@ -88,7 +104,7 @@ bool I2C_read_reg(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
     // UARTprintf("Indside readi2c\n");
 
     i2c_send_message_t message;
-    message.id = 0;   // writer task id (not used in this implementation)
+    message.id = 0;              // writer task id (not used in this implementation)
     message.type = I2C_REG_READ; // read
     message.sensor = ui8Addr;
     message.reg = ui8Reg;
@@ -97,10 +113,16 @@ bool I2C_read_reg(uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
     i2c_recv_message_t response;
     response.success = false;
 
-    xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
-    // UARTprintf("wait on semaphore in writei2c\n");
-    // xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
-    xQueueReceive(xI2CRecvQueue, &response, portMAX_DELAY);
+    if (xQueueSend(xI2CSendQueue, &message, pdMS_TO_TICKS(200)) != pdTRUE)
+    {
+        UARTprintf("!! Response queue full, dropping response id=%d\n", response.sensor);
+    }
+    // UARTprintf("Entering rx queue\n");
+    if (xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(500)) != pdTRUE)
+    {
+        UARTprintf("!! No response received from I2C manager\n");
+        return false;
+    }
 
     for (uint16_t i = 0; i < len; i++)
     {
@@ -118,17 +140,24 @@ bool I2C_read_bytes(uint8_t ui8Addr, uint8_t *data, uint16_t len)
     // UARTprintf("Indside readi2c\n");
 
     i2c_send_message_t message;
-    message.id = 0;   // writer task id (not used in this implementation)
+    message.id = 0;              // writer task id (not used in this implementation)
     message.type = I2C_RAW_READ; // read
     message.sensor = ui8Addr;
     message.len = len;
 
     i2c_recv_message_t response;
     response.success = false;
-
-    xQueueSend(xI2CSendQueue, &message, portMAX_DELAY);
-    // UARTprintf("wait on semaphore in writei2c\n");
-    xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(1000));
+    
+    if (xQueueSend(xI2CSendQueue, &message, pdMS_TO_TICKS(200)) != pdTRUE)
+    {
+        UARTprintf("!! Response queue full, dropping response id=%d\n", response.sensor);
+    }
+    // UARTprintf("Entering rx queue\n");
+    if (xQueueReceive(xI2CRecvQueue, &response, pdMS_TO_TICKS(500)) != pdTRUE)
+    {
+        UARTprintf("!! No response received from I2C manager\n");
+        return false;
+    }
 
     for (uint16_t i = 0; i < len; i++)
     {
