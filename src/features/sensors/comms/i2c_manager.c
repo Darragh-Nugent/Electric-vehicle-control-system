@@ -13,7 +13,7 @@
 #include "inc/hw_types.h"
 #include "driverlib/sysctl.h"
 #include "drivers/rtos_hw_drivers.h"
-#include "utils/uartstdio.h"
+#include "utils///uartstdio.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pwm.h"
 #include "drivers/opt3001.h"
@@ -31,6 +31,8 @@
 #define TEMP_SENSOR_ADDRESS 0x44
 
 /*-----------------------------------------------------------*/
+
+static void I2C_Reset(void);
 
 bool I2C_write_bytes_internal(uint32_t base, uint8_t ui8Addr, uint8_t *data, uint16_t len);
 bool I2C_write_reg_internal(uint32_t base, uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len);
@@ -84,26 +86,13 @@ volatile bool errorFlag = false;
 
 void xI2C2Handler(void)
 {
-    BaseType_t xI2CTaskWoken;
-    uint32_t ui32I2CStatus;
+    BaseType_t xI2CTaskWoken = pdFALSE;
 
-    /* Read interrupt status */
-    ui32I2CStatus = I2CMasterIntStatusEx(I2C2_BASE, true);
-    /* Clear interrupt */
+    // Clear all pending interrupts
+    uint32_t ui32I2CStatus = I2CMasterIntStatusEx(I2C2_BASE, true);
     I2CMasterIntClearEx(I2C2_BASE, ui32I2CStatus);
 
-    /* Initialize as pdFALSE for FreeRTOS ISR handling */
-    xI2CTaskWoken = pdFALSE;
-
-    /* Check which interrupt was called */
-    if ((ui32I2CStatus & I2C_MASTER_INT_TIMEOUT) == I2C_MASTER_INT_TIMEOUT)
-    {
-        errorFlag = true;
-    }
-
     xSemaphoreGiveFromISR(xI2CSemaphore, &xI2CTaskWoken);
-
-    /* Yield if required */
     portYIELD_FROM_ISR(xI2CTaskWoken);
 }
 
@@ -112,9 +101,15 @@ void vI2CManagerTask(void *pvParameters)
     i2c_send_message_t message;
     i2c_recv_message_t response;
 
+    I2C_Reset();
+    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_I2C2));
+    ////uartprintf("!! I2C Manager: peripheral ready, starting\n");
+
     while (1)
     {
+        //uartprintf("!! I2C Manager: waiting for message\n");
         xQueueReceive(xI2CSendQueue, &message, portMAX_DELAY);
+        //uartprintf("!! I2C Manager: got message type=%d sensor=0x%02x\n", message.type, message.sensor);
 
         // Initialise response
         response.id = message.id;
@@ -129,7 +124,7 @@ void vI2CManagerTask(void *pvParameters)
         case I2C_REG_READ:
             if (!I2C_read_reg_internal(I2C_Base, message.sensor, message.reg, message.data, message.len))
             {
-                UARTprintf("Bad read\n");
+                //uartprintf("Bad read\n");
                 response.success = false;
                 break;
             }
@@ -173,27 +168,109 @@ void vI2CManagerTask(void *pvParameters)
             break;
         }
 
-        xQueueSend(xI2CRecvQueue, &response, portMAX_DELAY);
+        //uartprintf("!! I2C Manager: sending response success=%d\n", response.success);
+        if (xQueueSend(xI2CRecvQueue, &response, pdMS_TO_TICKS(200)) != pdTRUE)
+        {
+            //uartprintf("!! I2C Manager: response queue full!\n");
+        }
+        //uartprintf("!! I2C Manager: response sent\n");
     }
 }
 
-static void I2C_Reset(uint32_t base)
+static void I2C_Reset(void)
 {
-    // Issue a stop condition to unstick the bus
-    I2CMasterControl(base, I2C_MASTER_CMD_BURST_SEND_ERROR_STOP);
-    vTaskDelay(pdMS_TO_TICKS(5));
+    //uartprintf("!! I2C_Reset: starting\n");
+
+    IntDisable(INT_I2C2);
+    SysCtlPeripheralReset(SYSCTL_PERIPH_I2C2);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C2); // <-- missing!
+
+    uint32_t timeout = 10000;
+    while (!SysCtlPeripheralReady(SYSCTL_PERIPH_I2C2))
+    {
+        if (--timeout == 0)
+        {
+            //uartprintf("!! I2C_Reset: peripheral never became ready, bailing\n");
+            return; // bail rather than spin forever
+        }
+    }
+
+    //uartprintf("!! I2C_Reset: peripheral ready\n");
+
+    //
+    // Temporarily switch pins to GPIO
+    //
+    GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE, GPIO_PIN_5); // SCL
+    GPIOPinTypeGPIOInput(GPIO_PORTN_BASE, GPIO_PIN_4);  // SDA
+
+    //
+    // Ensure SCL starts high
+    //
+    GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_5, GPIO_PIN_5);
+
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    //
+    // If SDA stuck low, clock out slave
+    //
+    if (!(GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_4) & GPIO_PIN_4))
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_5, 0);
+            vTaskDelay(pdMS_TO_TICKS(100));
+
+            GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_5, GPIO_PIN_5);
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+    }
+
+    //
+    // Restore I2C pin muxing
+    //
+    GPIOPinConfigure(GPIO_PN5_I2C2SCL);
+    GPIOPinConfigure(GPIO_PN4_I2C2SDA);
+
+    GPIOPinTypeI2CSCL(GPIO_PORTN_BASE, GPIO_PIN_5);
+    GPIOPinTypeI2C(GPIO_PORTN_BASE, GPIO_PIN_4);
+
+    //
+    // Reinitialize I2C
+    //
+    I2CMasterInitExpClk(I2C2_BASE, g_ui32SysClock, false);
+
+    //
+    // Clear pending interrupts
+    //
+    I2CMasterIntClearEx(I2C2_BASE,
+                        I2C_MASTER_INT_DATA |
+                            I2C_MASTER_INT_TIMEOUT);
+
+    //
+    // Re-enable interrupts
+    //
+    I2CMasterIntEnableEx(I2C2_BASE,
+                         I2C_MASTER_INT_DATA |
+                             I2C_MASTER_INT_TIMEOUT);
+
+    IntEnable(INT_I2C2);
+
+    //
+    // Clear software state
+    //
     errorFlag = false;
-    // Drain any pending semaphore
-    xSemaphoreTake(xI2CSemaphore, 0);
+
+    while (xSemaphoreTake(xI2CSemaphore, 0) == pdTRUE)
+        ;
 }
 
 bool I2C_write_reg_internal(uint32_t base, uint8_t addr, uint8_t reg, uint8_t *data, uint16_t len)
 {
-    // UARTprintf("write reg\n");
+    // //uartprintf("write reg\n");
 
     if (errorFlag)
     {
-        I2C_Reset(base);
+        I2C_Reset();
     }
 
     errorFlag = false;
@@ -207,9 +284,12 @@ bool I2C_write_reg_internal(uint32_t base, uint8_t addr, uint8_t reg, uint8_t *d
     I2CMasterDataPut(base, reg);
     I2CMasterControl(base, I2C_MASTER_CMD_BURST_SEND_START);
 
+    //uartprintf("!! waiting for BURST_SEND_START ack, bus busy=%d\n", I2CMasterBusy(base));
+
     if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
     {
-        I2C_Reset(base);
+        //uartprintf("!! BUSRT_SEND timed out errorFlag = %d, MasterErr=0x%08x\n",errorFlag, I2CMasterErr(base));
+        I2C_Reset();
         return false;
     }
 
@@ -219,15 +299,24 @@ bool I2C_write_reg_internal(uint32_t base, uint8_t addr, uint8_t reg, uint8_t *d
         I2CMasterDataPut(base, data[i]);
 
         if (i == len - 1)
+        {
             I2CMasterControl(base, I2C_MASTER_CMD_BURST_SEND_FINISH);
+            //uartprintf("!! waiting for BUSRT_SEND_FINISH ack, bus busy=%d\n", I2CMasterBusy(base));
+        }
         else
+        {
             I2CMasterControl(base, I2C_MASTER_CMD_BURST_SEND_CONT);
+            //uartprintf("!! waiting for BURST_SEND_CONT ack, bus busy=%d\n", I2CMasterBusy(base));
+        }
 
         if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
         {
-            I2C_Reset(base);
+            //uartprintf("!! timed out, MasterErr=0x%08x\n", I2CMasterErr(base));
+            I2C_Reset();
             return false;
         }
+
+        //uartprintf("!! Wrote data = %02x\n", data[i]);
     }
 
     return true;
@@ -235,11 +324,11 @@ bool I2C_write_reg_internal(uint32_t base, uint8_t addr, uint8_t reg, uint8_t *d
 
 bool I2C_write_bytes_internal(uint32_t base, uint8_t addr, uint8_t *data, uint16_t len)
 {
-    // UARTprintf("write bytes\n");
+    // //uartprintf("write bytes\n");
 
     if (errorFlag)
     {
-        I2C_Reset(base);
+        I2C_Reset();
     }
 
     errorFlag = false;
@@ -268,7 +357,7 @@ bool I2C_write_bytes_internal(uint32_t base, uint8_t addr, uint8_t *data, uint16
 
         if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
         {
-            I2C_Reset(base);
+            I2C_Reset();
             return false;
         }
     }
@@ -278,14 +367,14 @@ bool I2C_write_bytes_internal(uint32_t base, uint8_t addr, uint8_t *data, uint16
 
 bool I2C_read_reg_internal(uint32_t base, uint8_t ui8Addr, uint8_t ui8Reg, uint8_t *data, uint16_t len)
 {
-    // UARTprintf("Read reg\n");
+    // //uartprintf("Read reg\n");
 
     if (errorFlag)
     {
-        I2C_Reset(base);
+        I2C_Reset();
     }
 
-    // UARTprintf("len = %d\n", len);
+    // //uartprintf("len = %d\n", len);
     errorFlag = false;
 
     while (xSemaphoreTake(xI2CSemaphore, 0) == pdTRUE)
@@ -297,10 +386,13 @@ bool I2C_read_reg_internal(uint32_t base, uint8_t ui8Addr, uint8_t ui8Reg, uint8
     // Send register address
     I2CMasterDataPut(base, ui8Reg);
     I2CMasterControl(base, I2C_MASTER_CMD_SINGLE_SEND);
-    // UARTprintf("Sent reg\n");
+    // //uartprintf("Sent reg\n");
+    //uartprintf("!! waiting for SINGLE_SEND ack, bus busy=%d\n", I2CMasterBusy(base));
+
     if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
     {
-        I2C_Reset(base);
+        //uartprintf("!! SINGLE_SEND timed out, MasterErr=0x%08x\n", I2CMasterErr(base));
+        I2C_Reset();
         return false;
     }
 
@@ -311,38 +403,44 @@ bool I2C_read_reg_internal(uint32_t base, uint8_t ui8Addr, uint8_t ui8Reg, uint8
     {
         if (errorFlag)
         {
-            I2C_Reset(base);
+            I2C_Reset();
         }
 
         if (len == 1)
         {
             // Single byte read — use dedicated single receive command
             I2CMasterControl(base, I2C_MASTER_CMD_SINGLE_RECEIVE);
+            //uartprintf("!! waiting for SINGLE_RECEIVE ack, bus busy=%d\n", I2CMasterBusy(base));
         }
         else if (i == 0)
         {
             // Read MSB
             I2CMasterControl(base, I2C_MASTER_CMD_BURST_RECEIVE_START);
+            //uartprintf("!! waiting for BURST_RECIEVE_START ack, bus busy=%d\n", I2CMasterBusy(base));
         }
         else if (i == len - 1)
         {
             I2CMasterControl(base, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
+            //uartprintf("!! waiting for BURST_RECEIVE_FINISH ack, bus busy=%d\n", I2CMasterBusy(base));
         }
         else
         {
             // Read LSB
             I2CMasterControl(base, I2C_MASTER_CMD_BURST_RECEIVE_CONT);
+            //uartprintf("!! waiting for BURST_RECEIVE_CONT ack, bus busy=%d\n", I2CMasterBusy(base));
         }
 
-        // UARTprintf("%d sem start\n", i + 1);
+        // //uartprintf("%d sem start\n", i + 1);
         if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
         {
-            I2C_Reset(base);
+            //uartprintf("!! timed out, MasterErr=0x%08x\n", I2CMasterErr(base));
+            I2C_Reset();
             return false;
         }
-        // UARTprintf("%d sem end\n", i + 1);
+        // //uartprintf("%d sem end\n", i + 1);
 
         data[i] = I2CMasterDataGet(base);
+        //uartprintf("!! Received data = %02x\n", data[i]);
     }
 
     return true;
@@ -353,14 +451,14 @@ bool I2C_read_reg_internal(uint32_t base, uint8_t ui8Addr, uint8_t ui8Reg, uint8
  */
 bool I2C_read_bytes_internal(uint32_t base, uint8_t ui8Addr, uint8_t *data, uint16_t len)
 {
-    // UARTprintf("Read bytes\n");
+    // //uartprintf("Read bytes\n");
 
     if (errorFlag)
     {
-        I2C_Reset(base);
+        I2C_Reset();
     }
 
-    // UARTprintf("len = %d\n", len);
+    // //uartprintf("len = %d\n", len);
     errorFlag = false;
 
     while (xSemaphoreTake(xI2CSemaphore, 0) == pdTRUE)
@@ -390,13 +488,13 @@ bool I2C_read_bytes_internal(uint32_t base, uint8_t ui8Addr, uint8_t *data, uint
             I2CMasterControl(base, I2C_MASTER_CMD_BURST_RECEIVE_CONT);
         }
 
-        // UARTprintf("%d sem start\n", i + 1);
+        // //uartprintf("%d sem start\n", i + 1);
         if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
         {
-            I2C_Reset(base);
+            I2C_Reset();
             return false;
         }
-        // UARTprintf("%d sem end\n", i + 1);
+        // //uartprintf("%d sem end\n", i + 1);
 
         data[i] = I2CMasterDataGet(base);
     }
@@ -408,7 +506,7 @@ bool I2C_write_single_internal(uint32_t base, uint8_t ui8Addr, uint8_t data)
 {
     if (errorFlag)
     {
-        I2C_Reset(base);
+        I2C_Reset();
     }
 
     errorFlag = false;
@@ -422,10 +520,10 @@ bool I2C_write_single_internal(uint32_t base, uint8_t ui8Addr, uint8_t data)
     // Send register address
     I2CMasterDataPut(base, data);
     I2CMasterControl(base, I2C_MASTER_CMD_SINGLE_SEND);
-    UARTprintf("Sent reg\n");
+    //uartprintf("Sent reg\n");
     if (xSemaphoreTake(xI2CSemaphore, pdMS_TO_TICKS(100)) != pdTRUE || errorFlag)
     {
-        I2C_Reset(base);
+        I2C_Reset();
         return false;
     }
 

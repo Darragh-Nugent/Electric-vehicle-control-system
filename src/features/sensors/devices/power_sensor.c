@@ -12,6 +12,7 @@
 #include "utils/uartstdio.h"
 #include "driverlib/adc.h"
 #include "utils/muart.h"
+#include "drivers/power_sensor_driver.h"
 
 #define REF_VOLTS 3.3f
 #define ADC_MAX_COUNTS 4096.0f
@@ -37,6 +38,13 @@ void xPowerHandler(void)
 void PowerInit(void)
 {
     xPowerSemaphore = xSemaphoreCreateBinary();
+    power_sensor_dev_t dev;
+    dev.ref_voltage = REF_VOLTS;
+    dev.adc_max_counts = ADC_MAX_COUNTS;
+    dev.gain = GAIN;
+    dev.resistance = SHUNT_RESISTANCE;
+    dev.motor_voltage = VOLTS;
+    Power_Sensor_Init(dev);
 }
 
 // this is just the getPower without the voltage scaling. 
@@ -46,25 +54,13 @@ float getCurrent(void)
     ADCProcessorTrigger(ADC1_BASE, 0);
     xSemaphoreTake(xPowerSemaphore, portMAX_DELAY);
     uint32_t local_adc_values[2];
-    float converted_voltage[2];
-    float current[3];
 
     taskENTER_CRITICAL();
     local_adc_values[0] = adc_values[0];
     local_adc_values[1] = adc_values[1];
     taskEXIT_CRITICAL();
 
-    converted_voltage[0] = (float)local_adc_values[0] * (REF_VOLTS / ADC_MAX_COUNTS);
-    converted_voltage[1] = (float)local_adc_values[1] * (REF_VOLTS / ADC_MAX_COUNTS);
-
-    current[0] = (REF_VOLTS / 2.0f - converted_voltage[0]) / (GAIN * SHUNT_RESISTANCE);
-    current[1] = (REF_VOLTS / 2.0f - converted_voltage[1]) / (GAIN * SHUNT_RESISTANCE);
-
-    // Sum of currents in motor will always add to 0
-    current[2] = -(current[0] + current[1]);
-
-    // Find average using a denominator of 2 as one will always be 0
-    return (current[0] + current[1] + current[2]) / 2;
+    return Power_Sensor_GetCurrent(local_adc_values[0], local_adc_values[1]);
 }
 
 float getPower(void)
@@ -72,23 +68,11 @@ float getPower(void)
     ADCProcessorTrigger(ADC1_BASE, 0);
     xSemaphoreTake(xPowerSemaphore, portMAX_DELAY);
     uint32_t local_adc_values[2];
-    float converted_voltage[2];
-    float current[3];
 
     taskENTER_CRITICAL();
     local_adc_values[0] = adc_values[0];
     local_adc_values[1] = adc_values[1];
     taskEXIT_CRITICAL();
 
-    converted_voltage[0] = (float)local_adc_values[0] * (REF_VOLTS / ADC_MAX_COUNTS);
-    converted_voltage[1] = (float)local_adc_values[1] * (REF_VOLTS / ADC_MAX_COUNTS);
-
-    current[0] = (REF_VOLTS / 2.0f - converted_voltage[0]) / (GAIN * SHUNT_RESISTANCE);
-    current[1] = (REF_VOLTS / 2.0f - converted_voltage[1]) / (GAIN * SHUNT_RESISTANCE);
-
-    // Sum of currents in motor will always add to 0
-    current[2] = -(current[0] + current[1]);
-
-    // Find average using a denominator of 2 as one will always be 0
-    return (current[0] + current[1] + current[2]) / 2 * VOLTS;
+    return Power_Sensor_GetPower(local_adc_values[0], local_adc_values[1]);
 }
