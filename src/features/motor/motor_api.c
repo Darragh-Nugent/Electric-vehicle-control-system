@@ -43,11 +43,8 @@ void motorInit(void)
 void motorRunning(void)
 {
     // UARTprintf("STATE: RUNNING\n");
-    vTaskDelay(pdMS_TO_TICKS(100));
 
-    sensor_sample_t currentSpeed = Sensor_GetSpeed();
-    motorControlSetReferenceSpeed(currentSpeed.value);
-    // motorControlSetReferenceSpeed(userSetSpeed);  // start ramp at desired speed, not actual
+    motorControlSetReferenceSpeed(800);
     motorControllerInit();
 
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);
