@@ -74,7 +74,7 @@ void screen_manager_init(void)
 
 void disableGraphCB(void)
 {
-    lv_timer_pause(speed_graph->timer);
+    // lv_timer_pause(speed_graph->timer);
     // lv_timer_pause(lux_graph->timer);
     // lv_timer_pause(accel_graph->timer);
     // lv_timer_pause(pwr_graph->timer);

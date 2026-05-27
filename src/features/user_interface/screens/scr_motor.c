@@ -13,7 +13,7 @@
 #include <math.h>
 
 extern UiMsg_t g_ui_state;
-
+uint32_t motor_speed;
 // LV_IMAGE_DECLARE(img_hand);
 static lv_obj_t *s_screen;
 static lv_obj_t *rpm_input;
@@ -75,11 +75,6 @@ static void on_state_changed(const char *state)
         UARTprintf("RUNNING\n");
         updateGUIState(UI_MSG_MOTOR_RUNNING, MOTOR_STATE_RUNNING);
     }
-    else if (lv_strcmp(state, "BRAKE") == 0)
-    {
-        UARTprintf("BREAK\n");
-        updateGUIState(UI_MSG_MOTOR_BREAKING, MOTOR_STATE_BRAKING);
-    }
     else if (lv_strcmp(state, "EXPLODE") == 0)
     {
         UARTprintf("KABOOOM\n");
@@ -129,7 +124,8 @@ void motor_state_update_cb(lv_timer_t *timer)
 static int32_t get_speed(void)
 {
     // Sensor_GetSpeed or something
-    return Sensor_GetSpeed().value;
+    motor_speed = Sensor_GetSpeed().value;
+    return motor_speed;
 }
 
 void scr_motor_init(void)
@@ -183,14 +179,14 @@ void scr_motor_init(void)
     lv_obj_add_event_cb(btn, submit_rpm_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_size(btn, 40, 15);
     lv_obj_t *btn_label = lv_label_create(btn);
-    lv_label_set_text(btn_label, "SET");
+    lv_label_set_text(btn_label, "RPM");
     lv_obj_center(btn_label);
 
     UARTprintf("scr_motor Drop down\n");
     // Drop Down
     lv_obj_t *mode_dd = create_dropdown(
         nav_bar,
-        "RUN\nBRAKE\nEStop\nEXPLODE",
+        "RUN\nEStop\nEXPLODE",
         on_state_changed);
 
     lv_obj_set_size(mode_dd, 120, 30);

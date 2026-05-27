@@ -15,14 +15,14 @@ static lv_obj_t *accel_tab;
 static lv_obj_t *dist_tab;
 // static lv_obj_t *lux_tab;
 static lv_obj_t *temp_tab;
-static lv_obj_t *humidity_tab;
+// static lv_obj_t *humidity_tab;
 
 static lv_obj_t *power_spinbox;
 static lv_obj_t *accel_spinbox;
 static lv_obj_t *dist_spinbox;
 // static lv_obj_t *lux_spinbox;
 static lv_obj_t *temp_spinbox;
-static lv_obj_t *humidity_spinbox;
+// static lv_obj_t *humidity_spinbox;
 
 #define SPINBOX_SCALE 10.0f
 
@@ -265,7 +265,7 @@ void scr_settings_init(void)
     dist_submit_t.spinbox = dist_spinbox;
     // lux_submit_t.spinbox = lux_spinbox;
     temp_submit_t.spinbox = temp_spinbox;
-    humidity_submit_t.spinbox = humidity_spinbox;
+    // humidity_submit_t.spinbox = humidity_spinbox;
 
     // Submit button for each tab
     lv_obj_t *sub_pwr_btn = submit_threshold_btn(power_tab, "SUBMIT", lv_submit_cb, LV_ALIGN_BOTTOM_MID, 0, 0, &power_submit_t);

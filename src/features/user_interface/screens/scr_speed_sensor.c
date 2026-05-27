@@ -10,6 +10,7 @@
 #define TIME_LABEL_WIDTH 6
 static lv_obj_t *s_screen;
 graph_t *speed_graph;
+extern uint32_t motor_speed;
 static int32_t scaleYMin = SENSOR_SPEED_YMIN;
 static int32_t scaleYMax = SENSOR_SPEED_YMAX;
 void scr_sensor1_get_x(float x) {};
@@ -28,7 +29,7 @@ static void btn_home_cb(lv_event_t *e)
 static int32_t get_speed(void)
 {
     // Sensor_GetSpeed();
-    return Sensor_GetSpeed().value;
+    return motor_speed;
 }
 
 void scr_speed_sensor_init(void)
