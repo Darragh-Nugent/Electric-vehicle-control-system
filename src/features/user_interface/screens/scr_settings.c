@@ -258,7 +258,7 @@ void scr_settings_init(void)
     static submit_t dist_submit_t = {.spinbox = NULL, .msgType = UI_MSG_SENSOR_UPDATE_DISTANCE};
     // static submit_t lux_submit_t =  {.spinbox = NULL, .msgType = TH_LUX};
     static submit_t temp_submit_t = {.spinbox = NULL, .msgType = UI_MSG_SENSOR_UPDATE_TEMP};
-    static submit_t humidity_submit_t = {.spinbox = NULL, .msgType = UI_MSG_SENSOR_UPDATE_HUMIDITY};
+    // static submit_t humidity_submit_t = {.spinbox = NULL, .msgType = UI_MSG_SENSOR_UPDATE_HUMIDITY};
 
     power_submit_t.spinbox = power_spinbox;
     accel_submit_t.spinbox = accel_spinbox;
