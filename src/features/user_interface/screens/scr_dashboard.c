@@ -23,8 +23,8 @@ typedef enum
 static lv_obj_t *s_screen;
 static lv_obj_t *timeLabel;
 static uint8_t seconds = 0;
-static uint8_t minutes = 20;
-static uint8_t hours = 9;
+static uint8_t minutes = 23;
+static uint8_t hours = 11;
 static uint8_t days = 0;
 static dashboard_mode_t dashboardMode = DASH_DIST_ACCEL;
 static lv_obj_t *lbl_lhs_title;
@@ -260,7 +260,7 @@ void scr_dashboard_init(void)
     lv_obj_add_style(header, &style_date, 0);
 
     lv_obj_t *dateLabel = lv_label_create(header);
-    lv_label_set_text(dateLabel, "24/05/2026");
+    lv_label_set_text(dateLabel, "28/05/2026");
     lv_obj_center(dateLabel);
 
     timeLabel = lv_label_create(header);

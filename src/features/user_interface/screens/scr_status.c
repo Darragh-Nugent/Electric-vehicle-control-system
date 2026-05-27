@@ -52,7 +52,7 @@ status_t getFaultOrWarning(void)
     {
         status.sensor = DIST;
         status.value = dist;
-        status.type = (dist >= g_thresholds.TH_DIST)
+        status.type = (dist <= g_thresholds.TH_DIST)
                           ? FAULT
                           : WARNING;
         return status;
