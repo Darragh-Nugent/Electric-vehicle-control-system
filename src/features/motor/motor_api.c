@@ -45,6 +45,7 @@ void motorRunning(void)
     // UARTprintf("STATE: RUNNING\n");
 
     motorControlSetReferenceSpeed(800);
+    motorSetSpeed(800);
     motorControllerInit();
 
     xSemaphoreTake(motorStateMutex, portMAX_DELAY);

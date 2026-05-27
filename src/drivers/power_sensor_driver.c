@@ -28,7 +28,8 @@ float Power_Sensor_GetCurrent(uint32_t adcA, uint32_t adcB)
     current[2] = -(current[0] + current[1]);
 
     // Find average using a denominator of 2 as one will always be 0
-    return (fabs(current[0]) + fabs(current[1]) + fabs(current[2])) / 2;
+    return (float)((fabs((double)current[0]) + fabs((double)current[1]) + fabs((double)current[2])) 
+        / 2.0f);
 }
 
 float Power_Sensor_GetPower(uint32_t adcA, uint32_t adcB)
