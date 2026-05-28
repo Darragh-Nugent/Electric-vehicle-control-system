@@ -22,12 +22,14 @@
 #include "features/priorities.h"
 #include "states.h"
 #include "motor_api.h"
+#include "state_machine.h"
 #include "motor_control.h"
 #include "features/sensors/api/sensors_api.h"
 #include "utils/muart.h"
 
 #define CONTROL_PERIOD_MS 25
-#define MOTOR_SERIALPLOT_ENABLE 1
+
+volatile bool MOTOR_SERIALPLOT_ENABLE = 1;
 
 motor_state_t motor_state = MOTOR_STATE_IDLE;
 static void motorTask(void *pvParameters);
@@ -156,7 +158,6 @@ static void motorTask(void *pvParameters)
                 frozenSpeedCount = 0;
                 prev_speed_seq = actualSpeed.seq;
             }
-            
 
             if (frozenSpeedCount > 300) // 7.5s of identical readings
             {
@@ -167,7 +168,7 @@ static void motorTask(void *pvParameters)
             }
 
             // low-speed recovery only applies when speed is low but not zero. /////
-            if (referenceSpeed > 250 && actualSpeed.value < ( referenceSpeed - ((referenceSpeed * 4) / 5)))// if (referenceSpeed > 100 && actualSpeed.value < 200)
+            if (referenceSpeed > 250 && actualSpeed.value < (referenceSpeed - ((referenceSpeed * 4) / 5))) // if (referenceSpeed > 100 && actualSpeed.value < 200)
             {
                 lowSpeedCount++;
             }
@@ -200,7 +201,8 @@ static void motorTask(void *pvParameters)
 
             setDuty(duty);
 
-            #if MOTOR_SERIALPLOT_ENABLE
+            if (MOTOR_SERIALPLOT_ENABLE)
+            {
                 static uint8_t plotCount = 0;
                 plotCount++;
 
@@ -209,7 +211,7 @@ static void motorTask(void *pvParameters)
                     motorSerialPlotOutput(desiredSpeed, referenceSpeed, actualSpeed.value, duty);
                     plotCount = 0;
                 }
-            #endif
+            }
 
             vTaskDelay(controlPeriodTicks);
 
@@ -225,8 +227,9 @@ static void motorTask(void *pvParameters)
             prev_speed_seq = actualSpeed.seq;
             uint16_t duty = motorLQRUpdate(referenceSpeed, actualSpeed.value, controlPeriodSeconds);
             setDuty(duty);
-           
-            #if MOTOR_SERIALPLOT_ENABLE
+
+            if (MOTOR_SERIALPLOT_ENABLE)
+            {
                 static uint8_t brakePlotCount = 0;
                 brakePlotCount++;
                 if (brakePlotCount >= 5)
@@ -234,9 +237,9 @@ static void motorTask(void *pvParameters)
                     motorSerialPlotOutput(0, referenceSpeed, actualSpeed.value, duty);
                     brakePlotCount = 0;
                 }
-            #endif
+            }
 
-            if (referenceSpeed ==0 && actualSpeed.value <= 50)
+            if (referenceSpeed == 0 && actualSpeed.value <= 50)
             {
                 stoppedCount++;
             }
