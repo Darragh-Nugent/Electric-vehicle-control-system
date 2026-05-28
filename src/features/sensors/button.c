@@ -30,11 +30,14 @@
 #include "utils/ustdlib.h"
 #include "uart_mode.h"
 
+#include "features/motor/state_machine.h"
+
 extern uart_mode_t uart_mode;
 
 extern volatile bool motorEStopRequested;
 extern SemaphoreHandle_t faultAcknowledgedSemaphore;
 extern volatile motor_state_t motor_state;
+extern bool MOTOR_SERIALPLOT_ENABLE;
 
 void xButtonsHandler(void)
 {
@@ -61,6 +64,7 @@ void xButtonsHandler(void)
         if ((ui32Status & USR_SW1) == USR_SW1)
         {
             uart_mode = (uart_mode + 1) % MODE_COUNT;
+            MOTOR_SERIALPLOT_ENABLE = uart_mode == 0 ? true : false;
         }
         else if ((ui32Status & USR_SW2) == USR_SW2)
         {
