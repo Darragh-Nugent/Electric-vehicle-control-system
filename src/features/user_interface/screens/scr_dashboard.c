@@ -23,7 +23,7 @@ typedef enum
 static lv_obj_t *s_screen;
 static lv_obj_t *timeLabel;
 static uint8_t seconds = 0;
-static uint8_t minutes = 23;
+static uint8_t minutes = 15;
 static uint8_t hours = 11;
 static uint8_t days = 0;
 static dashboard_mode_t dashboardMode = DASH_DIST_ACCEL;
