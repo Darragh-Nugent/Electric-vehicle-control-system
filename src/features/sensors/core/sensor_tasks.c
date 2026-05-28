@@ -112,14 +112,6 @@ void vCreateSensorTasks(void)
         NULL,
         SPEED_SENSOR_PRIORITY,
         NULL);
-
-    // xTaskCreate(
-    //     vPowerSensorTask,
-    //     "PowerSensorTask",
-    //     configMINIMAL_STACK_SIZE * 2,
-    //     NULL,
-    //     SPEED_SENSOR_PRIORITY,
-    //     NULL);
 }
 
 /*-----------------------------------------------------------*/
